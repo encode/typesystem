@@ -348,6 +348,7 @@ class Object(Validator):
         min_properties=None,
         max_properties=None,
         required=None,
+        coerce=None,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -376,6 +377,7 @@ class Object(Validator):
         self.min_properties = min_properties
         self.max_properties = max_properties
         self.required = required
+        self.coerce = coerce
 
     def validate_value(self, value, strict=False):
         if value is None and self.allow_null:
@@ -467,6 +469,11 @@ class Object(Validator):
 
         if errors:
             return ErrorMessages(errors)
+
+        if self.coerce is not None:
+            print(self.coerce)
+            return self.coerce(validated)
+
         return validated
 
 
@@ -589,8 +596,6 @@ class DateTime(String):
         super().__init__(format="datetime", **kwargs)
 
 
-#
-#
 # class Any(Validator):
 #     def validate(self, value, definitions=None, allow_coerce=False):
 #         # TODO: Validate value matches primitive types
