@@ -1,4 +1,5 @@
-from typesystem.validators import String, Integer
+from typesystem.validators import String, Integer, Date, DateTime, Time
+import datetime
 
 
 def test_string():
@@ -73,3 +74,154 @@ def test_integer():
 
     validator = Integer(multiple_of=10)
     assert validator.validate(5).errors == ["multiple_of"]
+
+
+# Date
+
+def test_date_from_string():
+    validator = Date()
+    value = "2049-01-01"
+
+    validated = validator.validate(value)
+
+    assert validated.value == datetime.date(2049, 1, 1)
+
+
+def test_date_from_date():
+    validator = Date()
+    value = datetime.date(2049, 1, 1)
+
+    validated = validator.validate(value)
+
+    assert validated.value == value
+
+
+def test_date_from_incorrect_format():
+    validator = Date()
+    value = "20490101"
+
+    validated = validator.validate(value)
+
+    assert validated.errors == ["format"]
+
+
+def test_date_from_invalid_date():
+    validator = Date()
+    value = "2049-01-32"
+
+    validated = validator.validate(value)
+
+    assert validated.errors == ["invalid"]
+
+
+# Time
+
+def test_time_from_string():
+    validator = Time()
+    value = "12:00:01"
+
+    validated = validator.validate(value)
+
+    assert validated.value == datetime.time(12, 0, 1)
+
+
+def test_time_with_milliseconds():
+    validator = Time()
+    value = "12:00:01.001"
+
+    validated = validator.validate(value)
+
+    assert validated.value == datetime.time(12, 0, 1, 1000)
+
+
+def test_time_with_microseconds():
+    validator = Time()
+    value = "12:00:01.000001"
+
+    validated = validator.validate(value)
+
+    assert validated.value == datetime.time(12, 0, 1, 1)
+
+
+def test_time_from_time():
+    validator = Time()
+    value = datetime.time(12, 0, 1)
+
+    validated = validator.validate(value)
+
+    assert validated.value == value
+
+
+def test_time_from_incorrect_format():
+    validator = Time()
+    value = "12.00.01"
+
+    validated = validator.validate(value)
+
+    assert validated.errors == ["format"]
+
+
+def test_time_from_invalid_tiem():
+    validator = Time()
+    value = "12:00:60"
+
+    validated = validator.validate(value)
+
+    assert validated.errors == ["invalid"]
+
+
+# DateTime
+
+def test_datetime_from_string():
+    validator = DateTime()
+    value = "2049-1-1 12:00:00"
+
+    validated = validator.validate(value)
+
+    assert validated.value == datetime.datetime(2049, 1, 1, 12, 0, 0)
+
+
+def test_datetime_with_utc_timezone():
+    validator = DateTime()
+    value = "2049-1-1 12:00:00Z"
+
+    validated = validator.validate(value)
+
+    assert validated.value == datetime.datetime(2049, 1, 1, 12, 0, 0, tzinfo=datetime.timezone.utc)
+
+
+def test_datetime_with_offset_timezone():
+    validator = DateTime()
+    value = "2049-1-1 12:00:00-0230"
+    delta = -datetime.timedelta(hours=2, minutes=30)
+
+    validated = validator.validate(value)
+
+    assert validated.value == datetime.datetime(2049, 1, 1, 12, 0, 0, tzinfo=datetime.timezone(delta))
+
+
+def test_datetime_from_datetime():
+    validator = DateTime()
+    value = datetime.datetime(2049, 1, 1, 12, 0, 0)
+
+    validated = validator.validate(value)
+
+    assert validated.value == value
+
+
+def test_datetime_from_incorrect_format():
+    validator = DateTime()
+    value = "2049:01:01 12:00:00"
+
+    validated = validator.validate(value)
+
+    assert validated.errors == ["format"]
+
+
+def test_datetime_from_invalid_datetime():
+    validator = DateTime()
+    value = "2049-01-01 12:00:60"
+
+    validated = validator.validate(value)
+
+    assert validated.errors == ["invalid"]

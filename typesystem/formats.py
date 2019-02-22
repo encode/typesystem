@@ -41,7 +41,8 @@ class BaseFormat:
 
 class DateFormat(BaseFormat):
     errors = {
-        'format': 'Must be a valid date.'
+        'format': 'Must be in a valid date format.',
+        'invalid': 'Must be a real date.'
     }
 
     def is_native_type(self, value):
@@ -53,7 +54,10 @@ class DateFormat(BaseFormat):
             self.error('format')
 
         kwargs = {k: int(v) for k, v in match.groupdict().items()}
-        return datetime.date(**kwargs)
+        try:
+            return datetime.date(**kwargs)
+        except ValueError:
+            self.error('invalid')
 
     def to_string(self, value):
         return value.isoformat()
@@ -61,7 +65,8 @@ class DateFormat(BaseFormat):
 
 class TimeFormat(BaseFormat):
     errors = {
-        'format': 'Must be a valid time.'
+        'format': 'Must be a valid time format.',
+        'invalid': 'Must be a real time.'
     }
 
     def is_native_type(self, value):
@@ -75,7 +80,10 @@ class TimeFormat(BaseFormat):
         kwargs = match.groupdict()
         kwargs['microsecond'] = kwargs['microsecond'] and kwargs['microsecond'].ljust(6, '0')
         kwargs = {k: int(v) for k, v in kwargs.items() if v is not None}
-        return datetime.time(**kwargs)
+        try:
+            return datetime.time(**kwargs)
+        except ValueError:
+            self.error('invalid')
 
     def to_string(self, value):
         return value.isoformat()
@@ -83,7 +91,8 @@ class TimeFormat(BaseFormat):
 
 class DateTimeFormat(BaseFormat):
     errors = {
-        'format': 'Must be a valid datetime.'
+        'format': 'Must be a valid datetime format.',
+        'invalid': 'Must be a real datetime.'
     }
 
     def is_native_type(self, value):
@@ -108,7 +117,10 @@ class DateTimeFormat(BaseFormat):
             tzinfo = datetime.timezone(delta)
         kwargs = {k: int(v) for k, v in kwargs.items() if v is not None}
         kwargs['tzinfo'] = tzinfo
-        return datetime.datetime(**kwargs)
+        try:
+            return datetime.datetime(**kwargs)
+        except ValueError:
+            self.error('invalid')
 
     def to_string(self, value):
         value = value.isoformat()

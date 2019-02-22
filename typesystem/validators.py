@@ -560,19 +560,19 @@ class Integer(NumericType):
 #         return validated
 #
 #
-# class Date(String):
-#     def __init__(self, **kwargs):
-#         super().__init__(format='date', **kwargs)
-#
-#
-# class Time(String):
-#     def __init__(self, **kwargs):
-#         super().__init__(format='time', **kwargs)
-#
-#
-# class DateTime(String):
-#     def __init__(self, **kwargs):
-#         super().__init__(format='datetime', **kwargs)
+class Date(String):
+    def __init__(self, **kwargs):
+        super().__init__(format='date', **kwargs)
+
+
+class Time(String):
+    def __init__(self, **kwargs):
+        super().__init__(format='time', **kwargs)
+
+
+class DateTime(String):
+    def __init__(self, **kwargs):
+        super().__init__(format='datetime', **kwargs)
 #
 #
 # class Any(Validator):
