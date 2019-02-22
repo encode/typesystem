@@ -3,7 +3,7 @@ import typing
 from math import isfinite
 
 from typesystem import formats
-from typesystem.exceptions import ErrorMessage, ValidationError
+from typesystem.base import ErrorMessage, ErrorMessages, ValidationResult
 
 NO_DEFAULT = object()
 
@@ -12,15 +12,6 @@ FORMATS = {
     'time': formats.TimeFormat(),
     'datetime': formats.DateTimeFormat()
 }
-
-
-class ValidationResult:
-    def __init__(self, value, errors=None):
-        self.value = value
-        self.errors = [] if errors is None else errors
-
-    def __bool__(self):
-        return not self.errors
 
 
 class Validator:
@@ -54,11 +45,17 @@ class Validator:
         Validator._creation_counter += 1
 
     def validate(self, value, strict=False):
-        try:
-            value = self.validate_value(value, strict=strict)
-        except ValidationError as exc:
-            return ValidationResult(value, errors=exc.messages)
-        return ValidationResult(value)
+        result = self.validate_value(value, strict=strict)
+
+        if isinstance(result, ErrorMessage):
+            errors = ErrorMessages([result])
+        elif isinstance(result, ErrorMessages):
+            errors = result
+        else:
+            value = result
+            errors = None
+
+        return ValidationResult(value, errors=errors)
 
     def validate_value(self, value):
         raise NotImplementedError()  # pragma: no cover
@@ -66,38 +63,10 @@ class Validator:
     def has_default(self):
         return hasattr(self, 'default')
 
-    def error(self, code, **context):
+    def error(self, code, context=None, index=None):
+        context = {} if context is None else context
         text = self.errors[code].format(**self.__dict__, **context)
-        raise ValidationError(messages=[ErrorMessage(text=text, code=code)])
-
-    # def error_message(self, code, **context):
-    #     text = self.errors[code].format(**self.__dict__, **context)
-    #     return ErrorMessage(text=text, code=code)
-    #
-    # def get_definitions(self, definitions=None):
-    #     if self.definitions is None and self.def_name is None:
-    #         return definitions
-    #
-    #     if definitions is None:
-    #         definitions = {}
-    #     if self.definitions is not None:
-    #         definitions.update(self.definitions)
-    #     if self.def_name is not None:
-    #         definitions[self.def_name] = self
-    #     return definitions
-    #
-    # def __or__(self, other):
-    #     if isinstance(self, Union):
-    #         items = self.items
-    #     else:
-    #         items = [self]
-    #
-    #     if isinstance(other, Union):
-    #         items += other.items
-    #     else:
-    #         items += [other]
-    #
-    #     return Union(items)
+        return ErrorMessage(text=text, code=code, index=index)
 
 
 class String(Validator):
@@ -141,32 +110,32 @@ class String(Validator):
         if value is None and self.allow_null:
             return None
         elif value is None:
-            self.error('null')
+            return self.error('null')
         elif self.format in FORMATS and FORMATS[self.format].is_native_type(value):
             return value
         elif not isinstance(value, str):
-            self.error('type')
+            return self.error('type')
 
         if self.enum is not None:
             if value not in self.enum:
                 if len(self.enum) == 1:
-                    self.error('exact', exact=self.enum[0])
-                self.error('enum')
+                    return self.error('exact', context={'exact': self.enum[0]})
+                return self.error('enum')
 
         if self.min_length is not None:
             if len(value) < self.min_length:
                 if self.min_length == 1:
-                    self.error('blank')
+                    return self.error('blank')
                 else:
-                    self.error('min_length')
+                    return self.error('min_length')
 
         if self.max_length is not None:
             if len(value) > self.max_length:
-                self.error('max_length')
+                return self.error('max_length')
 
         if self.pattern is not None:
             if not re.search(self.pattern, value):
-                self.error('pattern')
+                return self.error('pattern')
 
         if self.format in FORMATS:
             return FORMATS[self.format].validate(value)
@@ -222,42 +191,42 @@ class NumericType(Validator):
         if value is None and self.allow_null:
             return None
         elif value is None:
-            self.error('null')
+            return self.error('null')
         elif isinstance(value, bool):
-            self.error('type')
+            return self.error('type')
         elif self.numeric_type is int and isinstance(value, float) and not value.is_integer():
-            self.error('integer')
+            return self.error('integer')
         elif not isinstance(value, (int, float)) and strict:
-            self.error('type')
+            return self.error('type')
         elif isinstance(value, float) and not isfinite(value):
-            self.error('finite')
+            return self.error('finite')
 
         try:
             value = self.numeric_type(value)
         except (TypeError, ValueError):
-            self.error('type')
+            return self.error('type')
 
         if self.enum is not None:
             if value not in self.enum:
                 if len(self.enum) == 1:
-                    self.error('exact', exact=self.enum[0])
-                self.error('enum')
+                    return self.error('exact', context={"exact": self.enum[0]})
+                return self.error('enum')
 
         if self.minimum is not None and value < self.minimum:
-            self.error('minimum')
+            return self.error('minimum')
 
         if self.exclusive_minimum is not None and value <= self.exclusive_minimum:
-            self.error('exclusive_minimum')
+            return self.error('exclusive_minimum')
 
         if self.maximum is not None and value > self.maximum:
-            self.error('maximum')
+            return self.error('maximum')
 
         if self.exclusive_maximum is not None and value >= self.exclusive_maximum:
-            self.error('exclusive_maximum')
+            return self.error('exclusive_maximum')
 
         if self.multiple_of is not None:
             if value % self.multiple_of:
-                self.error('multiple_of')
+                return self.error('multiple_of')
 
         return value
 
@@ -297,11 +266,11 @@ class Boolean(Validator):
             return None
 
         elif value is None:
-            self.error('null')
+            return self.error('null')
 
         elif not isinstance(value, bool):
             if strict:
-                self.error('type')
+                return self.error('type')
 
             if self.allow_null:
                 values = dict(self.coerce_values)
@@ -314,150 +283,143 @@ class Boolean(Validator):
                 else:
                     value = values[value]
             except KeyError:
-                self.error('type')
+                return self.error('type')
 
         return value
 
 
-# class Object(Validator):
-#     errors = {
-#         'type': 'Must be an object.',
-#         'null': 'May not be null.',
-#         'invalid_key': 'Object keys must be strings.',
-#         'required': 'The "{field_name}" field is required.',
-#         'invalid_property': 'Invalid property name.',
-#         'empty': 'Must not be empty.',
-#         'max_properties': 'Must have no more than {max_properties} properties.',
-#         'min_properties': 'Must have at least {min_properties} properties.',
-#     }
-#
-#     def __init__(self, properties=None, pattern_properties=None,
-#                  additional_properties=True, min_properties=None,
-#                  max_properties=None, required=None,
-#                  **kwargs):
-#         super().__init__(**kwargs)
-#
-#         properties = {} if (properties is None) else dict(properties)
-#         pattern_properties = {} if (pattern_properties is None) else dict(pattern_properties)
-#         required = list(required) if isinstance(required, (list, tuple)) else required
-#         required = [] if (required is None) else required
-#
-#         assert all(isinstance(k, str) for k in properties.keys())
-#         assert all(hasattr(v, 'validate') for v in properties.values())
-#         assert all(isinstance(k, str) for k in pattern_properties.keys())
-#         assert all(hasattr(v, 'validate') for v in pattern_properties.values())
-#         assert additional_properties in (None, True, False) or hasattr(additional_properties, 'validate')
-#         assert min_properties is None or isinstance(min_properties, int)
-#         assert max_properties is None or isinstance(max_properties, int)
-#         assert all(isinstance(i, str) for i in required)
-#
-#         self.properties = properties
-#         self.pattern_properties = pattern_properties
-#         self.additional_properties = additional_properties
-#         self.min_properties = min_properties
-#         self.max_properties = max_properties
-#         self.required = required
-#
-#     def validate(self, value, definitions=None, allow_coerce=False):
-#         if value is None and self.allow_null:
-#             return None
-#         elif value is None:
-#             self.error('null')
-#         elif not isinstance(value, (dict, typing.Mapping)):
-#             self.error('type')
-#
-#         definitions = self.get_definitions(definitions)
-#         validated = {}
-#
-#         # Ensure all property keys are strings.
-#         errors = {}
-#         for key in value.keys():
-#             if not isinstance(key, str):
-#                 errors[key] = [self.error_message('invalid_key')]
-#
-#         # Min/Max properties
-#         if self.min_properties is not None:
-#             if len(value) < self.min_properties:
-#                 if self.min_properties == 1:
-#                     self.error('empty')
-#                 else:
-#                     self.error('min_properties')
-#         if self.max_properties is not None:
-#             if len(value) > self.max_properties:
-#                 self.error('max_properties')
-#
-#         # Required properties
-#         for key in self.required:
-#             if key not in value:
-#                 errors[key] = [self.error_message('required', field_name=key)]
-#
-#         # Properties
-#         for key, child_schema in self.properties.items():
-#             if key not in value:
-#                 if child_schema.has_default():
-#                     validated[key] = child_schema.default
-#                 continue
-#             item = value[key]
-#             try:
-#                 validated[key] = child_schema.validate(
-#                     item,
-#                     definitions=definitions,
-#                     allow_coerce=allow_coerce
-#                 )
-#             except ValidationError as exc:
-#                 errors[key] = exc.messages
-#
-#         # Pattern properties
-#         if self.pattern_properties:
-#             for key in list(value.keys()):
-#                 for pattern, child_schema in self.pattern_properties.items():
-#                     if isinstance(key, str) and re.search(pattern, key):
-#                         item = value[key]
-#                         try:
-#                             validated[key] = child_schema.validate(
-#                                 item, definitions=definitions,
-#                                 allow_coerce=allow_coerce
-#                             )
-#                         except ValidationError as exc:
-#                             errors[key] = exc.messages
-#
-#         # Additional properties
-#         remaining = [
-#             key for key in value.keys()
-#             if key not in set(validated.keys()) | set(errors.keys())
-#         ]
-#
-#         if self.additional_properties is True:
-#             for key in remaining:
-#                 validated[key] = value[key]
-#         elif self.additional_properties is False:
-#             for key in remaining:
-#                 errors[key] = [self.error_message('invalid_property')]
-#         elif self.additional_properties is not None:
-#             child_schema = self.additional_properties
-#             for key in remaining:
-#                 item = value[key]
-#                 try:
-#                     validated[key] = child_schema.validate(
-#                         item,
-#                         definitions=definitions,
-#                         allow_coerce=allow_coerce
-#                     )
-#                 except ValidationError as exc:
-#                     errors[key] = exc.messages
-#
-#         if errors:
-#             error_messages = []
-#             for key, messages in errors.items():
-#                 for message in messages:
-#                     index = [key] if message.index is None else [key] + message.index
-#                     error_message = ErrorMessage(message.text, message.code, index)
-#                     error_messages.append(error_message)
-#             raise ValidationError(error_messages)
-#
-#         return validated
-#
-#
+class Object(Validator):
+    errors = {
+        'type': 'Must be an object.',
+        'null': 'May not be null.',
+        'invalid_key': 'All object keys must be strings.',
+        'required': 'The "{field_name}" field is required.',
+        'invalid_property': 'Invalid property name.',
+        'empty': 'Must not be empty.',
+        'max_properties': 'Must have no more than {max_properties} properties.',
+        'min_properties': 'Must have at least {min_properties} properties.',
+    }
+
+    def __init__(self, properties=None, pattern_properties=None,
+                 additional_properties=True, min_properties=None,
+                 max_properties=None, required=None,
+                 **kwargs):
+        super().__init__(**kwargs)
+
+        properties = {} if (properties is None) else dict(properties)
+        pattern_properties = {} if (pattern_properties is None) else dict(pattern_properties)
+        required = list(required) if isinstance(required, (list, tuple)) else required
+        required = [] if (required is None) else required
+
+        assert all(isinstance(k, str) for k in properties.keys())
+        assert all(hasattr(v, 'validate') for v in properties.values())
+        assert all(isinstance(k, str) for k in pattern_properties.keys())
+        assert all(hasattr(v, 'validate') for v in pattern_properties.values())
+        assert additional_properties in (None, True, False) or hasattr(additional_properties, 'validate')
+        assert min_properties is None or isinstance(min_properties, int)
+        assert max_properties is None or isinstance(max_properties, int)
+        assert all(isinstance(i, str) for i in required)
+
+        self.properties = properties
+        self.pattern_properties = pattern_properties
+        self.additional_properties = additional_properties
+        self.min_properties = min_properties
+        self.max_properties = max_properties
+        self.required = required
+
+    def validate_value(self, value, strict=False):
+        if value is None and self.allow_null:
+            return None
+        elif value is None:
+            return self.error('null')
+        elif not isinstance(value, (dict, typing.Mapping)):
+            return self.error('type')
+
+        validated = {}
+        errors = []
+
+        # Ensure all property keys are strings.
+        for key in value.keys():
+            if not isinstance(key, str):
+                return self.error('invalid_key')
+
+        # Min/Max properties
+        if self.min_properties is not None:
+            if len(value) < self.min_properties:
+                if self.min_properties == 1:
+                    return self.error('empty')
+                else:
+                    return self.error('min_properties')
+        if self.max_properties is not None:
+            if len(value) > self.max_properties:
+                return self.error('max_properties')
+
+        # Required properties
+        for key in self.required:
+            if key not in value:
+                error = self.error('required', context={"field_name": key}, index=[key])
+                errors.append(error)
+
+        # Properties
+        for key, child_schema in self.properties.items():
+            if key not in value:
+                if child_schema.has_default():
+                    validated[key] = child_schema.default
+                continue
+            item = value[key]
+            child = child_schema.validate(item, strict=strict)
+            if child.is_valid:
+                validated[key] = child.value
+            else:
+                for error in child.errors:
+                    error = error.with_index_prefix(prefix=key)
+                    errors.append(error)
+
+        # Pattern properties
+        if self.pattern_properties:
+            for key in list(value.keys()):
+                for pattern, child_schema in self.pattern_properties.items():
+                    if isinstance(key, str) and re.search(pattern, key):
+                        item = value[key]
+                        child = child_schema.validate(item, strict=strict)
+                        if child.is_valid:
+                            validated[key] = child.value
+                        else:
+                            for error in child.errors:
+                                errors.append(error.with_index_prefix(prefix=key))
+
+        # Additional properties
+        validated_keys = set(validated.keys())
+        error_keys = set([error.index[0] for error in errors if error.index])
+
+        remaining = [
+            key for key in value.keys()
+            if key not in validated_keys | error_keys
+        ]
+
+        if self.additional_properties is True:
+            for key in remaining:
+                validated[key] = value[key]
+        elif self.additional_properties is False:
+            for key in remaining:
+                error = self.error('invalid_property', index=[key])
+                errors.append(error)
+        elif self.additional_properties is not None:
+            child_schema = self.additional_properties
+            for key in remaining:
+                item = value[key]
+                child = child_schema.validate(item, strict=strict)
+                if child.is_valid:
+                    validated[key] = child.value
+                else:
+                    for error in child.errors:
+                        errors.append(error.with_index_prefix(prefix=key))
+
+        if errors:
+            return ErrorMessages(errors)
+        return validated
+
+
 # class Array(Validator):
 #     errors = {
 #         'type': 'Must be an array.',

@@ -1,7 +1,7 @@
 import datetime
 import re
 
-from typesystem.exceptions import ErrorMessage, ValidationError
+from typesystem.base import ErrorMessage
 
 DATE_REGEX = re.compile(
     r'(?P<year>\d{4})-(?P<month>\d{1,2})-(?P<day>\d{1,2})$'
@@ -22,21 +22,14 @@ DATETIME_REGEX = re.compile(
 
 class BaseFormat:
     def error(self, code, **context):
-        message = self.error_message(code, **context)
-        raise ValidationError(messages=[message])
-
-    def error_message(self, code, **context):
         text = self.errors[code].format(**self.__dict__, **context)
         return ErrorMessage(text=text, code=code)
 
     def is_native_type(self, value):
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     def validate(self, value):
-        raise NotImplementedError()
-
-    def to_string(self, value):
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
 
 class DateFormat(BaseFormat):
@@ -51,16 +44,13 @@ class DateFormat(BaseFormat):
     def validate(self, value):
         match = DATE_REGEX.match(value)
         if not match:
-            self.error('format')
+            return self.error('format')
 
         kwargs = {k: int(v) for k, v in match.groupdict().items()}
         try:
             return datetime.date(**kwargs)
         except ValueError:
-            self.error('invalid')
-
-    def to_string(self, value):
-        return value.isoformat()
+            return self.error('invalid')
 
 
 class TimeFormat(BaseFormat):
@@ -75,7 +65,7 @@ class TimeFormat(BaseFormat):
     def validate(self, value):
         match = TIME_REGEX.match(value)
         if not match:
-            self.error('format')
+            return self.error('format')
 
         kwargs = match.groupdict()
         kwargs['microsecond'] = kwargs['microsecond'] and kwargs['microsecond'].ljust(6, '0')
@@ -83,10 +73,7 @@ class TimeFormat(BaseFormat):
         try:
             return datetime.time(**kwargs)
         except ValueError:
-            self.error('invalid')
-
-    def to_string(self, value):
-        return value.isoformat()
+            return self.error('invalid')
 
 
 class DateTimeFormat(BaseFormat):
@@ -101,7 +88,7 @@ class DateTimeFormat(BaseFormat):
     def validate(self, value):
         match = DATETIME_REGEX.match(value)
         if not match:
-            self.error('format')
+            return self.error('format')
 
         kwargs = match.groupdict()
         kwargs['microsecond'] = kwargs['microsecond'] and kwargs['microsecond'].ljust(6, '0')
@@ -120,10 +107,4 @@ class DateTimeFormat(BaseFormat):
         try:
             return datetime.datetime(**kwargs)
         except ValueError:
-            self.error('invalid')
-
-    def to_string(self, value):
-        value = value.isoformat()
-        if value.endswith('+00:00'):
-            value = value[:-6] + 'Z'
-        return value
+            return self.error('invalid')

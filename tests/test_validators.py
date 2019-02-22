@@ -1,4 +1,5 @@
-from typesystem.validators import Boolean, String, Integer, Number, Date, DateTime, Time
+from typesystem.base import ErrorMessage
+from typesystem.validators import Boolean, String, Integer, Number, Date, DateTime, Time, Object
 import datetime
 
 
@@ -133,6 +134,66 @@ def test_boolean():
 
     validator = Boolean()
     assert validator.validate("True", strict=True).errors == ["type"]
+
+
+def test_object():
+    validator = Object()
+    assert validator.validate({}).value == {}
+    assert validator.validate(None).errors == ["null"]
+    assert validator.validate(123).errors == ["type"]
+    assert validator.validate({1: 123}).errors == ["invalid_key"]
+
+    validator = Object(allow_null=True)
+    assert validator.validate(None).value == None
+
+    validator = Object(min_properties=1)
+    assert validator.validate({}).errors == ["empty"]
+    assert validator.validate({"a": 1}).is_valid
+
+    validator = Object(min_properties=2)
+    assert validator.validate({}).errors == ["min_properties"]
+    assert validator.validate({"a": 1, "b": 2}).is_valid
+
+    validator = Object(max_properties=2)
+    assert validator.validate({}).is_valid
+    assert validator.validate({"a": 1, "b": 2, "c": 3}).errors == ["max_properties"]
+
+    validator = Object(required=["example"])
+    assert validator.validate({"example": 123}).value == {"example": 123}
+    assert validator.validate({}).errors.to_dict() == {'example': 'required'}
+
+    validator = Object(properties={"example": Integer()})
+    assert validator.validate({"example": '123'}).value == {'example': 123}
+    assert validator.validate({"example": "abc"}).errors.to_dict() == {'example': 'type'}
+
+    validator = Object(pattern_properties={"^x-.*$": Integer()})
+    assert validator.validate({"x-example": '123'}).value == {'x-example': 123}
+    assert validator.validate({"x-example": "abc"}).errors.to_dict() == {'x-example': 'type'}
+
+    validator = Object(properties={"example": Integer(default=0)})
+    assert validator.validate({"example": "123"}).value == {"example": 123}
+    assert validator.validate({}).value == {"example": 0}
+
+    validator = Object(additional_properties=False)
+    assert validator.validate({"example": "123"}).errors.to_dict() == {"example": "invalid_property"}
+
+    validator = Object(additional_properties=True)
+    assert validator.validate({"example": "abc"}).value == {"example": "abc"}
+
+    validator = Object(additional_properties=None)
+    assert validator.validate({"example": "abc"}).value == {}
+
+    validator = Object(additional_properties=Integer())
+    assert validator.validate({"example": "123"}).value == {"example": 123}
+    assert validator.validate({"example": "abc"}).errors.to_dict() == {"example": "type"}
+
+    validator = Object(properties={"example": Integer()})
+    assert validator.validate({"example": '123'}).value == {'example': 123}
+    assert validator.validate({"example": "abc"}).errors.to_dict() == {'example': 'type'}
+
+    validator = Object(additional_properties=Object(additional_properties=Integer()))
+    assert validator.validate({"example": {"nested": '123'}}).value == {'example': {"nested": 123}}
+    assert validator.validate({"example": {"nested": 'abc'}}).errors.to_dict() == {'example': {"nested": "type"}}
 
 
 # Date
