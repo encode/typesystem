@@ -202,7 +202,7 @@ class NumericType(Validator):
         assert maximum is None or isinstance(maximum, self.numeric_type)
         assert exclusive_minimum is None or isinstance(exclusive_minimum, self.numeric_type)
         assert exclusive_maximum is None or isinstance(exclusive_maximum, self.numeric_type)
-        assert multiple_of is None or isinstance(multiple_of, self.numeric_type)
+        assert multiple_of is None or isinstance(multiple_of, int) or multiple_of.is_integer()
         assert enum is None or isinstance(enum, list) and all([isinstance(i, self.numeric_type) for i in enum])
         assert format is None or isinstance(format, str)
 
@@ -256,12 +256,8 @@ class NumericType(Validator):
             self.error('exclusive_maximum')
 
         if self.multiple_of is not None:
-            if isinstance(self.multiple_of, float):
-                if not (value * (1 / self.multiple_of)).is_integer():
-                    self.error('multiple_of')
-            else:
-                if value % self.multiple_of:
-                    self.error('multiple_of')
+            if value % self.multiple_of:
+                self.error('multiple_of')
 
         return value
 
@@ -274,49 +270,55 @@ class Integer(NumericType):
     numeric_type = int
 
 
-# class Boolean(Validator):
-#     errors = {
-#         'type': 'Must be a valid boolean.',
-#         'null': 'May not be null.',
-#     }
-#     values = {
-#         'true': True,
-#         'false': False,
-#         'on': True,
-#         'off': False,
-#         '1': True,
-#         '0': False,
-#         '': False,
-#     }
-#     null_values = {
-#         '': None,
-#         'null': None,
-#         'none': None,
-#     }
-#
-#     def validate(self, value, definitions=None, allow_coerce=False):
-#         if value is None and self.allow_null:
-#             return None
-#
-#         elif value is None:
-#             self.error('null')
-#
-#         elif not isinstance(value, bool):
-#             if allow_coerce and isinstance(value, str):
-#                 if self.allow_null:
-#                     values = dict(self.value)
-#                     values.update(self.null_values)
-#                 else:
-#                     values = self.values
-#                 try:
-#                     return values[value.lower()]
-#                 except KeyError:
-#                     pass
-#             self.error('type')
-#
-#         return value
-#
-#
+class Boolean(Validator):
+    errors = {
+        'type': 'Must be a valid boolean.',
+        'null': 'May not be null.',
+    }
+    coerce_values = {
+        'true': True,
+        'false': False,
+        'on': True,
+        'off': False,
+        '1': True,
+        '0': False,
+        '': False,
+        1: True,
+        0: False
+    }
+    coerce_null_values = {
+        '': None,
+        'null': None,
+        'none': None,
+    }
+
+    def validate_value(self, value, strict=False):
+        if value is None and self.allow_null:
+            return None
+
+        elif value is None:
+            self.error('null')
+
+        elif not isinstance(value, bool):
+            if strict:
+                self.error('type')
+
+            if self.allow_null:
+                values = dict(self.coerce_values)
+                values.update(self.coerce_null_values)
+            else:
+                values = self.coerce_values
+            try:
+                if isinstance(value, str):
+                    value = values[value.lower()]
+                else:
+                    value = values[value]
+            except KeyError:
+                self.error('type')
+
+        return value
+
+
 # class Object(Validator):
 #     errors = {
 #         'type': 'Must be an object.',

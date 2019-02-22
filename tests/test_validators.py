@@ -1,4 +1,4 @@
-from typesystem.validators import String, Integer, Date, DateTime, Time
+from typesystem.validators import Boolean, String, Integer, Number, Date, DateTime, Time
 import datetime
 
 
@@ -74,6 +74,65 @@ def test_integer():
 
     validator = Integer(multiple_of=10)
     assert validator.validate(5).errors == ["multiple_of"]
+
+
+def test_number():
+    validator = Number()
+    assert validator.validate(123.1).value == 123.1
+    assert validator.validate(123).value == 123.0
+    assert validator.validate("123.1").value == 123.1
+    assert validator.validate(None).errors == ["null"]
+    assert validator.validate("abc").errors == ["type"]
+    assert validator.validate(True).errors == ["type"]
+    assert validator.validate(float('inf')).errors == ["finite"]
+    assert validator.validate(float('nan')).errors == ["finite"]
+    assert validator.validate("123", strict=True).errors == ["type"]
+
+    validator = Number(allow_null=True)
+    assert validator.validate(None).value is None
+
+    validator = Number(maximum=10.0)
+    assert validator.validate(100.0).errors == ["maximum"]
+    assert validator.validate(10.0).value == 10.0
+
+    validator = Number(minimum=3.0)
+    assert validator.validate(1.0).errors == ["minimum"]
+    assert validator.validate(3.0).value == 3.0
+
+    validator = Number(exclusive_maximum=10.0)
+    assert validator.validate(10.0).errors == ["exclusive_maximum"]
+
+    validator = Number(exclusive_minimum=3.0)
+    assert validator.validate(3.0).errors == ["exclusive_minimum"]
+
+    validator = Number(enum=[1.0, 2.0, 3.0])
+    assert validator.validate(5.0).errors == ["enum"]
+
+    validator = Number(enum=[123.0])
+    assert validator.validate(5.0).errors == ["exact"]
+
+    validator = Number(exact=123.0)
+    assert validator.validate(5.0).errors == ["exact"]
+
+    validator = Number(multiple_of=10.0)
+    assert validator.validate(5.0).errors == ["multiple_of"]
+
+
+def test_boolean():
+    validator = Boolean()
+    assert validator.validate(True).value is True
+    assert validator.validate(False).value is False
+    assert validator.validate("True").value is True
+    assert validator.validate(1).value is True
+    assert validator.validate(None).errors == ["null"]
+    assert validator.validate(2).errors == ["type"]
+
+    validator = Boolean(allow_null=True)
+    assert validator.validate(None).value is None
+    assert validator.validate('').value is None
+
+    validator = Boolean()
+    assert validator.validate("True", strict=True).errors == ["type"]
 
 
 # Date
