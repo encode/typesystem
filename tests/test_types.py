@@ -44,3 +44,6 @@ def test_type_instantiation():
 
     with pytest.raises(TypeError):
         Product()
+
+    with pytest.raises(TypeError):
+        Product(name="T-Shirt", other="Invalid")

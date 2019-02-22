@@ -55,11 +55,15 @@ class Type(metaclass=TypeMetaclass):
 
         for key, schema in self.validator.properties.items():
             if key in item:
-                setattr(self, key, item[key])
+                setattr(self, key, item.pop(key))
             elif schema.has_default():
                 setattr(self, key, schema.default)
             else:
                 raise TypeError("Missing required argument {key!r}")
+
+        if item:
+            key = list(item.keys())[0]
+            raise TypeError("Invalid argument {!r}")
 
     @classmethod
     def validate(cls, value, strict=False):
