@@ -8,9 +8,9 @@ from typesystem.base import ErrorMessage, ErrorMessages, ValidationResult
 NO_DEFAULT = object()
 
 FORMATS = {
-    'date': formats.DateFormat(),
-    'time': formats.TimeFormat(),
-    'datetime': formats.DateTimeFormat()
+    "date": formats.DateFormat(),
+    "time": formats.TimeFormat(),
+    "datetime": formats.DateTimeFormat(),
 }
 
 
@@ -18,7 +18,15 @@ class Validator:
     errors = {}
     _creation_counter = 0
 
-    def __init__(self, title='', description='', default=NO_DEFAULT, allow_null=False, definitions=None, def_name=None):
+    def __init__(
+        self,
+        title="",
+        description="",
+        default=NO_DEFAULT,
+        allow_null=False,
+        definitions=None,
+        def_name=None,
+    ):
         definitions = {} if (definitions is None) else dict(definitions)
 
         assert isinstance(title, str)
@@ -61,7 +69,7 @@ class Validator:
         raise NotImplementedError()  # pragma: no cover
 
     def has_default(self):
-        return hasattr(self, 'default')
+        return hasattr(self, "default")
 
     def error(self, code, context=None, index=None):
         context = {} if context is None else context
@@ -71,25 +79,38 @@ class Validator:
 
 class String(Validator):
     errors = {
-        'type': 'Must be a string.',
-        'null': 'May not be null.',
-        'blank': 'Must not be blank.',
-        'max_length': 'Must have no more than {max_length} characters.',
-        'min_length': 'Must have at least {min_length} characters.',
-        'pattern': 'Must match the pattern /{pattern}/.',
-        'format': 'Must be a valid {format}.',
-        'enum': 'Must be one of {enum}.',
-        'exact': 'Must be {exact}.'
+        "type": "Must be a string.",
+        "null": "May not be null.",
+        "blank": "Must not be blank.",
+        "max_length": "Must have no more than {max_length} characters.",
+        "min_length": "Must have at least {min_length} characters.",
+        "pattern": "Must match the pattern /{pattern}/.",
+        "format": "Must be a valid {format}.",
+        "enum": "Must be one of {enum}.",
+        "exact": "Must be {exact}.",
     }
 
-    def __init__(self, max_length=None, min_length=None, pattern=None,
-                 enum=None, format=None, allow_blank=True, exact=None, **kwargs):
+    def __init__(
+        self,
+        max_length=None,
+        min_length=None,
+        pattern=None,
+        enum=None,
+        format=None,
+        allow_blank=True,
+        exact=None,
+        **kwargs
+    ):
         super().__init__(**kwargs)
 
         assert max_length is None or isinstance(max_length, int)
         assert min_length is None or isinstance(min_length, int)
         assert pattern is None or isinstance(pattern, str)
-        assert enum is None or isinstance(enum, list) and all([isinstance(i, str) for i in enum])
+        assert (
+            enum is None
+            or isinstance(enum, list)
+            and all([isinstance(i, str) for i in enum])
+        )
         assert format is None or isinstance(format, str)
 
         if not allow_blank:
@@ -110,32 +131,32 @@ class String(Validator):
         if value is None and self.allow_null:
             return None
         elif value is None:
-            return self.error('null')
+            return self.error("null")
         elif self.format in FORMATS and FORMATS[self.format].is_native_type(value):
             return value
         elif not isinstance(value, str):
-            return self.error('type')
+            return self.error("type")
 
         if self.enum is not None:
             if value not in self.enum:
                 if len(self.enum) == 1:
-                    return self.error('exact', context={'exact': self.enum[0]})
-                return self.error('enum')
+                    return self.error("exact", context={"exact": self.enum[0]})
+                return self.error("enum")
 
         if self.min_length is not None:
             if len(value) < self.min_length:
                 if self.min_length == 1:
-                    return self.error('blank')
+                    return self.error("blank")
                 else:
-                    return self.error('min_length')
+                    return self.error("min_length")
 
         if self.max_length is not None:
             if len(value) > self.max_length:
-                return self.error('max_length')
+                return self.error("max_length")
 
         if self.pattern is not None:
             if not re.search(self.pattern, value):
-                return self.error('pattern')
+                return self.error("pattern")
 
         if self.format in FORMATS:
             return FORMATS[self.format].validate(value)
@@ -147,32 +168,54 @@ class NumericType(Validator):
     """
     Base class for both `Number` and `Integer`.
     """
+
     numeric_type = None  # type: type
     errors = {
-        'type': 'Must be a number.',
-        'null': 'May not be null.',
-        'integer': 'Must be an integer.',
-        'finite': 'Must be finite.',
-        'minimum': 'Must be greater than or equal to {minimum}.',
-        'exclusive_minimum': 'Must be greater than {minimum}.',
-        'maximum': 'Must be less than or equal to {maximum}.',
-        'exclusive_maximum': 'Must be less than {maximum}.',
-        'multiple_of': 'Must be a multiple of {multiple_of}.',
-        'enum': 'Must be one of {enum}.',
-        'exact': 'Must be {exact}.'
+        "type": "Must be a number.",
+        "null": "May not be null.",
+        "integer": "Must be an integer.",
+        "finite": "Must be finite.",
+        "minimum": "Must be greater than or equal to {minimum}.",
+        "exclusive_minimum": "Must be greater than {minimum}.",
+        "maximum": "Must be less than or equal to {maximum}.",
+        "exclusive_maximum": "Must be less than {maximum}.",
+        "multiple_of": "Must be a multiple of {multiple_of}.",
+        "enum": "Must be one of {enum}.",
+        "exact": "Must be {exact}.",
     }
 
-    def __init__(self, minimum=None, maximum=None, exclusive_minimum=None,
-                 exclusive_maximum=None, multiple_of=None, enum=None,
-                 format=None, exact=None, **kwargs):
+    def __init__(
+        self,
+        minimum=None,
+        maximum=None,
+        exclusive_minimum=None,
+        exclusive_maximum=None,
+        multiple_of=None,
+        enum=None,
+        format=None,
+        exact=None,
+        **kwargs
+    ):
         super().__init__(**kwargs)
 
         assert minimum is None or isinstance(minimum, self.numeric_type)
         assert maximum is None or isinstance(maximum, self.numeric_type)
-        assert exclusive_minimum is None or isinstance(exclusive_minimum, self.numeric_type)
-        assert exclusive_maximum is None or isinstance(exclusive_maximum, self.numeric_type)
-        assert multiple_of is None or isinstance(multiple_of, int) or multiple_of.is_integer()
-        assert enum is None or isinstance(enum, list) and all([isinstance(i, self.numeric_type) for i in enum])
+        assert exclusive_minimum is None or isinstance(
+            exclusive_minimum, self.numeric_type
+        )
+        assert exclusive_maximum is None or isinstance(
+            exclusive_maximum, self.numeric_type
+        )
+        assert (
+            multiple_of is None
+            or isinstance(multiple_of, int)
+            or multiple_of.is_integer()
+        )
+        assert (
+            enum is None
+            or isinstance(enum, list)
+            and all([isinstance(i, self.numeric_type) for i in enum])
+        )
         assert format is None or isinstance(format, str)
 
         if exact is not None:
@@ -191,42 +234,46 @@ class NumericType(Validator):
         if value is None and self.allow_null:
             return None
         elif value is None:
-            return self.error('null')
+            return self.error("null")
         elif isinstance(value, bool):
-            return self.error('type')
-        elif self.numeric_type is int and isinstance(value, float) and not value.is_integer():
-            return self.error('integer')
+            return self.error("type")
+        elif (
+            self.numeric_type is int
+            and isinstance(value, float)
+            and not value.is_integer()
+        ):
+            return self.error("integer")
         elif not isinstance(value, (int, float)) and strict:
-            return self.error('type')
+            return self.error("type")
         elif isinstance(value, float) and not isfinite(value):
-            return self.error('finite')
+            return self.error("finite")
 
         try:
             value = self.numeric_type(value)
         except (TypeError, ValueError):
-            return self.error('type')
+            return self.error("type")
 
         if self.enum is not None:
             if value not in self.enum:
                 if len(self.enum) == 1:
-                    return self.error('exact', context={"exact": self.enum[0]})
-                return self.error('enum')
+                    return self.error("exact", context={"exact": self.enum[0]})
+                return self.error("enum")
 
         if self.minimum is not None and value < self.minimum:
-            return self.error('minimum')
+            return self.error("minimum")
 
         if self.exclusive_minimum is not None and value <= self.exclusive_minimum:
-            return self.error('exclusive_minimum')
+            return self.error("exclusive_minimum")
 
         if self.maximum is not None and value > self.maximum:
-            return self.error('maximum')
+            return self.error("maximum")
 
         if self.exclusive_maximum is not None and value >= self.exclusive_maximum:
-            return self.error('exclusive_maximum')
+            return self.error("exclusive_maximum")
 
         if self.multiple_of is not None:
             if value % self.multiple_of:
-                return self.error('multiple_of')
+                return self.error("multiple_of")
 
         return value
 
@@ -240,37 +287,30 @@ class Integer(NumericType):
 
 
 class Boolean(Validator):
-    errors = {
-        'type': 'Must be a valid boolean.',
-        'null': 'May not be null.',
-    }
+    errors = {"type": "Must be a valid boolean.", "null": "May not be null."}
     coerce_values = {
-        'true': True,
-        'false': False,
-        'on': True,
-        'off': False,
-        '1': True,
-        '0': False,
-        '': False,
+        "true": True,
+        "false": False,
+        "on": True,
+        "off": False,
+        "1": True,
+        "0": False,
+        "": False,
         1: True,
-        0: False
+        0: False,
     }
-    coerce_null_values = {
-        '': None,
-        'null': None,
-        'none': None,
-    }
+    coerce_null_values = {"": None, "null": None, "none": None}
 
     def validate_value(self, value, strict=False):
         if value is None and self.allow_null:
             return None
 
         elif value is None:
-            return self.error('null')
+            return self.error("null")
 
         elif not isinstance(value, bool):
             if strict:
-                return self.error('type')
+                return self.error("type")
 
             if self.allow_null:
                 values = dict(self.coerce_values)
@@ -283,39 +323,49 @@ class Boolean(Validator):
                 else:
                     value = values[value]
             except KeyError:
-                return self.error('type')
+                return self.error("type")
 
         return value
 
 
 class Object(Validator):
     errors = {
-        'type': 'Must be an object.',
-        'null': 'May not be null.',
-        'invalid_key': 'All object keys must be strings.',
-        'required': 'The "{field_name}" field is required.',
-        'invalid_property': 'Invalid property name.',
-        'empty': 'Must not be empty.',
-        'max_properties': 'Must have no more than {max_properties} properties.',
-        'min_properties': 'Must have at least {min_properties} properties.',
+        "type": "Must be an object.",
+        "null": "May not be null.",
+        "invalid_key": "All object keys must be strings.",
+        "required": 'The "{field_name}" field is required.',
+        "invalid_property": "Invalid property name.",
+        "empty": "Must not be empty.",
+        "max_properties": "Must have no more than {max_properties} properties.",
+        "min_properties": "Must have at least {min_properties} properties.",
     }
 
-    def __init__(self, properties=None, pattern_properties=None,
-                 additional_properties=True, min_properties=None,
-                 max_properties=None, required=None,
-                 **kwargs):
+    def __init__(
+        self,
+        properties=None,
+        pattern_properties=None,
+        additional_properties=True,
+        min_properties=None,
+        max_properties=None,
+        required=None,
+        **kwargs
+    ):
         super().__init__(**kwargs)
 
         properties = {} if (properties is None) else dict(properties)
-        pattern_properties = {} if (pattern_properties is None) else dict(pattern_properties)
+        pattern_properties = (
+            {} if (pattern_properties is None) else dict(pattern_properties)
+        )
         required = list(required) if isinstance(required, (list, tuple)) else required
         required = [] if (required is None) else required
 
         assert all(isinstance(k, str) for k in properties.keys())
-        assert all(hasattr(v, 'validate') for v in properties.values())
+        assert all(hasattr(v, "validate") for v in properties.values())
         assert all(isinstance(k, str) for k in pattern_properties.keys())
-        assert all(hasattr(v, 'validate') for v in pattern_properties.values())
-        assert additional_properties in (None, True, False) or hasattr(additional_properties, 'validate')
+        assert all(hasattr(v, "validate") for v in pattern_properties.values())
+        assert additional_properties in (None, True, False) or hasattr(
+            additional_properties, "validate"
+        )
         assert min_properties is None or isinstance(min_properties, int)
         assert max_properties is None or isinstance(max_properties, int)
         assert all(isinstance(i, str) for i in required)
@@ -331,9 +381,9 @@ class Object(Validator):
         if value is None and self.allow_null:
             return None
         elif value is None:
-            return self.error('null')
+            return self.error("null")
         elif not isinstance(value, (dict, typing.Mapping)):
-            return self.error('type')
+            return self.error("type")
 
         validated = {}
         errors = []
@@ -341,23 +391,23 @@ class Object(Validator):
         # Ensure all property keys are strings.
         for key in value.keys():
             if not isinstance(key, str):
-                return self.error('invalid_key')
+                return self.error("invalid_key")
 
         # Min/Max properties
         if self.min_properties is not None:
             if len(value) < self.min_properties:
                 if self.min_properties == 1:
-                    return self.error('empty')
+                    return self.error("empty")
                 else:
-                    return self.error('min_properties')
+                    return self.error("min_properties")
         if self.max_properties is not None:
             if len(value) > self.max_properties:
-                return self.error('max_properties')
+                return self.error("max_properties")
 
         # Required properties
         for key in self.required:
             if key not in value:
-                error = self.error('required', context={"field_name": key}, index=[key])
+                error = self.error("required", context={"field_name": key}, index=[key])
                 errors.append(error)
 
         # Properties
@@ -393,8 +443,7 @@ class Object(Validator):
         error_keys = set([error.index[0] for error in errors if error.index])
 
         remaining = [
-            key for key in value.keys()
-            if key not in validated_keys | error_keys
+            key for key in value.keys() if key not in validated_keys | error_keys
         ]
 
         if self.additional_properties is True:
@@ -402,7 +451,7 @@ class Object(Validator):
                 validated[key] = value[key]
         elif self.additional_properties is False:
             for key in remaining:
-                error = self.error('invalid_property', index=[key])
+                error = self.error("invalid_property", index=[key])
                 errors.append(error)
         elif self.additional_properties is not None:
             child_schema = self.additional_properties
@@ -413,7 +462,8 @@ class Object(Validator):
                     validated[key] = child.value
                 else:
                     for error in child.errors:
-                        errors.append(error.with_index_prefix(prefix=key))
+                        error = error.with_index_prefix(prefix=key)
+                        errors.append(error)
 
         if errors:
             return ErrorMessages(errors)
@@ -526,17 +576,19 @@ class Object(Validator):
 #
 class Date(String):
     def __init__(self, **kwargs):
-        super().__init__(format='date', **kwargs)
+        super().__init__(format="date", **kwargs)
 
 
 class Time(String):
     def __init__(self, **kwargs):
-        super().__init__(format='time', **kwargs)
+        super().__init__(format="time", **kwargs)
 
 
 class DateTime(String):
     def __init__(self, **kwargs):
-        super().__init__(format='datetime', **kwargs)
+        super().__init__(format="datetime", **kwargs)
+
+
 #
 #
 # class Any(Validator):

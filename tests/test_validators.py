@@ -1,5 +1,14 @@
 from typesystem.base import ErrorMessage
-from typesystem.validators import Boolean, String, Integer, Number, Date, DateTime, Time, Object
+from typesystem.validators import (
+    Boolean,
+    String,
+    Integer,
+    Number,
+    Date,
+    DateTime,
+    Time,
+    Object,
+)
 import datetime
 
 
@@ -43,8 +52,8 @@ def test_integer():
     assert validator.validate("abc").errors == ["type"]
     assert validator.validate(True).errors == ["type"]
     assert validator.validate(123.1).errors == ["integer"]
-    assert validator.validate(float('inf')).errors == ["integer"]
-    assert validator.validate(float('nan')).errors == ["integer"]
+    assert validator.validate(float("inf")).errors == ["integer"]
+    assert validator.validate(float("nan")).errors == ["integer"]
     assert validator.validate("123", strict=True).errors == ["type"]
 
     validator = Integer(allow_null=True)
@@ -64,7 +73,7 @@ def test_integer():
     validator = Integer(exclusive_minimum=3)
     assert validator.validate(3).errors == ["exclusive_minimum"]
 
-    validator = Integer(enum=[1,2,3])
+    validator = Integer(enum=[1, 2, 3])
     assert validator.validate(5).errors == ["enum"]
 
     validator = Integer(enum=[123])
@@ -85,8 +94,8 @@ def test_number():
     assert validator.validate(None).errors == ["null"]
     assert validator.validate("abc").errors == ["type"]
     assert validator.validate(True).errors == ["type"]
-    assert validator.validate(float('inf')).errors == ["finite"]
-    assert validator.validate(float('nan')).errors == ["finite"]
+    assert validator.validate(float("inf")).errors == ["finite"]
+    assert validator.validate(float("nan")).errors == ["finite"]
     assert validator.validate("123", strict=True).errors == ["type"]
 
     validator = Number(allow_null=True)
@@ -130,10 +139,11 @@ def test_boolean():
 
     validator = Boolean(allow_null=True)
     assert validator.validate(None).value is None
-    assert validator.validate('').value is None
+    assert validator.validate("").value is None
 
     validator = Boolean()
-    assert validator.validate("True", strict=True).errors == ["type"]
+    validated = validator.validate("True", strict=True)
+    assert validated.errors == ["type"]
 
 
 def test_object():
@@ -160,22 +170,30 @@ def test_object():
 
     validator = Object(required=["example"])
     assert validator.validate({"example": 123}).value == {"example": 123}
-    assert validator.validate({}).errors.to_dict() == {'example': 'required'}
+    assert validator.validate({}).errors.to_dict(style="code") == {
+        "example": "required"
+    }
 
     validator = Object(properties={"example": Integer()})
-    assert validator.validate({"example": '123'}).value == {'example': 123}
-    assert validator.validate({"example": "abc"}).errors.to_dict() == {'example': 'type'}
+    assert validator.validate({"example": "123"}).value == {"example": 123}
+    assert validator.validate({"example": "abc"}).errors.to_dict(style="code") == {
+        "example": "type"
+    }
 
     validator = Object(pattern_properties={"^x-.*$": Integer()})
-    assert validator.validate({"x-example": '123'}).value == {'x-example': 123}
-    assert validator.validate({"x-example": "abc"}).errors.to_dict() == {'x-example': 'type'}
+    assert validator.validate({"x-example": "123"}).value == {"x-example": 123}
+    assert validator.validate({"x-example": "abc"}).errors.to_dict(style="code") == {
+        "x-example": "type"
+    }
 
     validator = Object(properties={"example": Integer(default=0)})
     assert validator.validate({"example": "123"}).value == {"example": 123}
     assert validator.validate({}).value == {"example": 0}
 
     validator = Object(additional_properties=False)
-    assert validator.validate({"example": "123"}).errors.to_dict() == {"example": "invalid_property"}
+    assert validator.validate({"example": "123"}).errors.to_dict(style="code") == {
+        "example": "invalid_property"
+    }
 
     validator = Object(additional_properties=True)
     assert validator.validate({"example": "abc"}).value == {"example": "abc"}
@@ -185,18 +203,48 @@ def test_object():
 
     validator = Object(additional_properties=Integer())
     assert validator.validate({"example": "123"}).value == {"example": 123}
-    assert validator.validate({"example": "abc"}).errors.to_dict() == {"example": "type"}
+    assert validator.validate({"example": "abc"}).errors.to_dict(style="code") == {
+        "example": "type"
+    }
 
     validator = Object(properties={"example": Integer()})
-    assert validator.validate({"example": '123'}).value == {'example': 123}
-    assert validator.validate({"example": "abc"}).errors.to_dict() == {'example': 'type'}
+    assert validator.validate({"example": "123"}).value == {"example": 123}
+    assert validator.validate({"example": "abc"}).errors.to_dict(style="code") == {
+        "example": "type"
+    }
 
     validator = Object(additional_properties=Object(additional_properties=Integer()))
-    assert validator.validate({"example": {"nested": '123'}}).value == {'example': {"nested": 123}}
-    assert validator.validate({"example": {"nested": 'abc'}}).errors.to_dict() == {'example': {"nested": "type"}}
+    assert validator.validate({"example": {"nested": "123"}}).value == {
+        "example": {"nested": 123}
+    }
+    assert validator.validate({"example": {"nested": "abc"}}).errors.to_dict(
+        style="code"
+    ) == {"example": {"nested": "type"}}
+    assert dict(validator.validate({"example": {"nested": "abc"}}).errors) == {
+        "example": {"nested": "Must be a number."}
+    }
+
+
+def test_dict_errors():
+    validator = Integer()
+    validated = validator.validate("abc")
+    assert validated.errors[""] == "Must be a number."
+
+    validator = Integer()
+    validated = validator.validate("abc")
+    assert dict(validated.errors) == {"": "Must be a number."}
+
+
+def test_list_errors():
+    validator = Integer()
+    validated = validator.validate("abc")
+    assert list(validated.errors) == [
+        ErrorMessage(text="Must be a number.", code="type")
+    ]
 
 
 # Date
+
 
 def test_date_from_string():
     validator = Date()
@@ -234,7 +282,8 @@ def test_date_from_invalid_date():
     assert validated.errors == ["invalid"]
 
 
-# Time
+#  Time
+
 
 def test_time_from_string():
     validator = Time()
@@ -292,6 +341,7 @@ def test_time_from_invalid_tiem():
 
 # DateTime
 
+
 def test_datetime_from_string():
     validator = DateTime()
     value = "2049-1-1 12:00:00"
@@ -307,7 +357,9 @@ def test_datetime_with_utc_timezone():
 
     validated = validator.validate(value)
 
-    assert validated.value == datetime.datetime(2049, 1, 1, 12, 0, 0, tzinfo=datetime.timezone.utc)
+    assert validated.value == datetime.datetime(
+        2049, 1, 1, 12, 0, 0, tzinfo=datetime.timezone.utc
+    )
 
 
 def test_datetime_with_offset_timezone():
@@ -317,7 +369,9 @@ def test_datetime_with_offset_timezone():
 
     validated = validator.validate(value)
 
-    assert validated.value == datetime.datetime(2049, 1, 1, 12, 0, 0, tzinfo=datetime.timezone(delta))
+    assert validated.value == datetime.datetime(
+        2049, 1, 1, 12, 0, 0, tzinfo=datetime.timezone(delta)
+    )
 
 
 def test_datetime_from_datetime():
