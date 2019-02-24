@@ -9,40 +9,26 @@ RESERVED_KEY_MESSAGE = (
 
 class TypeMetaclass(type):
     def __new__(cls, name, bases, attrs):
-        properties = []
+        fields = []
         for key, value in list(attrs.items()):
             assert key not in RESERVED_KEYS, RESERVED_KEY_MESSAGE
 
             if hasattr(value, "validate"):
                 attrs.pop(key)
-                properties.append((key, value))
+                fields.append((key, value))
 
         # If this class is subclassing another Type, add that Type's properties.
         # Note that we loop over the bases in reverse. This is necessary in order
         # to maintain the correct order of properties.
         for base in reversed(bases):
-            if hasattr(base, "validator"):
-                properties = [
-                    (key, base.validator.properties[key])
-                    for key in base.validator.properties
-                    if key not in attrs
-                ] + properties
+            if hasattr(base, "fields"):
+                fields = [
+                    (key, base.fields[key]) for key in base.fields if key not in attrs
+                ] + fields
 
-        properties = sorted(properties, key=lambda item: item[1]._creation_counter)
-        required = [key for key, value in properties if not value.has_default()]
-        attrs["fields"] = dict(properties)
-
-        attrs["validator"] = validators.Object(
-            def_name=name,
-            properties=properties,
-            required=required,
-            additional_properties=None,
-        )
-        attrs["_creation_counter"] = validators.Validator._creation_counter
-        validators.Validator._creation_counter += 1
-        ret = super(TypeMetaclass, cls).__new__(cls, name, bases, attrs)
-        ret.validator.coerce = ret
-        return ret
+        fields = sorted(fields, key=lambda item: item[1]._creation_counter)
+        attrs["fields"] = dict(fields)
+        return super(TypeMetaclass, cls).__new__(cls, name, bases, attrs)
 
 
 class Type(metaclass=TypeMetaclass):
@@ -54,7 +40,7 @@ class Type(metaclass=TypeMetaclass):
         else:
             item = kwargs
 
-        for key, schema in self.validator.properties.items():
+        for key, schema in self.fields.items():
             if key in item:
                 setattr(self, key, item.pop(key))
             elif schema.has_default():
@@ -68,13 +54,20 @@ class Type(metaclass=TypeMetaclass):
 
     @classmethod
     def validate(cls, value, strict=False):
-        return cls.validator.validate(value, strict=strict)
+        required = [key for key, value in cls.fields.items() if not value.has_default()]
+        validator = validators.Object(
+            properties=cls.fields,
+            required=required,
+            additional_properties=None,
+            coerce=cls,
+        )
+        return validator.validate(value, strict=strict)
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return False
 
-        for key in self.validator.properties.keys():
+        for key in self.fields.keys():
             if getattr(self, key) != getattr(other, key):
                 return False
         return True

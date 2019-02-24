@@ -583,7 +583,7 @@ class Object(Validator):
 
 class Text(String):
     def __init__(self, **kwargs):
-        super().__init__(format="textarea", **kwargs)
+        super().__init__(format="text", **kwargs)
 
 
 class Date(String):

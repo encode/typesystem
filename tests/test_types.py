@@ -1,7 +1,7 @@
 import pytest
 
 from typesystem.types import Type
-from typesystem.validators import Integer, String
+from typesystem.validators import Integer, String, Text
 
 
 class Person(Type):
@@ -48,3 +48,10 @@ def test_type_instantiation():
 
     with pytest.raises(TypeError):
         Product(name="T-Shirt", other="Invalid")
+
+
+def test_type_subclass():
+    class DetailedProduct(Product):
+        info = Text()
+
+    assert set(DetailedProduct.fields.keys()) == {"name", "rating", "info"}

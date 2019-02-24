@@ -7,12 +7,12 @@ from typesystem import validators
 
 
 class Jinja2Forms:
-    def __init__(self):
+    def __init__(self, package="typesystem"):
         assert jinja2 is not None, "jinja2 must be installed to use Jinja2Forms"
-        self.env = self.get_env()
+        self.env = self.get_env(package)
 
-    def get_env(self) -> "jinja2.Environment":
-        loader = jinja2.PackageLoader("typesystem", "templates")
+    def get_env(self, package) -> "jinja2.Environment":
+        loader = jinja2.PackageLoader(package, "templates")
         env = jinja2.Environment(loader=loader, autoescape=True)
         return env
 
@@ -34,6 +34,6 @@ class Jinja2Forms:
             return "inputs/select.html"
         elif isinstance(validator, validators.Boolean):
             return "inputs/checkbox.html"
-        if isinstance(validator, validators.String) and validator.format == "textarea":
+        if isinstance(validator, validators.String) and validator.format == "text":
             return "inputs/textarea.html"
         return "inputs/input.html"
