@@ -1,6 +1,7 @@
+import pytest
+
 from typesystem.types import Type
 from typesystem.validators import Integer, String
-import pytest
 
 
 class Person(Type):

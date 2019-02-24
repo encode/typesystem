@@ -1,0 +1,3 @@
+{% for key, validator in type.fields.items() %}
+    {{ render_field(key, validator) }}
+{% endfor %}

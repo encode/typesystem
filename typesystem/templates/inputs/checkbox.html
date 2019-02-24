@@ -1,0 +1,11 @@
+<div class="form-group">
+    <div class="checkbox">
+        <label class="control-label">
+            <input type="checkbox" name="{{ key }}" value="true">
+            {{ label }}
+        </label>
+    </div>
+    {% if validator.description %}
+        <span class="help-block">{{ validator.description }}</span>
+    {% endif %}
+</div>

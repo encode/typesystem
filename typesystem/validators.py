@@ -579,8 +579,13 @@ class Object(Validator):
 #             raise ValidationError(error_messages)
 #
 #         return validated
-#
-#
+
+
+class Text(String):
+    def __init__(self, **kwargs):
+        super().__init__(format="textarea", **kwargs)
+
+
 class Date(String):
     def __init__(self, **kwargs):
         super().__init__(format="date", **kwargs)

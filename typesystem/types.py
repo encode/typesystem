@@ -30,6 +30,7 @@ class TypeMetaclass(type):
 
         properties = sorted(properties, key=lambda item: item[1]._creation_counter)
         required = [key for key, value in properties if not value.has_default()]
+        attrs["fields"] = dict(properties)
 
         attrs["validator"] = validators.Object(
             def_name=name,

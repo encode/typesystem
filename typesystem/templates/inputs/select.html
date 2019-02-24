@@ -1,0 +1,19 @@
+<div class="form-group">
+    <label for="{{ key }}" class="control-label">
+        {{ label }}
+        {% if required %}
+            <span class="text-danger">*</span>
+        {% endif %}
+    </label>
+
+    <select class="form-control" name="{{ key }}">
+        <option></option>
+        {% for value in validator.enum %}
+            <option value="{{ value }}">{{ value }}</option>
+        {% endfor %}
+    </select>
+
+    {% if validator.description %}
+        <span class="help-block">{{ validator.description }}</span>
+    {% endif %}
+</div>

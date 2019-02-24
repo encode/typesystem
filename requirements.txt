@@ -1,3 +1,6 @@
+# Optionals
+jinja2
+
 # Testing
 autoflake
 black
