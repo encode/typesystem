@@ -43,8 +43,8 @@ async def add_user(request):
 
 
 app = Starlette(routes=[
-    Route(path='/', func=list_users, method="GET"),
-    Route(path='/', func=add_user, method="POST"),
+    Route('/', list_users, methods=["GET"]),
+    Route('/', add_user, methods=["POST"]),
 ])
 ```
 
