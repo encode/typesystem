@@ -30,16 +30,16 @@ class User(TypeSchema):
 
 
 async def list_users(request):
-    return JSONResponse([{"user": dict(user) for user in users}])
+    return JSONResponse([dict(user) for user in users])
 
 
 async def add_user(request):
     data = await request.json()
     user, errors = User.validate(data)
     if errors:
-        return JSONResponse({"errors": dict(errors)}, status_code=400)
+        return JSONResponse(dict(errors), status_code=400)
     users.append(user)
-    return JSONResponse({"user": dict(user)})
+    return JSONResponse(dict(user))
 
 
 app = Starlette(routes=[
