@@ -68,6 +68,9 @@ class Validator:
     def validate_value(self, value):
         raise NotImplementedError()  # pragma: no cover
 
+    def serialize(self, obj):
+        return obj
+
     def has_default(self):
         return hasattr(self, "default")
 
@@ -162,6 +165,11 @@ class String(Validator):
             return FORMATS[self.format].validate(value)
 
         return value
+
+    def serialize(self, obj):
+        if self.format in FORMATS:
+            return FORMATS[self.format].serialize(obj)
+        return obj
 
 
 class NumericType(Validator):
@@ -278,12 +286,12 @@ class NumericType(Validator):
         return value
 
 
-class Number(NumericType):
-    numeric_type = float
-
-
 class Integer(NumericType):
     numeric_type = int
+
+
+class Float(NumericType):
+    numeric_type = float
 
 
 class Boolean(Validator):
@@ -471,7 +479,6 @@ class Object(Validator):
             return ErrorMessages(errors)
 
         if self.coerce is not None:
-            print(self.coerce)
             return self.coerce(validated)
 
         return validated

@@ -1,9 +1,9 @@
 from typesystem.forms import Jinja2Forms
-from typesystem.types import Type
+from typesystem.schemas import TypeSchema
 from typesystem.validators import Boolean, String, Text
 
 
-class Contact(Type):
+class Contact(TypeSchema):
     a = Boolean()
     b = String(max_length=10)
     c = Text()

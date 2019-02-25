@@ -74,6 +74,10 @@ class ValidationResult:
         self.value = value
         self.errors = ErrorMessages() if errors is None else errors
 
+    def __iter__(self):
+        yield self.value
+        yield self.errors
+
     def __bool__(self):
         return not self.errors
 

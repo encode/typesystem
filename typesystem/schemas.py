@@ -1,19 +1,14 @@
+from abc import ABCMeta
+from collections.abc import Mapping
+
 from typesystem import validators
 
-RESERVED_KEYS = ["validator"]
-RESERVED_KEY_MESSAGE = (
-    'Cannot use reserved name "%s" on Type "%s", '
-    "as it clashes with the class interface."
-)
 
-
-class TypeMetaclass(type):
+class TypeSchemaMetaclass(ABCMeta):
     def __new__(cls, name, bases, attrs):
         fields = []
         for key, value in list(attrs.items()):
-            assert key not in RESERVED_KEYS, RESERVED_KEY_MESSAGE
-
-            if hasattr(value, "validate"):
+            if isinstance(value, validators.Validator):
                 attrs.pop(key)
                 fields.append((key, value))
 
@@ -28,10 +23,10 @@ class TypeMetaclass(type):
 
         fields = sorted(fields, key=lambda item: item[1]._creation_counter)
         attrs["fields"] = dict(fields)
-        return super(TypeMetaclass, cls).__new__(cls, name, bases, attrs)
+        return super(TypeSchemaMetaclass, cls).__new__(cls, name, bases, attrs)
 
 
-class Type(metaclass=TypeMetaclass):
+class TypeSchema(Mapping, metaclass=TypeSchemaMetaclass):
     def __init__(self, *args, **kwargs):
         if args:
             assert len(args) == 1
@@ -45,8 +40,6 @@ class Type(metaclass=TypeMetaclass):
                 setattr(self, key, item.pop(key))
             elif schema.has_default():
                 setattr(self, key, schema.default)
-            else:
-                raise TypeError("Missing required argument {key!r}")
 
         if item:
             key = list(item.keys())[0]
@@ -71,3 +64,18 @@ class Type(metaclass=TypeMetaclass):
             if getattr(self, key) != getattr(other, key):
                 return False
         return True
+
+    def __getitem__(self, key):
+        if key not in self.fields or not hasattr(self, key):
+            raise KeyError(key)
+        field = self.fields[key]
+        value = getattr(self, key)
+        return field.serialize(value)
+
+    def __iter__(self):
+        for key in self.fields:
+            if hasattr(self, key):
+                yield key
+
+    def __len__(self):
+        return len([key for key in self.fields if hasattr(self, key)])

@@ -5,8 +5,8 @@ from typesystem.validators import (
     Boolean,
     Date,
     DateTime,
+    Float,
     Integer,
-    Number,
     Object,
     String,
     Time,
@@ -153,84 +153,84 @@ def test_integer():
     assert validated.errors == ["multiple_of"]
 
 
-def test_number():
-    validator = Number()
+def test_float():
+    validator = Float()
     validated = validator.validate(123.1)
     assert validated.value == 123.1
 
-    validator = Number()
+    validator = Float()
     validated = validator.validate(123)
     assert validated.value == 123.0
 
-    validator = Number()
+    validator = Float()
     validated = validator.validate("123.1")
     assert validated.value == 123.1
 
-    validator = Number()
+    validator = Float()
     validated = validator.validate(None)
     assert validated.errors == ["null"]
 
-    validator = Number()
+    validator = Float()
     validated = validator.validate("abc")
     assert validated.errors == ["type"]
 
-    validator = Number()
+    validator = Float()
     validated = validator.validate(True)
     assert validated.errors == ["type"]
 
-    validator = Number()
+    validator = Float()
     validated = validator.validate(float("inf"))
     assert validated.errors == ["finite"]
 
-    validator = Number()
+    validator = Float()
     validated = validator.validate(float("nan"))
     assert validated.errors == ["finite"]
 
-    validator = Number()
+    validator = Float()
     validated = validator.validate("123", strict=True)
     assert validated.errors == ["type"]
 
-    validator = Number(allow_null=True)
+    validator = Float(allow_null=True)
     validated = validator.validate(None)
     assert validated.value is None
 
-    validator = Number(maximum=10.0)
+    validator = Float(maximum=10.0)
     validated = validator.validate(100.0)
     assert validated.errors == ["maximum"]
 
-    validator = Number(maximum=10.0)
+    validator = Float(maximum=10.0)
     validated = validator.validate(10.0)
     assert validated.value == 10.0
 
-    validator = Number(minimum=3.0)
+    validator = Float(minimum=3.0)
     validated = validator.validate(1.0)
     assert validated.errors == ["minimum"]
 
-    validator = Number(minimum=3.0)
+    validator = Float(minimum=3.0)
     validated = validator.validate(3.0)
     assert validated.value == 3.0
 
-    validator = Number(exclusive_maximum=10.0)
+    validator = Float(exclusive_maximum=10.0)
     validated = validator.validate(10.0)
     assert validated.errors == ["exclusive_maximum"]
 
-    validator = Number(exclusive_minimum=3.0)
+    validator = Float(exclusive_minimum=3.0)
     validated = validator.validate(3.0)
     assert validated.errors == ["exclusive_minimum"]
 
-    validator = Number(enum=[1.0, 2.0, 3.0])
+    validator = Float(enum=[1.0, 2.0, 3.0])
     validated = validator.validate(5.0)
     assert validated.errors == ["enum"]
 
-    validator = Number(enum=[123.0])
+    validator = Float(enum=[123.0])
     validated = validator.validate(5.0)
     assert validated.errors == ["exact"]
 
-    validator = Number(exact=123.0)
+    validator = Float(exact=123.0)
     validated = validator.validate(5.0)
     assert validated.errors == ["exact"]
 
-    validator = Number(multiple_of=10.0)
+    validator = Float(multiple_of=10.0)
     validated = validator.validate(5.0)
     assert validated.errors == ["multiple_of"]
 
@@ -457,6 +457,13 @@ def test_datetime():
     validator = DateTime()
     validated = validator.validate("2049-01-01 12:00:60")
     assert validated.errors == ["invalid"]
+
+
+def test_validated_result_interface():
+    validator = String()
+    value, errors = validator.validate("abc")
+    assert value == "abc"
+    assert not errors
 
 
 def test_errors_dict_interface():

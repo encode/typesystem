@@ -29,6 +29,9 @@ class BaseFormat:
     def validate(self, value):
         raise NotImplementedError()  # pragma: no cover
 
+    def serialize(self, obj):
+        raise NotImplementedError()  # pragma: no cover
+
 
 class DateFormat(BaseFormat):
     errors = {
@@ -49,6 +52,9 @@ class DateFormat(BaseFormat):
             return datetime.date(**kwargs)
         except ValueError:
             return self.error("invalid")
+
+    def serialize(self, obj):
+        return obj.isoformat()
 
 
 class TimeFormat(BaseFormat):
@@ -74,6 +80,9 @@ class TimeFormat(BaseFormat):
             return datetime.time(**kwargs)
         except ValueError:
             return self.error("invalid")
+
+    # def serialize(self, obj):
+    #     return obj.isoformat()
 
 
 class DateTimeFormat(BaseFormat):
@@ -110,3 +119,9 @@ class DateTimeFormat(BaseFormat):
             return datetime.datetime(**kwargs)
         except ValueError:
             return self.error("invalid")
+
+    # def serialize(self, obj):
+    #     value = value.isoformat()
+    #     if value.endswith('+00:00'):
+    #         value = value[:-6] + 'Z'
+    #     return value
