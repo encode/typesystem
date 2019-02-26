@@ -10,9 +10,13 @@ class Contact(Schema):
     d = Text(enum=["abc", "def", "ghi"])
 
 
-def test_forms():
-    forms = Jinja2Forms()
+forms = Jinja2Forms()
 
-    html = forms.render_form(Contact)
+
+def test_forms():
+    class ContactForm(forms.Form):
+        schema = Contact
+
+    html = str(ContactForm())
 
     assert html

@@ -22,7 +22,7 @@ from starlette.responses import JSONResponse
 from starlette.routing import Route
 import typesystem
 
-users = []
+users = []  # Mock datastore. This'll only work if running a single instance.
 
 
 class User(typesystem.Schema):
@@ -54,12 +54,15 @@ app = Starlette(routes=[
 ```python
 from starlette.applications import Starlette
 from starlette.routing import Route, Mount
+from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
 import typesystem
 
 
 forms = typesystem.Jinja2Forms(package="bootstrap4")
 templates = Jinja2Templates(directory="templates")
+statics = StaticFiles(directory="statics", packages=["bootstrap4"])
+
 users = []
 
 
@@ -72,7 +75,7 @@ class UserForm(forms.Form):
     schema = User
 
 
-async def list_users(request):
+async def homepage(request):
     form = UserForm()
     return templates.TemplateResponse('index.html', {'users': users, 'form': form})
 
@@ -84,12 +87,12 @@ async def add_user(request):
         form = UserForm(values=data, errors=errors)
         return templates.TemplateResponse('index.html', {'form': form}, status_code=400)
     users.append(user)
-    return RedirectResponse(url=request.url_for('list_users'))
+    return RedirectResponse(url=request.url_for('homepage'))
 
 
 app = Starlette(routes=[
-    Route(path='/', func=list_users, method="GET"),
-    Route(path='/', func=add_user, method="POST"),
-    Mount(path='/static', app=StaticFiles(packages=["bootstrap4"]), name="static")
+    Route('/', homepage, methods=['GET']),
+    Route('/', add_user, methods=['POST']),
+    Mount('/static', app=statics, name='static')
 ])
 ```
