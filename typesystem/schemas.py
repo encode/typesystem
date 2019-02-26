@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from typesystem import validators
 
 
-class TypeSchemaMetaclass(ABCMeta):
+class SchemaMetaclass(ABCMeta):
     def __new__(cls, name, bases, attrs):
         fields = []
         for key, value in list(attrs.items()):
@@ -23,10 +23,10 @@ class TypeSchemaMetaclass(ABCMeta):
 
         fields = sorted(fields, key=lambda item: item[1]._creation_counter)
         attrs["fields"] = dict(fields)
-        return super(TypeSchemaMetaclass, cls).__new__(cls, name, bases, attrs)
+        return super(SchemaMetaclass, cls).__new__(cls, name, bases, attrs)
 
 
-class TypeSchema(Mapping, metaclass=TypeSchemaMetaclass):
+class Schema(Mapping, metaclass=SchemaMetaclass):
     def __init__(self, *args, **kwargs):
         if args:
             assert len(args) == 1

@@ -20,13 +20,14 @@
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
+import typesystem
 
 users = []
 
 
-class User(TypeSchema):
-    username = String(max_length=100)
-    is_admin = Boolean()
+class User(typesystem.Schema):
+    username = typesystem.String(max_length=100)
+    is_admin = typesystem.Boolean()
 
 
 async def list_users(request):
@@ -62,7 +63,7 @@ templates = Jinja2Templates(directory="templates")
 users = []
 
 
-class User(typesystem.TypeSchema):
+class User(typesystem.Schema):
     username = typesystem.String(max_length=100)
     is_admin = typesystem.Boolean()
 

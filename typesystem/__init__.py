@@ -1,4 +1,4 @@
-from typesystem.schemas import TypeSchema
+from typesystem.schemas import Schema
 from typesystem.validators import (
     Validator,
     Boolean,
@@ -24,5 +24,6 @@ __all__ = [
     "Float",
     "Object",
     "String",
-    "Text" "Time",
+    "Text",
+    "Time",
 ]

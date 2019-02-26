@@ -2,21 +2,21 @@ import datetime
 
 import pytest
 
-from typesystem.schemas import TypeSchema
+from typesystem.schemas import Schema
 from typesystem.validators import Date, Integer, String, Text
 
 
-class Person(TypeSchema):
+class Person(Schema):
     name = String(max_length=100, allow_blank=False)
     age = Integer()
 
 
-class Product(TypeSchema):
+class Product(Schema):
     name = String(max_length=100, allow_blank=False)
     rating = Integer(default=None)
 
 
-def test_typeschema_validation():
+def test_schema_validation():
     validated = Person.validate({"name": "Tom", "age": "123"})
     assert validated.value == Person(name="Tom", age=123)
 
@@ -30,7 +30,7 @@ def test_typeschema_validation():
     assert dict(validated.errors) == {"age": 'The "age" field is required.'}
 
 
-def test_typeschema_eq():
+def test_schema_eq():
     tom = Person(name="Tom", age=123)
     lucy = Person(name="Lucy", age=123)
     assert tom != lucy
@@ -40,7 +40,7 @@ def test_typeschema_eq():
     assert tom != tshirt
 
 
-def test_typeschema_instantiation():
+def test_schema_instantiation():
     tshirt = Product(name="T-Shirt")
     assert tshirt.name == "T-Shirt"
     assert tshirt.rating == None
@@ -52,14 +52,14 @@ def test_typeschema_instantiation():
         Product(name="T-Shirt", other="Invalid")
 
 
-def test_typeschema_subclass():
+def test_schema_subclass():
     class DetailedProduct(Product):
         info = Text()
 
     assert set(DetailedProduct.fields.keys()) == {"name", "rating", "info"}
 
 
-def test_typeschema_serialization():
+def test_schema_serialization():
     tshirt = Product(name="T-Shirt")
 
     data = dict(tshirt)
@@ -67,7 +67,7 @@ def test_typeschema_serialization():
     assert data == {"name": "T-Shirt", "rating": None}
 
 
-def test_typeschema_len():
+def test_schema_len():
     tshirt = Product(name="T-Shirt")
 
     count = len(tshirt)
@@ -75,20 +75,20 @@ def test_typeschema_len():
     assert count == 2
 
 
-def test_typeschema_getattr():
+def test_schema_getattr():
     tshirt = Product(name="T-Shirt")
     assert tshirt["name"] == "T-Shirt"
 
 
-def test_typeschema_missing_getattr():
+def test_schema_missing_getattr():
     tshirt = Product(name="T-Shirt")
 
     with pytest.raises(KeyError):
         assert tshirt["missing"]
 
 
-def test_typeschema_format_serialization():
-    class BlogPost(TypeSchema):
+def test_schema_format_serialization():
+    class BlogPost(Schema):
         text = String()
         created = Date()
 
