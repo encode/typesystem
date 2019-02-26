@@ -51,7 +51,7 @@ class Schema(Mapping, metaclass=SchemaMetaclass):
         validator = validators.Object(
             properties=cls.fields,
             required=required,
-            additional_properties=None,
+            additional_properties=False if strict else None,
             coerce=cls,
         )
         return validator.validate(value, strict=strict)
