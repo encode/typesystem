@@ -368,11 +368,11 @@ class Object(Field):
         required = [] if (required is None) else required
 
         assert all(isinstance(k, str) for k in properties.keys())
-        assert all(hasattr(v, "validate") for v in properties.values())
+        assert all(isinstance(v, Field) for v in properties.values())
         assert all(isinstance(k, str) for k in pattern_properties.keys())
-        assert all(hasattr(v, "validate") for v in pattern_properties.values())
-        assert additional_properties in (None, True, False) or hasattr(
-            additional_properties, "validate"
+        assert all(isinstance(v, Field) for v in pattern_properties.values())
+        assert additional_properties in (None, True, False) or isinstance(
+            additional_properties, Field
         )
         assert min_properties is None or isinstance(min_properties, int)
         assert max_properties is None or isinstance(max_properties, int)
