@@ -2,14 +2,14 @@ import jinja2
 
 from typesystem.forms import Jinja2Forms
 from typesystem.schemas import Schema
-from typesystem.validators import Boolean, String, Text
+from typesystem.validators import Boolean, Choice, String, Text
 
 
 class Contact(Schema):
     a = Boolean()
     b = String(max_length=10)
     c = Text()
-    d = Text(enum=["abc", "def", "ghi"])
+    d = Choice(choices=["abc", "def", "ghi"])
 
 
 forms = Jinja2Forms()

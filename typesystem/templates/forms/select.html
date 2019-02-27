@@ -11,7 +11,7 @@
     </select>
 
     {% if error %}
-        <div class="invalid-feedback">{{ error }}</div>
+        <small class="invalid-feedback">{{ error }}</small>
     {% elif field.description %}
         <small class="form-text text-muted">{{ field.description }}</small>
     {% endif %}

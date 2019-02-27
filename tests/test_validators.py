@@ -3,6 +3,7 @@ import datetime
 from typesystem.base import ErrorMessage
 from typesystem.validators import (
     Boolean,
+    Choice,
     Date,
     DateTime,
     Float,
@@ -45,22 +46,6 @@ def test_string():
     validator = String(allow_null=True)
     validated = validator.validate(None)
     assert validated.value is None
-
-    validator = String(exact="example")
-    validated = validator.validate("foo")
-    assert validated.errors == ["exact"]
-
-    validator = String(exact="example")
-    validated = validator.validate("example")
-    assert validated.value == "example"
-
-    validator = String(enum=["red", "blue", "green"])
-    validated = validator.validate("foo")
-    assert validated.errors == ["enum"]
-
-    validator = String(enum=["red", "blue", "green"])
-    validated = validator.validate("red")
-    assert validated.value == "red"
 
     validator = String(pattern="^[abc]*$")
     validated = validator.validate("cba")
@@ -140,18 +125,6 @@ def test_integer():
     validated = validator.validate(3)
     assert validated.errors == ["exclusive_minimum"]
 
-    validator = Integer(enum=[1, 2, 3])
-    validated = validator.validate(5)
-    assert validated.errors == ["enum"]
-
-    validator = Integer(enum=[123])
-    validated = validator.validate(5)
-    assert validated.errors == ["exact"]
-
-    validator = Integer(exact=123)
-    validated = validator.validate(5)
-    assert validated.errors == ["exact"]
-
     validator = Integer(multiple_of=10)
     validated = validator.validate(5)
     assert validated.errors == ["multiple_of"]
@@ -222,18 +195,6 @@ def test_float():
     validated = validator.validate(3.0)
     assert validated.errors == ["exclusive_minimum"]
 
-    validator = Float(enum=[1.0, 2.0, 3.0])
-    validated = validator.validate(5.0)
-    assert validated.errors == ["enum"]
-
-    validator = Float(enum=[123.0])
-    validated = validator.validate(5.0)
-    assert validated.errors == ["exact"]
-
-    validator = Float(exact=123.0)
-    validated = validator.validate(5.0)
-    assert validated.errors == ["exact"]
-
     validator = Float(multiple_of=10.0)
     validated = validator.validate(5.0)
     assert validated.errors == ["multiple_of"]
@@ -275,6 +236,40 @@ def test_boolean():
     validator = Boolean()
     validated = validator.validate("True", strict=True)
     assert validated.errors == ["type"]
+
+
+def test_choice():
+    validator = Choice(choices=["red", "blue", "green"])
+    validated = validator.validate("foo")
+    assert validated.errors == ["choice"]
+
+    validator = Choice(choices=["red", "blue", "green"])
+    validated = validator.validate("red")
+    assert validated.value == "red"
+
+    validator = Choice(choices=["red", "blue", "green"])
+    validated = validator.validate(None)
+    assert validated.errors == ["null"]
+
+    validator = Choice(choices=["red", "blue", "green"], allow_null=True)
+    validated = validator.validate(None)
+    assert validated.value == None
+
+    validator = Choice(choices={"R": "red", "B": "blue", "G": "green"})
+    validated = validator.validate("Z")
+    assert validated.errors == ["choice"]
+
+    validator = Choice(choices={"R": "red", "B": "blue", "G": "green"})
+    validated = validator.validate("R")
+    assert validated.value == "R"
+
+    validator = Choice(choices=[("R", "red"), ("B", "blue"), ("G", "green")])
+    validated = validator.validate("Z")
+    assert validated.errors == ["choice"]
+
+    validator = Choice(choices=[("R", "red"), ("B", "blue"), ("G", "green")])
+    validated = validator.validate("R")
+    assert validated.value == "R"
 
 
 def test_object():

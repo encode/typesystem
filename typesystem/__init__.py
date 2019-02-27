@@ -3,6 +3,7 @@ from typesystem.schemas import Schema
 from typesystem.validators import (
     Validator,
     Boolean,
+    Choice,
     Date,
     DateTime,
     Integer,
@@ -20,6 +21,7 @@ __all__ = [
     "Schema",
     "Validator",
     "Boolean",
+    "Choice",
     "Date",
     "DateTime",
     "Integer",
