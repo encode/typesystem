@@ -1,19 +1,19 @@
 import datetime
+import decimal
 
 import pytest
 
-from typesystem.schemas import Schema
-from typesystem.validators import Date, Integer, String, Text
+import typesystem
 
 
-class Person(Schema):
-    name = String(max_length=100, allow_blank=False)
-    age = Integer()
+class Person(typesystem.Schema):
+    name = typesystem.String(max_length=100, allow_blank=False)
+    age = typesystem.Integer()
 
 
-class Product(Schema):
-    name = String(max_length=100, allow_blank=False)
-    rating = Integer(default=None)
+class Product(typesystem.Schema):
+    name = typesystem.String(max_length=100, allow_blank=False)
+    rating = typesystem.Integer(default=None)
 
 
 def test_schema_validation():
@@ -51,10 +51,16 @@ def test_schema_instantiation():
     with pytest.raises(TypeError):
         Product(name="T-Shirt", other="Invalid")
 
+    with pytest.raises(TypeError):
+        Product(name="x" * 1000)
+
+    tshirt = Product(name="T-Shirt")
+    assert Product(tshirt) == tshirt
+
 
 def test_schema_subclass():
     class DetailedProduct(Product):
-        info = Text()
+        info = typesystem.Text()
 
     assert set(DetailedProduct.fields.keys()) == {"name", "rating", "info"}
 
@@ -88,9 +94,9 @@ def test_schema_missing_getattr():
 
 
 def test_schema_format_serialization():
-    class BlogPost(Schema):
-        text = String()
-        created = Date()
+    class BlogPost(typesystem.Schema):
+        text = typesystem.String()
+        created = typesystem.Date()
 
     post = BlogPost(text="Hi", created=datetime.date.today())
 
@@ -98,3 +104,14 @@ def test_schema_format_serialization():
 
     assert data["text"] == "Hi"
     assert data["created"] == datetime.date.today().isoformat()
+
+
+def test_schema_decimal_serialization():
+    class InventoryItem(typesystem.Schema):
+        name = typesystem.String()
+        price = typesystem.Decimal(precision="0.01")
+
+    item = InventoryItem(name="Example", price=123.45)
+
+    assert item.price == decimal.Decimal("123.45")
+    assert item["price"] == 123.45

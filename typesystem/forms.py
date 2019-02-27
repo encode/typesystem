@@ -3,7 +3,7 @@ try:
 except ImportError:  # pragma: no cover
     jinja2 = None  # type: ignore
 
-from typesystem import validators
+from typesystem import fields
 
 
 class Form:
@@ -43,11 +43,11 @@ class Form:
         )
 
     def template_for_field(self, field):
-        if isinstance(field, validators.Choice):
+        if isinstance(field, fields.Choice):
             return "forms/select.html"
-        elif isinstance(field, validators.Boolean):
+        elif isinstance(field, fields.Boolean):
             return "forms/checkbox.html"
-        if isinstance(field, validators.String) and field.format == "text":
+        if isinstance(field, fields.String) and field.format == "text":
             return "forms/textarea.html"
         return "forms/input.html"
 

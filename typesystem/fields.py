@@ -1,3 +1,4 @@
+import decimal
 import re
 import typing
 from math import isfinite
@@ -14,7 +15,7 @@ FORMATS = {
 }
 
 
-class Validator:
+class Field:
     errors = {}
     _creation_counter = 0
 
@@ -48,9 +49,9 @@ class Validator:
         self.def_name = def_name
 
         # We need this global counter to determine what order fields have
-        # been declared in when used with `Type`.
-        self._creation_counter = Validator._creation_counter
-        Validator._creation_counter += 1
+        # been declared in when used with `Schema`.
+        self._creation_counter = Field._creation_counter
+        Field._creation_counter += 1
 
     def validate(self, value, strict=False):
         result = self.validate_value(value, strict=strict)
@@ -80,7 +81,7 @@ class Validator:
         return ErrorMessage(text=text, code=code, index=index)
 
 
-class String(Validator):
+class String(Field):
     errors = {
         "type": "Must be a string.",
         "null": "May not be null.",
@@ -150,7 +151,7 @@ class String(Validator):
         return obj
 
 
-class NumericType(Validator):
+class NumericType(Field):
     """
     Base class for both `Number` and `Integer`.
     """
@@ -174,6 +175,7 @@ class NumericType(Validator):
         maximum=None,
         exclusive_minimum=None,
         exclusive_maximum=None,
+        precision=None,
         multiple_of=None,
         format=None,
         **kwargs
@@ -201,6 +203,7 @@ class NumericType(Validator):
         self.exclusive_maximum = exclusive_maximum
         self.multiple_of = multiple_of
         self.format = format
+        self.precision = precision
 
     def validate_value(self, value, strict=False):
         if value is None and self.allow_null:
@@ -224,6 +227,14 @@ class NumericType(Validator):
             value = self.numeric_type(value)
         except (TypeError, ValueError):
             return self.error("type")
+
+        if self.precision is not None:
+            quantize_val = decimal.Decimal(self.precision)
+            decimal_val = decimal.Decimal(value)
+            decimal_val = decimal_val.quantize(
+                quantize_val, rounding=decimal.ROUND_HALF_UP
+            )
+            value = self.numeric_type(decimal_val)
 
         if self.minimum is not None and value < self.minimum:
             return self.error("minimum")
@@ -252,7 +263,14 @@ class Float(NumericType):
     numeric_type = float
 
 
-class Boolean(Validator):
+class Decimal(NumericType):
+    numeric_type = decimal.Decimal
+
+    def serialize(self, obj):
+        return float(obj)
+
+
+class Boolean(Field):
     errors = {"type": "Must be a valid boolean.", "null": "May not be null."}
     coerce_values = {
         "true": True,
@@ -294,7 +312,7 @@ class Boolean(Validator):
         return value
 
 
-class Choice(Validator):
+class Choice(Field):
     errors = {"null": "May not be null.", "choice": "Not a valid choice."}
 
     def __init__(self, choices, **kwargs):
@@ -317,7 +335,7 @@ class Choice(Validator):
         return value
 
 
-class Object(Validator):
+class Object(Field):
     errors = {
         "type": "Must be an object.",
         "null": "May not be null.",
@@ -465,7 +483,7 @@ class Object(Validator):
         return validated
 
 
-# class Array(Validator):
+# class Array(Field):
 #     errors = {
 #         'type': 'Must be an array.',
 #         'null': 'May not be null.',
