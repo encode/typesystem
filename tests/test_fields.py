@@ -1,7 +1,7 @@
 import datetime
 
 from typesystem.base import ErrorMessage
-from typesystem.validators import (
+from typesystem.fields import (
     Boolean,
     Choice,
     Date,

@@ -2,18 +2,17 @@ import datetime
 
 import pytest
 
-from typesystem.schemas import Schema
-from typesystem.validators import Date, Integer, String, Text
+import typesystem
 
 
-class Person(Schema):
-    name = String(max_length=100, allow_blank=False)
-    age = Integer()
+class Person(typesystem.Schema):
+    name = typesystem.String(max_length=100, allow_blank=False)
+    age = typesystem.Integer()
 
 
-class Product(Schema):
-    name = String(max_length=100, allow_blank=False)
-    rating = Integer(default=None)
+class Product(typesystem.Schema):
+    name = typesystem.String(max_length=100, allow_blank=False)
+    rating = typesystem.Integer(default=None)
 
 
 def test_schema_validation():
@@ -54,7 +53,7 @@ def test_schema_instantiation():
 
 def test_schema_subclass():
     class DetailedProduct(Product):
-        info = Text()
+        info = typesystem.Text()
 
     assert set(DetailedProduct.fields.keys()) == {"name", "rating", "info"}
 
@@ -88,9 +87,9 @@ def test_schema_missing_getattr():
 
 
 def test_schema_format_serialization():
-    class BlogPost(Schema):
-        text = String()
-        created = Date()
+    class BlogPost(typesystem.Schema):
+        text = typesystem.String()
+        created = typesystem.Date()
 
     post = BlogPost(text="Hi", created=datetime.date.today())
 

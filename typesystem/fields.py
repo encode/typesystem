@@ -14,7 +14,7 @@ FORMATS = {
 }
 
 
-class Validator:
+class Field:
     errors = {}
     _creation_counter = 0
 
@@ -48,9 +48,9 @@ class Validator:
         self.def_name = def_name
 
         # We need this global counter to determine what order fields have
-        # been declared in when used with `Type`.
-        self._creation_counter = Validator._creation_counter
-        Validator._creation_counter += 1
+        # been declared in when used with `Schema`.
+        self._creation_counter = Field._creation_counter
+        Field._creation_counter += 1
 
     def validate(self, value, strict=False):
         result = self.validate_value(value, strict=strict)
@@ -80,7 +80,7 @@ class Validator:
         return ErrorMessage(text=text, code=code, index=index)
 
 
-class String(Validator):
+class String(Field):
     errors = {
         "type": "Must be a string.",
         "null": "May not be null.",
@@ -150,7 +150,7 @@ class String(Validator):
         return obj
 
 
-class NumericType(Validator):
+class NumericType(Field):
     """
     Base class for both `Number` and `Integer`.
     """
@@ -252,7 +252,7 @@ class Float(NumericType):
     numeric_type = float
 
 
-class Boolean(Validator):
+class Boolean(Field):
     errors = {"type": "Must be a valid boolean.", "null": "May not be null."}
     coerce_values = {
         "true": True,
@@ -294,7 +294,7 @@ class Boolean(Validator):
         return value
 
 
-class Choice(Validator):
+class Choice(Field):
     errors = {"null": "May not be null.", "choice": "Not a valid choice."}
 
     def __init__(self, choices, **kwargs):
@@ -317,7 +317,7 @@ class Choice(Validator):
         return value
 
 
-class Object(Validator):
+class Object(Field):
     errors = {
         "type": "Must be an object.",
         "null": "May not be null.",
@@ -465,7 +465,7 @@ class Object(Validator):
         return validated
 
 
-# class Array(Validator):
+# class Array(Field):
 #     errors = {
 #         'type': 'Must be an array.',
 #         'null': 'May not be null.',

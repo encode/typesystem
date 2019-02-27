@@ -1,14 +1,14 @@
 from abc import ABCMeta
 from collections.abc import Mapping
 
-from typesystem import validators
+from typesystem.fields import Field, Object
 
 
 class SchemaMetaclass(ABCMeta):
     def __new__(cls, name, bases, attrs):
         fields = []
         for key, value in list(attrs.items()):
-            if isinstance(value, validators.Validator):
+            if isinstance(value, Field):
                 attrs.pop(key)
                 fields.append((key, value))
 
@@ -48,7 +48,7 @@ class Schema(Mapping, metaclass=SchemaMetaclass):
     @classmethod
     def validate(cls, value, strict=False):
         required = [key for key, value in cls.fields.items() if not value.has_default()]
-        validator = validators.Object(
+        validator = Object(
             properties=cls.fields,
             required=required,
             additional_properties=False if strict else None,

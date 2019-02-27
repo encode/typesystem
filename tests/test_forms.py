@@ -1,18 +1,16 @@
 import jinja2
 
-from typesystem.forms import Jinja2Forms
-from typesystem.schemas import Schema
-from typesystem.validators import Boolean, Choice, String, Text
+import typesystem
 
 
-class Contact(Schema):
-    a = Boolean()
-    b = String(max_length=10)
-    c = Text()
-    d = Choice(choices=["abc", "def", "ghi"])
+class Contact(typesystem.Schema):
+    a = typesystem.Boolean()
+    b = typesystem.String(max_length=10)
+    c = typesystem.Text()
+    d = typesystem.Choice(choices=["abc", "def", "ghi"])
 
 
-forms = Jinja2Forms()
+forms = typesystem.Jinja2Forms()
 
 
 def test_form_rendering():
