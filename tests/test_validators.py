@@ -19,6 +19,10 @@ def test_string():
     assert validated
 
     validator = String()
+    validated = validator.validate("")
+    assert validated.errors == ["blank"]
+
+    validator = String()
     validated = validator.validate(None)
     assert validated.errors == ["null"]
 

@@ -1,3 +1,5 @@
+import jinja2
+
 from typesystem.forms import Jinja2Forms
 from typesystem.schemas import Schema
 from typesystem.validators import Boolean, String, Text
@@ -13,10 +15,21 @@ class Contact(Schema):
 forms = Jinja2Forms()
 
 
-def test_forms():
-    class ContactForm(forms.Form):
-        schema = Contact
+def test_form_rendering():
+    form = forms.Form(Contact)
 
-    html = str(ContactForm())
+    html = str(form)
 
-    assert html
+    assert html.count('<input type="checkbox" ') == 1
+    assert html.count('<input type="text" ') == 1
+    assert html.count("<textarea ") == 1
+    assert html.count("<select ") == 1
+
+
+def test_form_html():
+    form = forms.Form(Contact)
+
+    markup = form.__html__()
+
+    assert isinstance(markup, jinja2.Markup)
+    assert str(markup) == str(form)

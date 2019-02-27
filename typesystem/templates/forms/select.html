@@ -1,0 +1,18 @@
+<div class="form-group">
+    <label for="{{ field_id }}">
+        {{ label }}
+    </label>
+
+    <select class="form-control {% if error %}is-invalid{% endif %}" id="{{ field_id }}" name="{{ field_name }}">
+        <option></option>
+        {% for choice in field.enum %}
+            <option value="{{ choice }}" {% if value == choice %}selected{% endif %}>{{ choice }}</option>
+        {% endfor %}
+    </select>
+
+    {% if error %}
+        <div class="invalid-feedback">{{ error }}</div>
+    {% elif field.description %}
+        <small class="form-text text-muted">{{ field.description }}</small>
+    {% endif %}
+</div>

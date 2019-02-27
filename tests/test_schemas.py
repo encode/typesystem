@@ -27,7 +27,7 @@ def test_schema_validation():
     assert dict(validated.errors) == {"age": "Must be a number."}
 
     validated = Person.validate({"name": "Tom"})
-    assert dict(validated.errors) == {"age": 'The "age" field is required.'}
+    assert dict(validated.errors) == {"age": "This field is required."}
 
 
 def test_schema_eq():
