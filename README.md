@@ -27,7 +27,7 @@ users = []  # Mock datastore. This'll only work if running a single instance.
 
 class User(typesystem.Schema):
     username = typesystem.String(max_length=100)
-    is_admin = typesystem.Boolean()
+    is_admin = typesystem.Boolean(default=False)
 
 
 async def list_users(request):
@@ -68,15 +68,11 @@ users = []
 
 class User(typesystem.Schema):
     username = typesystem.String(max_length=100)
-    is_admin = typesystem.Boolean()
-
-
-class UserForm(forms.Form):
-    schema = User
+    is_admin = typesystem.Boolean(default=False)
 
 
 async def homepage(request):
-    form = UserForm()
+    form = forms.Form(User)
     return templates.TemplateResponse('index.html', {'users': users, 'form': form})
 
 
@@ -84,7 +80,7 @@ async def add_user(request):
     data = await request.form()
     user, errors = User.validate(data)
     if errors:
-        form = UserForm(values=data, errors=errors)
+        form = forms.Form(User, values=data, errors=errors)
         return templates.TemplateResponse('index.html', {'form': form}, status_code=400)
     users.append(user)
     return RedirectResponse(url=request.url_for('homepage'))

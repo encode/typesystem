@@ -1,0 +1,13 @@
+<div class="form-check">
+    <input type="checkbox" class="form-check-input {% if error %}is-invalid{% endif %}" id="{{ field_id }}" name="{{ field_name }}" value="true" {% if value %}checked{% endif %}>
+
+    <label class="form-check-label" for="{{ field_id }}">
+        {{ label }}
+    </label>
+
+    {% if error %}
+        <small class="invalid-feedback">{{ error }}</small>
+    {% elif field.description %}
+        <small class="form-text text-muted">{{ field.description }}</small>
+    {% endif %}
+</div>

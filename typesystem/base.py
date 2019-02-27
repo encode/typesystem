@@ -1,4 +1,5 @@
 import typing
+from collections.abc import Mapping
 
 
 class ErrorMessage:
@@ -24,7 +25,7 @@ class ErrorMessage:
         return ErrorMessage(text=self.text, code=self.code, index=index)
 
 
-class ErrorMessages:
+class ErrorMessages(Mapping):
     def __init__(self, messages: typing.List[ErrorMessage] = None):
         self._messages = [] if messages is None else messages
 

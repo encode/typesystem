@@ -95,12 +95,12 @@ class String(Validator):
 
     def __init__(
         self,
+        allow_blank=False,
         max_length=None,
         min_length=None,
         pattern=None,
         enum=None,
         format=None,
-        allow_blank=True,
         exact=None,
         **kwargs
     ):
@@ -116,14 +116,11 @@ class String(Validator):
         )
         assert format is None or isinstance(format, str)
 
-        if not allow_blank:
-            assert min_length is None
-            min_length = 1
-
         if exact is not None:
             assert enum is None
             enum = [exact]
 
+        self.allow_blank = allow_blank
         self.max_length = max_length
         self.min_length = min_length
         self.pattern = pattern
@@ -140,6 +137,9 @@ class String(Validator):
         elif not isinstance(value, str):
             return self.error("type")
 
+        if not self.allow_blank and not value:
+            return self.error("blank")
+
         if self.enum is not None:
             if value not in self.enum:
                 if len(self.enum) == 1:
@@ -148,10 +148,7 @@ class String(Validator):
 
         if self.min_length is not None:
             if len(value) < self.min_length:
-                if self.min_length == 1:
-                    return self.error("blank")
-                else:
-                    return self.error("min_length")
+                return self.error("min_length")
 
         if self.max_length is not None:
             if len(value) > self.max_length:
@@ -341,7 +338,7 @@ class Object(Validator):
         "type": "Must be an object.",
         "null": "May not be null.",
         "invalid_key": "All object keys must be strings.",
-        "required": 'The "{field_name}" field is required.',
+        "required": "This field is required.",
         "invalid_property": "Invalid property name.",
         "empty": "Must not be empty.",
         "max_properties": "Must have no more than {max_properties} properties.",
