@@ -1,7 +1,7 @@
 import datetime
 import re
 
-from typesystem.base import ErrorMessage
+from typesystem.base import ValidationError
 
 DATE_REGEX = re.compile(r"(?P<year>\d{4})-(?P<month>\d{1,2})-(?P<day>\d{1,2})$")
 
@@ -21,7 +21,7 @@ DATETIME_REGEX = re.compile(
 class BaseFormat:
     def error(self, code, **context):
         text = self.errors[code].format(**self.__dict__, **context)
-        return ErrorMessage(text=text, code=code)
+        return ValidationError(text=text, code=code)
 
     def is_native_type(self, value):
         raise NotImplementedError()  # pragma: no cover
@@ -35,7 +35,7 @@ class BaseFormat:
 
 class DateFormat(BaseFormat):
     errors = {
-        "format": "Must be in a valid date format.",
+        "format": "Must be a valid date format.",
         "invalid": "Must be a real date.",
     }
 

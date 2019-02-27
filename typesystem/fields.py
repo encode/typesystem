@@ -4,7 +4,7 @@ import typing
 from math import isfinite
 
 from typesystem import formats
-from typesystem.base import ErrorMessage, ErrorMessages, ValidationResult
+from typesystem.base import ErrorMessage, ValidationError, ValidationResult
 
 NO_DEFAULT = object()
 
@@ -56,15 +56,9 @@ class Field:
     def validate(self, value, strict=False):
         result = self.validate_value(value, strict=strict)
 
-        if isinstance(result, ErrorMessage):
-            errors = ErrorMessages([result])
-        elif isinstance(result, ErrorMessages):
-            errors = result
-        else:
-            value = result
-            errors = None
-
-        return ValidationResult(value, errors=errors)
+        if isinstance(result, ValidationError):
+            return ValidationResult(value=None, error=result)
+        return ValidationResult(value=result, error=None)
 
     def validate_value(self, value):
         raise NotImplementedError()  # pragma: no cover
@@ -75,9 +69,12 @@ class Field:
     def has_default(self):
         return hasattr(self, "default")
 
-    def error(self, code, context=None, index=None):
-        context = {} if context is None else context
-        text = self.errors[code].format(**self.__dict__, **context)
+    def error(self, code):
+        text = self.errors[code].format(**self.__dict__)
+        return ValidationError(text=text, code=code)
+
+    def error_message(self, code, index=None):
+        text = self.errors[code].format(**self.__dict__)
         return ErrorMessage(text=text, code=code, index=index)
 
 
@@ -163,9 +160,9 @@ class NumericType(Field):
         "integer": "Must be an integer.",
         "finite": "Must be finite.",
         "minimum": "Must be greater than or equal to {minimum}.",
-        "exclusive_minimum": "Must be greater than {minimum}.",
+        "exclusive_minimum": "Must be greater than {exclusive_minimum}.",
         "maximum": "Must be less than or equal to {maximum}.",
-        "exclusive_maximum": "Must be less than {maximum}.",
+        "exclusive_maximum": "Must be less than {exclusive_maximum}.",
         "multiple_of": "Must be a multiple of {multiple_of}.",
     }
 
@@ -271,7 +268,7 @@ class Decimal(NumericType):
 
 
 class Boolean(Field):
-    errors = {"type": "Must be a valid boolean.", "null": "May not be null."}
+    errors = {"type": "Must be a boolean.", "null": "May not be null."}
     coerce_values = {
         "true": True,
         "false": False,
@@ -395,7 +392,7 @@ class Object(Field):
             return self.error("type")
 
         validated = {}
-        errors = []
+        error_messages = []
 
         # Ensure all property keys are strings.
         for key in value.keys():
@@ -416,8 +413,8 @@ class Object(Field):
         # Required properties
         for key in self.required:
             if key not in value:
-                error = self.error("required", context={"field_name": key}, index=[key])
-                errors.append(error)
+                message = self.error_message("required", index=[key])
+                error_messages.append(message)
 
         # Properties
         for key, child_schema in self.properties.items():
@@ -430,9 +427,9 @@ class Object(Field):
             if child.is_valid:
                 validated[key] = child.value
             else:
-                for error in child.errors:
+                for error in child.error.messages():
                     error = error.with_index_prefix(prefix=key)
-                    errors.append(error)
+                    error_messages.append(error)
 
         # Pattern properties
         if self.pattern_properties:
@@ -444,12 +441,16 @@ class Object(Field):
                         if child.is_valid:
                             validated[key] = child.value
                         else:
-                            for error in child.errors:
-                                errors.append(error.with_index_prefix(prefix=key))
+                            for error in child.error.messages():
+                                error_messages.append(
+                                    error.with_index_prefix(prefix=key)
+                                )
 
         # Additional properties
         validated_keys = set(validated.keys())
-        error_keys = set([error.index[0] for error in errors if error.index])
+        error_keys = set(
+            [message.index[0] for message in error_messages if message.index]
+        )
 
         remaining = [
             key for key in value.keys() if key not in validated_keys | error_keys
@@ -460,8 +461,8 @@ class Object(Field):
                 validated[key] = value[key]
         elif self.additional_properties is False:
             for key in remaining:
-                error = self.error("invalid_property", index=[key])
-                errors.append(error)
+                message = self.error_message("invalid_property", index=[key])
+                error_messages.append(message)
         elif self.additional_properties is not None:
             child_schema = self.additional_properties
             for key in remaining:
@@ -470,12 +471,12 @@ class Object(Field):
                 if child.is_valid:
                     validated[key] = child.value
                 else:
-                    for error in child.errors:
+                    for error in child.error.messages():
                         error = error.with_index_prefix(prefix=key)
-                        errors.append(error)
+                        error_messages.append(error)
 
-        if errors:
-            return ErrorMessages(errors)
+        if error_messages:
+            return ValidationError(messages=error_messages)
 
         if self.coerce is not None:
             return self.coerce(validated)

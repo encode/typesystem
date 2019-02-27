@@ -17,17 +17,19 @@ class Product(typesystem.Schema):
 
 
 def test_schema_validation():
-    validated = Person.validate({"name": "Tom", "age": "123"})
-    assert validated.value == Person(name="Tom", age=123)
+    value, error = Person.validate({"name": "Tom", "age": "123"})
+    assert not error
+    assert value == Person(name="Tom", age=123)
 
-    validated = Person.validate({"name": "Tom", "age": "123"})
-    assert validated.value == Person(name="Tom", age=123)
+    value, error = Person.validate({"name": "Tom", "age": "123"})
+    assert not error
+    assert value == Person(name="Tom", age=123)
 
-    validated = Person.validate({"name": "Tom", "age": "abc"})
-    assert dict(validated.errors) == {"age": "Must be a number."}
+    value, error = Person.validate({"name": "Tom", "age": "abc"})
+    assert dict(error) == {"age": "Must be a number."}
 
-    validated = Person.validate({"name": "Tom"})
-    assert dict(validated.errors) == {"age": "This field is required."}
+    value, error = Person.validate({"name": "Tom"})
+    assert dict(error) == {"age": "This field is required."}
 
 
 def test_schema_eq():
