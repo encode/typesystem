@@ -35,7 +35,7 @@ class BaseFormat:
 
 class DateFormat(BaseFormat):
     errors = {
-        "format": "Must be in a valid date format.",
+        "format": "Must be a valid date format.",
         "invalid": "Must be a real date.",
     }
 

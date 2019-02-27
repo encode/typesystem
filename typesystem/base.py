@@ -11,9 +11,6 @@ class ErrorMessage:
         self.index = [] if index is None else index
 
     def __eq__(self, other):
-        if isinstance(other, str):
-            return self.code == other
-
         return isinstance(other, ErrorMessage) and (
             self.text == other.text
             and self.code == other.code
@@ -25,55 +22,59 @@ class ErrorMessage:
         return ErrorMessage(text=self.text, code=self.code, index=index)
 
 
-class ErrorMessages(Mapping):
-    def __init__(self, messages: typing.List[ErrorMessage] = None):
-        self._messages = [] if messages is None else messages
+class ValidationError(Mapping):
+    def __init__(
+        self,
+        *,
+        text: str = None,
+        code: str = None,
+        messages: typing.List[ErrorMessage] = None
+    ):
+        if messages is None:
+            # Instantiated as a ValidationError with a single error message.
+            assert text is not None
+            assert code is not None
+            messages = [ErrorMessage(text=text, code=code)]
+        else:
+            # Instantiated as a ValidationError with multiple error messages.
+            assert text is None
+            assert code is None
 
-    def __iter__(self):
-        return iter(self._messages)
+        self._messages = messages
+        self._message_dict = {}
 
-    def __bool__(self):
-        return bool(self._messages)
-
-    def __len__(self):
-        return len(self._messages)
-
-    def __eq__(self, other):
-        return list(self) == list(other)
-
-    def __getitem__(self, key):
-        if not hasattr(self, "_message_dict"):
-            self._message_dict = self.to_dict(style="text")
-        return self._message_dict[key]
-
-    def keys(self):
-        if not hasattr(self, "_message_dict"):
-            self._message_dict = self.to_dict(style="text")
-        return self._message_dict.keys()
-
-    def to_dict(self, *, style: str):
-        assert style in ("code", "text", "full")
-
-        get_value = {
-            "code": lambda message: message.code,
-            "text": lambda message: message.text,
-            "full": lambda message: message,
-        }[style]
-
-        result = {}
-        for message in self._messages:
-            insert_into = result
+        # Populate 'self._message_dict'
+        for message in messages:
+            insert_into = self._message_dict
             for key in message.index[:-1]:
                 insert_into = insert_into.setdefault(key, {})
             insert_key = message.index[-1] if message.index else ""
-            insert_into[insert_key] = get_value(message)
-        return result
+            insert_into[insert_key] = message.text
+
+    def messages(self):
+        return list(self._messages)
+
+    def __iter__(self):
+        return iter(self._message_dict)
+
+    def __len__(self):
+        return len(self._message_dict)
+
+    def __getitem__(self, key):
+        return self._message_dict[key]
+
+    def __eq__(self, other):
+        return isinstance(other, ValidationError) and self._messages == other._messages
 
 
 class ValidationResult:
-    def __init__(self, value, errors: ErrorMessages = None):
+    def __init__(self, value, errors: ValidationError):
         self.value = value
-        self.errors = ErrorMessages() if errors is None else errors
+        self.errors = errors
+
+    @property
+    def error(self):
+        return self.errors
 
     def __iter__(self):
         yield self.value

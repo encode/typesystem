@@ -45,10 +45,12 @@ class Schema(Mapping, metaclass=SchemaMetaclass):
         for key, schema in self.fields.items():
             if key in kwargs:
                 value = kwargs.pop(key)
-                value, errors = schema.validate(value)
-                if errors:
+                value, error = schema.validate(value)
+                if error:
                     class_name = self.__class__.__name__
-                    error_text = list(errors)[0].text
+                    error_text = " ".join(
+                        [message.text for message in error.messages()]
+                    )
                     message = (
                         f"Invalid argument {key!r} for {class_name}(). {error_text}"
                     )

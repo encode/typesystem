@@ -4,7 +4,7 @@ import typing
 from math import isfinite
 
 from typesystem import formats
-from typesystem.base import ErrorMessage, ErrorMessages, ValidationResult
+from typesystem.base import ErrorMessage, ValidationError, ValidationResult
 
 NO_DEFAULT = object()
 
@@ -57,14 +57,16 @@ class Field:
         result = self.validate_value(value, strict=strict)
 
         if isinstance(result, ErrorMessage):
-            errors = ErrorMessages([result])
-        elif isinstance(result, ErrorMessages):
+            value = None
+            errors = ValidationError(messages=[result])
+        elif isinstance(result, ValidationError):
+            value = None
             errors = result
         else:
             value = result
             errors = None
 
-        return ValidationResult(value, errors=errors)
+        return ValidationResult(value=value, errors=errors)
 
     def validate_value(self, value):
         raise NotImplementedError()  # pragma: no cover
@@ -75,9 +77,8 @@ class Field:
     def has_default(self):
         return hasattr(self, "default")
 
-    def error(self, code, context=None, index=None):
-        context = {} if context is None else context
-        text = self.errors[code].format(**self.__dict__, **context)
+    def error(self, code, index=None):
+        text = self.errors[code].format(**self.__dict__)
         return ErrorMessage(text=text, code=code, index=index)
 
 
@@ -163,9 +164,9 @@ class NumericType(Field):
         "integer": "Must be an integer.",
         "finite": "Must be finite.",
         "minimum": "Must be greater than or equal to {minimum}.",
-        "exclusive_minimum": "Must be greater than {minimum}.",
+        "exclusive_minimum": "Must be greater than {exclusive_minimum}.",
         "maximum": "Must be less than or equal to {maximum}.",
-        "exclusive_maximum": "Must be less than {maximum}.",
+        "exclusive_maximum": "Must be less than {exclusive_maximum}.",
         "multiple_of": "Must be a multiple of {multiple_of}.",
     }
 
@@ -271,7 +272,7 @@ class Decimal(NumericType):
 
 
 class Boolean(Field):
-    errors = {"type": "Must be a valid boolean.", "null": "May not be null."}
+    errors = {"type": "Must be a boolean.", "null": "May not be null."}
     coerce_values = {
         "true": True,
         "false": False,
@@ -416,7 +417,7 @@ class Object(Field):
         # Required properties
         for key in self.required:
             if key not in value:
-                error = self.error("required", context={"field_name": key}, index=[key])
+                error = self.error("required", index=[key])
                 errors.append(error)
 
         # Properties
@@ -430,7 +431,7 @@ class Object(Field):
             if child.is_valid:
                 validated[key] = child.value
             else:
-                for error in child.errors:
+                for error in child.errors.messages():
                     error = error.with_index_prefix(prefix=key)
                     errors.append(error)
 
@@ -444,7 +445,7 @@ class Object(Field):
                         if child.is_valid:
                             validated[key] = child.value
                         else:
-                            for error in child.errors:
+                            for error in child.errors.messages():
                                 errors.append(error.with_index_prefix(prefix=key))
 
         # Additional properties
@@ -470,12 +471,12 @@ class Object(Field):
                 if child.is_valid:
                     validated[key] = child.value
                 else:
-                    for error in child.errors:
+                    for error in child.errors.messages():
                         error = error.with_index_prefix(prefix=key)
                         errors.append(error)
 
         if errors:
-            return ErrorMessages(errors)
+            return ValidationError(messages=errors)
 
         if self.coerce is not None:
             return self.coerce(validated)
