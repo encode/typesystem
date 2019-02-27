@@ -1,4 +1,5 @@
 import datetime
+import decimal
 
 import pytest
 
@@ -50,6 +51,12 @@ def test_schema_instantiation():
     with pytest.raises(TypeError):
         Product(name="T-Shirt", other="Invalid")
 
+    with pytest.raises(TypeError):
+        Product(name="x" * 1000)
+
+    tshirt = Product(name="T-Shirt")
+    assert Product(tshirt) == tshirt
+
 
 def test_schema_subclass():
     class DetailedProduct(Product):
@@ -97,3 +104,14 @@ def test_schema_format_serialization():
 
     assert data["text"] == "Hi"
     assert data["created"] == datetime.date.today().isoformat()
+
+
+def test_schema_decimal_serialization():
+    class InventoryItem(typesystem.Schema):
+        name = typesystem.String()
+        price = typesystem.Decimal(precision="0.01")
+
+    item = InventoryItem(name="Example", price=123.45)
+
+    assert item.price == decimal.Decimal("123.45")
+    assert item["price"] == 123.45

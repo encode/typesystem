@@ -31,19 +31,37 @@ class Schema(Mapping, metaclass=SchemaMetaclass):
         if args:
             assert len(args) == 1
             assert not kwargs
-            item = dict(args[0])
-        else:
-            item = kwargs
+            item = args[0]
+            if isinstance(item, dict):
+                for key in self.fields.keys():
+                    if key in item:
+                        setattr(self, key, item[key])
+            else:
+                for key in self.fields.keys():
+                    if hasattr(item, key):
+                        setattr(self, key, getattr(item, key))
+            return
 
         for key, schema in self.fields.items():
-            if key in item:
-                setattr(self, key, item.pop(key))
+            if key in kwargs:
+                value = kwargs.pop(key)
+                value, errors = schema.validate(value)
+                if errors:
+                    class_name = self.__class__.__name__
+                    error_text = list(errors)[0].text
+                    message = (
+                        f"Invalid argument {key!r} for {class_name}(). {error_text}"
+                    )
+                    raise TypeError(message)
+                setattr(self, key, value)
             elif schema.has_default():
                 setattr(self, key, schema.default)
 
-        if item:
-            key = list(item.keys())[0]
-            raise TypeError("Invalid argument {!r}")
+        if kwargs:
+            key = list(kwargs.keys())[0]
+            class_name = self.__class__.__name__
+            message = f"{key!r} is an invalid keyword argument for {class_name}()."
+            raise TypeError(message)
 
     @classmethod
     def validate(cls, value, strict=False):

@@ -199,6 +199,10 @@ def test_float():
     validated = validator.validate(5.0)
     assert validated.errors == ["multiple_of"]
 
+    validator = Float(precision="0.01")
+    validated = validator.validate("123.456")
+    assert validated.value == 123.46
+
 
 def test_boolean():
     validator = Boolean()

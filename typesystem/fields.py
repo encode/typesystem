@@ -1,3 +1,4 @@
+import decimal
 import re
 import typing
 from math import isfinite
@@ -174,6 +175,7 @@ class NumericType(Field):
         maximum=None,
         exclusive_minimum=None,
         exclusive_maximum=None,
+        precision=None,
         multiple_of=None,
         format=None,
         **kwargs
@@ -201,6 +203,7 @@ class NumericType(Field):
         self.exclusive_maximum = exclusive_maximum
         self.multiple_of = multiple_of
         self.format = format
+        self.precision = precision
 
     def validate_value(self, value, strict=False):
         if value is None and self.allow_null:
@@ -224,6 +227,14 @@ class NumericType(Field):
             value = self.numeric_type(value)
         except (TypeError, ValueError):
             return self.error("type")
+
+        if self.precision is not None:
+            quantize_val = decimal.Decimal(self.precision)
+            decimal_val = decimal.Decimal(value)
+            decimal_val = decimal_val.quantize(
+                quantize_val, rounding=decimal.ROUND_HALF_UP
+            )
+            value = self.numeric_type(decimal_val)
 
         if self.minimum is not None and value < self.minimum:
             return self.error("minimum")
@@ -250,6 +261,13 @@ class Integer(NumericType):
 
 class Float(NumericType):
     numeric_type = float
+
+
+class Decimal(NumericType):
+    numeric_type = decimal.Decimal
+
+    def serialize(self, obj):
+        return float(obj)
 
 
 class Boolean(Field):
