@@ -68,21 +68,17 @@ class ValidationError(Mapping):
 
 
 class ValidationResult:
-    def __init__(self, value, errors: ValidationError):
+    def __init__(self, value, error: typing.Optional[ValidationError]):
         self.value = value
-        self.errors = errors
-
-    @property
-    def error(self):
-        return self.errors
+        self.error = error
 
     def __iter__(self):
         yield self.value
-        yield self.errors
+        yield self.error
 
     def __bool__(self):
-        return not self.errors
+        return self.error is None
 
     @property
     def is_valid(self):
-        return not self.errors
+        return self.error is None

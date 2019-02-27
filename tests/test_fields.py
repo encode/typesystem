@@ -280,8 +280,8 @@ def test_choice():
     assert error == ValidationError(text="Not a valid choice.", code="choice")
 
     validator = Choice(choices=["red", "blue", "green"])
-    validated = validator.validate(None)
-    assert validated.errors == ValidationError(text="May not be null.", code="null")
+    value, error = validator.validate(None)
+    assert error == ValidationError(text="May not be null.", code="null")
 
     validator = Choice(choices=["red", "blue", "green"], allow_null=True)
     value, error = validator.validate(None)
@@ -499,24 +499,24 @@ def test_errors_dict_interface():
     `validated.errors` should present a dict-like interface.
     """
     validator = Object(properties={"example": Integer()})
-    validated = validator.validate({"example": "abc"})
-    assert dict(validated.errors) == {"example": "Must be a number."}
+    value, error = validator.validate({"example": "abc"})
+    assert dict(error) == {"example": "Must be a number."}
 
     validator = Object(properties={"example": Integer()})
-    validated = validator.validate({"example": "abc"})
-    assert validated.errors["example"] == "Must be a number."
+    value, error = validator.validate({"example": "abc"})
+    assert error["example"] == "Must be a number."
 
     validator = Object(additional_properties=Object(additional_properties=Integer()))
-    validated = validator.validate({"example": {"nested": "abc"}})
-    assert dict(validated.errors) == {"example": {"nested": "Must be a number."}}
+    value, error = validator.validate({"example": {"nested": "abc"}})
+    assert dict(error) == {"example": {"nested": "Must be a number."}}
 
     validator = Integer()
-    validated = validator.validate("abc")
-    assert validated.errors[""] == "Must be a number."
+    value, error = validator.validate("abc")
+    assert error[""] == "Must be a number."
 
     validator = Integer()
-    validated = validator.validate("abc")
-    assert dict(validated.errors) == {"": "Must be a number."}
+    value, error = validator.validate("abc")
+    assert dict(error) == {"": "Must be a number."}
 
 
 def test_error_messages_interface():
