@@ -10,7 +10,7 @@ class Contact(typesystem.Schema):
     d = typesystem.Choice(choices=["abc", "def", "ghi"])
 
 
-forms = typesystem.Jinja2Forms()
+forms = typesystem.Jinja2Forms(package="typesystem")
 
 
 def test_form_rendering():
@@ -31,3 +31,13 @@ def test_form_html():
 
     assert isinstance(markup, jinja2.Markup)
     assert str(markup) == str(form)
+
+
+def test_forms_from_directory(tmpdir):
+    forms = typesystem.Jinja2Forms(directory=str(tmpdir))
+    assert isinstance(forms.env.loader, jinja2.FileSystemLoader)
+
+
+def test_forms_with_directory_override(tmpdir):
+    forms = typesystem.Jinja2Forms(directory=str(tmpdir), package="typesystem")
+    assert isinstance(forms.env.loader, jinja2.ChoiceLoader)

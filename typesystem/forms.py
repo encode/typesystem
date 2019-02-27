@@ -61,12 +61,25 @@ class Form:
 class Jinja2Forms:
     form_class = Form
 
-    def __init__(self, package="typesystem"):
-        assert jinja2 is not None, "jinja2 must be installed to use Jinja2Forms"
-        self.env = self.load_template_env(package)
+    def __init__(self, directory=None, package=None):
+        assert jinja2 is not None, "jinja2 must be installed to use Jinja2Forms."
+        assert (
+            directory is not None or package is not None
+        ), "Either 'directory' or 'package' must be specified."
+        self.env = self.load_template_env(directory, package)
 
-    def load_template_env(self, package) -> "jinja2.Environment":
-        loader = jinja2.PackageLoader(package, "templates")
+    def load_template_env(self, directory=None, package=None) -> "jinja2.Environment":
+        if directory is not None and package is None:
+            loader = jinja2.FileSystemLoader(directory)
+        elif directory is None and package is not None:
+            loader = jinja2.PackageLoader(package, "templates")
+        else:
+            loader = jinja2.ChoiceLoader(
+                [
+                    jinja2.FileSystemLoader(directory),
+                    jinja2.PackageLoader(package, "templates"),
+                ]
+            )
         return jinja2.Environment(loader=loader, autoescape=True)
 
     def Form(self, schema, values=None, errors=None):
