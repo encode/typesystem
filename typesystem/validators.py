@@ -89,8 +89,6 @@ class String(Validator):
         "min_length": "Must have at least {min_length} characters.",
         "pattern": "Must match the pattern /{pattern}/.",
         "format": "Must be a valid {format}.",
-        "enum": "Must be one of {enum}.",
-        "exact": "Must be {exact}.",
     }
 
     def __init__(
@@ -99,7 +97,6 @@ class String(Validator):
         max_length=None,
         min_length=None,
         pattern=None,
-        enum=None,
         format=None,
         exact=None,
         **kwargs
@@ -109,22 +106,12 @@ class String(Validator):
         assert max_length is None or isinstance(max_length, int)
         assert min_length is None or isinstance(min_length, int)
         assert pattern is None or isinstance(pattern, str)
-        assert (
-            enum is None
-            or isinstance(enum, list)
-            and all([isinstance(i, str) for i in enum])
-        )
         assert format is None or isinstance(format, str)
-
-        if exact is not None:
-            assert enum is None
-            enum = [exact]
 
         self.allow_blank = allow_blank
         self.max_length = max_length
         self.min_length = min_length
         self.pattern = pattern
-        self.enum = enum
         self.format = format
 
     def validate_value(self, value, strict=False):
@@ -139,12 +126,6 @@ class String(Validator):
 
         if not self.allow_blank and not value:
             return self.error("blank")
-
-        if self.enum is not None:
-            if value not in self.enum:
-                if len(self.enum) == 1:
-                    return self.error("exact", context={"exact": self.enum[0]})
-                return self.error("enum")
 
         if self.min_length is not None:
             if len(value) < self.min_length:
@@ -185,8 +166,6 @@ class NumericType(Validator):
         "maximum": "Must be less than or equal to {maximum}.",
         "exclusive_maximum": "Must be less than {maximum}.",
         "multiple_of": "Must be a multiple of {multiple_of}.",
-        "enum": "Must be one of {enum}.",
-        "exact": "Must be {exact}.",
     }
 
     def __init__(
@@ -196,9 +175,7 @@ class NumericType(Validator):
         exclusive_minimum=None,
         exclusive_maximum=None,
         multiple_of=None,
-        enum=None,
         format=None,
-        exact=None,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -216,23 +193,13 @@ class NumericType(Validator):
             or isinstance(multiple_of, int)
             or multiple_of.is_integer()
         )
-        assert (
-            enum is None
-            or isinstance(enum, list)
-            and all([isinstance(i, self.numeric_type) for i in enum])
-        )
         assert format is None or isinstance(format, str)
-
-        if exact is not None:
-            assert enum is None
-            enum = [exact]
 
         self.minimum = minimum
         self.maximum = maximum
         self.exclusive_minimum = exclusive_minimum
         self.exclusive_maximum = exclusive_maximum
         self.multiple_of = multiple_of
-        self.enum = enum
         self.format = format
 
     def validate_value(self, value, strict=False):
@@ -257,12 +224,6 @@ class NumericType(Validator):
             value = self.numeric_type(value)
         except (TypeError, ValueError):
             return self.error("type")
-
-        if self.enum is not None:
-            if value not in self.enum:
-                if len(self.enum) == 1:
-                    return self.error("exact", context={"exact": self.enum[0]})
-                return self.error("enum")
 
         if self.minimum is not None and value < self.minimum:
             return self.error("minimum")
@@ -330,6 +291,29 @@ class Boolean(Validator):
             except KeyError:
                 return self.error("type")
 
+        return value
+
+
+class Choice(Validator):
+    errors = {"null": "May not be null.", "choice": "Not a valid choice."}
+
+    def __init__(self, choices, **kwargs):
+        super().__init__(**kwargs)
+        if isinstance(choices, dict):
+            self.choice_items = list(choices.items())
+        elif all([isinstance(choice, str) for choice in choices]):
+            self.choice_items = [(choice, choice) for choice in choices]
+        else:
+            self.choice_items = list(choices)
+        self.choice_dict = dict(self.choice_items)
+
+    def validate_value(self, value, strict=False):
+        if value is None and self.allow_null:
+            return None
+        elif value is None:
+            return self.error("null")
+        elif value not in self.choice_dict:
+            return self.error("choice")
         return value
 
 

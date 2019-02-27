@@ -43,7 +43,7 @@ class Form:
         )
 
     def template_for_field(self, field):
-        if getattr(field, "enum", None):
+        if isinstance(field, validators.Choice):
             return "forms/select.html"
         elif isinstance(field, validators.Boolean):
             return "forms/checkbox.html"
