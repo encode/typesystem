@@ -125,3 +125,12 @@ def test_schema_decimal_serialization():
 
     assert item.price == decimal.Decimal("123.45")
     assert item["price"] == 123.45
+
+
+def test_schema_with_callable_default():
+    class Example(typesystem.Schema):
+        created = typesystem.Date(default=datetime.date.today)
+
+    value, error = Example.validate({})
+    print(value)
+    assert value.created == datetime.date.today()

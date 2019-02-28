@@ -68,7 +68,7 @@ class Schema(Mapping, metaclass=SchemaMetaclass):
                     raise TypeError(message)
                 setattr(self, key, value)
             elif schema.has_default():
-                setattr(self, key, schema.default)
+                setattr(self, key, schema.get_default_value())
 
         if kwargs:
             key = list(kwargs.keys())[0]
