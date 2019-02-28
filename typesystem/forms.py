@@ -6,7 +6,7 @@ except ImportError:  # pragma: no cover
 import typing
 
 from typesystem.base import ValidationError
-from typesystem.fields import Boolean, Choice, Field, String
+from typesystem.fields import Boolean, Choice, Field, Object, String
 from typesystem.schemas import Schema
 
 
@@ -55,6 +55,10 @@ class Form:
         )
 
     def template_for_field(self, field: Field) -> str:
+        assert not isinstance(
+            field, Object
+        ), "Forms do not support rendering Object fields"
+
         if isinstance(field, Choice):
             return "forms/select.html"
         elif isinstance(field, Boolean):

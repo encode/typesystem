@@ -1,16 +1,18 @@
 # TypeSystem
 
+<p>
+<a href="https://travis-ci.org/encode/typesystem">
+    <img src="https://travis-ci.org/encode/typesystem.svg?branch=master" alt="Build Status">
+</a>
+<a href="https://codecov.io/gh/encode/typesystem">
+    <img src="https://codecov.io/gh/encode/typesystem/branch/master/graph/badge.svg" alt="Coverage">
+</a>
+<a href="https://pypi.org/project/typesystem/">
+    <img src="https://badge.fury.io/py/typesystem.svg" alt="Package version">
+</a>
+</p>
+
 *IN PROGRESS.*
-
-*TODO*
-
-* All: Switch allow_null.
-* String: Time. Nulls. allow_blank/allow_null coercions.
-* Boolean: Exact.
-* Time: Second/Millisecond/Microsecond precision.
-* DateTime: Timezone. Second/Millisecond/Microsecond precision.
-* Object: properties=Integer()
-
 
 *Sketches*
 

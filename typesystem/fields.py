@@ -306,10 +306,14 @@ class Choice(Field):
     ) -> None:
         super().__init__(**kwargs)
         if isinstance(choices, dict):
+            #  Instantiated with a dictionary.
             self.choice_items = list(choices.items())
         elif all([isinstance(choice, str) for choice in choices]):
+            # Instantiated with a list of strings.
             self.choice_items = [(choice, choice) for choice in choices]
         else:
+            # Instantiated with a list of two-tuples.
+            assert all([len(item) == 2 for item in choices])
             self.choice_items = list(choices)
         self.choice_dict = dict(self.choice_items)
 
@@ -595,105 +599,3 @@ class Time(String):
 class DateTime(String):
     def __init__(self, **kwargs: typing.Any) -> None:
         super().__init__(format="datetime", **kwargs)
-
-
-# class Any(Validator):
-#     def validate(self, value, definitions=None, allow_coerce=False):
-#         # TODO: Validate value matches primitive types
-#         return value
-#
-#
-# class Union(Validator):
-#     errors = {
-#         'null': 'Must not be null.',
-#         'union': 'Must match one of the union types.'
-#     }
-#
-#     def __init__(self, items, **kwargs):
-#         super().__init__(**kwargs)
-#         assert isinstance(items, list) and all(isinstance(i, Validator) for i in items)
-#         self.items = list(items)
-#
-#     def validate(self, value, definitions=None, allow_coerce=False):
-#         if value is None and self.allow_null:
-#             return None
-#         elif value is None:
-#             self.error('null')
-#
-#         for item in self.items:
-#             try:
-#                 return item.validate(
-#                     value,
-#                     definitions=definitions,
-#                     allow_coerce=allow_coerce
-#                 )
-#             except ValidationError:
-#                 pass
-#         self.error('union')
-#
-#
-# class Ref(Validator):
-#     def __init__(self, ref, **kwargs):
-#         super().__init__(**kwargs)
-#         assert isinstance(ref, str)
-#         self.ref = ref
-#
-#     def validate(self, value, definitions=None, allow_coerce=False):
-#         assert definitions is not None, 'Ref.validate() requires definitions'
-#         assert self.ref in definitions, 'Ref "%s" not in definitions' % self.ref
-#
-#         child_schema = definitions[self.ref]
-#         return child_schema.validate(
-#             value,
-#             definitions=definitions,
-#             allow_coerce=allow_coerce
-#         )
-#
-#
-# class Uniqueness():
-#     """
-#     A set-like class that tests for uniqueness of primitive types.
-#     Ensures the `True` and `False` are treated as distinct from `1` and `0`,
-#     and coerces non-hashable instances that cannot be added to sets,
-#     into hashable representations that can.
-#     """
-#     TRUE = object()
-#     FALSE = object()
-#
-#     def __init__(self):
-#         self._set = set()
-#
-#     def __contains__(self, item):
-#         item = self.make_hashable(item)
-#         return item in self._set
-#
-#     def add(self, item):
-#         item = self.make_hashable(item)
-#         self._set.add(item)
-#
-#     def make_hashable(self, element):
-#         """
-#         Coerce a primitive into a uniquely hashable type, for uniqueness checks.
-#         """
-#
-#         # Only primitive types can be handled.
-#         assert (element is None) or isinstance(element, (bool, int, float, str, list, dict))
-#
-#         if element is True:
-#             # Need to make `True` distinct from `1`.
-#             return self.TRUE
-#         elif element is False:
-#             # Need to make `False` distinct from `0`.
-#             return self.FALSE
-#         elif isinstance(element, list):
-#             # Represent lists using a two-tuple of ('list', (item, item, ...))
-#             return ('list', tuple([
-#                 self.make_hashable(item) for item in element
-#             ]))
-#         elif isinstance(element, dict):
-#             # Represent dicts using a two-tuple of ('dict', ((key, val), (key, val), ...))
-#             return ('dict', tuple([
-#                 (self.make_hashable(key), self.make_hashable(value)) for key, value in element.items()
-#             ]))
-#
-#         return element
