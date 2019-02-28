@@ -78,7 +78,7 @@ class Schema(Mapping, metaclass=SchemaMetaclass):
 
     @classmethod
     def validate(
-        cls: typing.Type["Schema"], value: typing.Any, strict: bool = False
+        cls: typing.Type["Schema"], value: typing.Any, *, strict: bool = False
     ) -> ValidationResult:
         required = [key for key, value in cls.fields.items() if not value.has_default()]
         validator = Object(

@@ -21,6 +21,7 @@ class Field:
 
     def __init__(
         self,
+        *,
         title: str = "",
         description: str = "",
         default: typing.Any = NO_DEFAULT,
@@ -44,7 +45,7 @@ class Field:
         self._creation_counter = Field._creation_counter
         Field._creation_counter += 1
 
-    def validate(self, value: typing.Any, strict: bool = False) -> ValidationResult:
+    def validate(self, value: typing.Any, *, strict: bool = False) -> ValidationResult:
         result = self.validate_value(value, strict=strict)
 
         if isinstance(result, ValidationError):
@@ -52,7 +53,7 @@ class Field:
         return ValidationResult(value=result, error=None)
 
     def validate_value(
-        self, value: typing.Any, strict: bool = False
+        self, value: typing.Any, *, strict: bool = False
     ) -> typing.Union[typing.Any, ValidationError]:
         raise NotImplementedError()  # pragma: no cover
 
@@ -66,7 +67,7 @@ class Field:
         text = self.errors[code].format(**self.__dict__)
         return ValidationError(text=text, code=code)
 
-    def error_message(self, code: str, index: list = None) -> ErrorMessage:
+    def error_message(self, code: str, *, index: list = None) -> ErrorMessage:
         text = self.errors[code].format(**self.__dict__)
         return ErrorMessage(text=text, code=code, index=index)
 
@@ -84,12 +85,13 @@ class String(Field):
 
     def __init__(
         self,
+        *,
         allow_blank: bool = False,
         max_length: int = None,
         min_length: int = None,
         pattern: str = None,
         format: str = None,
-        **kwargs: typing.Any
+        **kwargs: typing.Any,
     ) -> None:
         super().__init__(**kwargs)
 
@@ -105,7 +107,7 @@ class String(Field):
         self.format = format
 
     def validate_value(
-        self, value: typing.Any, strict: bool = False
+        self, value: typing.Any, *, strict: bool = False
     ) -> typing.Union[typing.Any, ValidationError]:
         if value is None and self.allow_null:
             return None
@@ -162,13 +164,14 @@ class NumericType(Field):
 
     def __init__(
         self,
+        *,
         minimum: typing.Union[int, float, decimal.Decimal] = None,
         maximum: typing.Union[int, float, decimal.Decimal] = None,
         exclusive_minimum: typing.Union[int, float, decimal.Decimal] = None,
         exclusive_maximum: typing.Union[int, float, decimal.Decimal] = None,
         precision: str = None,
         multiple_of: int = None,
-        **kwargs: typing.Any
+        **kwargs: typing.Any,
     ):
         super().__init__(**kwargs)
 
@@ -190,7 +193,7 @@ class NumericType(Field):
         self.precision = precision
 
     def validate_value(
-        self, value: typing.Any, strict: bool = False
+        self, value: typing.Any, *, strict: bool = False
     ) -> typing.Union[typing.Any, ValidationError]:
         if value is None and self.allow_null:
             return None
@@ -272,7 +275,7 @@ class Boolean(Field):
     coerce_null_values = {"", "null", "none"}
 
     def validate_value(
-        self, value: typing.Any, strict: bool = False
+        self, value: typing.Any, *, strict: bool = False
     ) -> typing.Union[typing.Any, ValidationError]:
         if value is None and self.allow_null:
             return None
@@ -302,7 +305,7 @@ class Choice(Field):
     errors = {"null": "May not be null.", "choice": "Not a valid choice."}
 
     def __init__(
-        self, choices: typing.Union[dict, typing.Sequence], **kwargs: typing.Any
+        self, *, choices: typing.Union[dict, typing.Sequence], **kwargs: typing.Any
     ) -> None:
         super().__init__(**kwargs)
         if isinstance(choices, dict):
@@ -318,7 +321,7 @@ class Choice(Field):
         self.choice_dict = dict(self.choice_items)
 
     def validate_value(
-        self, value: typing.Any, strict: bool = False
+        self, value: typing.Any, *, strict: bool = False
     ) -> typing.Union[typing.Any, ValidationError]:
         if value is None and self.allow_null:
             return None
@@ -343,6 +346,7 @@ class Object(Field):
 
     def __init__(
         self,
+        *,
         properties: typing.Dict[str, Field] = None,
         pattern_properties: typing.Dict[str, Field] = None,
         additional_properties: typing.Union[bool, None, Field] = True,
@@ -350,7 +354,7 @@ class Object(Field):
         max_properties: int = None,
         required: typing.Sequence[str] = None,
         coerce: type = None,
-        **kwargs: typing.Any
+        **kwargs: typing.Any,
     ) -> None:
         super().__init__(**kwargs)
 
@@ -381,7 +385,7 @@ class Object(Field):
         self.coerce = coerce
 
     def validate_value(
-        self, value: typing.Any, strict: bool = False
+        self, value: typing.Any, *, strict: bool = False
     ) -> typing.Union[typing.Any, ValidationError]:
         if value is None and self.allow_null:
             return None
