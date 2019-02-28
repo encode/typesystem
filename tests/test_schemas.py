@@ -47,7 +47,7 @@ def test_schema_repr():
     assert repr(tom) == "Person(name='Tom', age=123)"
 
     tom = Person(name="Tom")
-    assert repr(tom) == "Person(name='Tom')"
+    assert repr(tom) == "Person(name='Tom') [sparse]"
 
 
 def test_schema_instantiation():

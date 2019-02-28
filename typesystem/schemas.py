@@ -89,6 +89,12 @@ class Schema(Mapping, metaclass=SchemaMetaclass):
         )
         return validator.validate(value, strict=strict)
 
+    @property
+    def is_sparse(self) -> bool:
+        # A schema is sparsely populated if it does not include attributes
+        # for all its fields.
+        return bool([key for key in self.fields.keys() if not hasattr(self, key)])
+
     def __eq__(self, other: typing.Any) -> bool:
         if not isinstance(other, self.__class__):
             return False
@@ -121,4 +127,5 @@ class Schema(Mapping, metaclass=SchemaMetaclass):
         argument_str = ", ".join(
             [f"{key}={value!r}" for key, value in arguments.items()]
         )
-        return f"{class_name}({argument_str})"
+        sparse_indicator = " [sparse]" if self.is_sparse else ""
+        return f"{class_name}({argument_str}){sparse_indicator}"
