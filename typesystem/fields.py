@@ -16,25 +16,18 @@ FORMATS = {
 
 
 class Field:
-    errors = {}
+    errors = {}  # type: typing.Dict[str, str]
     _creation_counter = 0
 
     def __init__(
         self,
-        title="",
-        description="",
-        default=NO_DEFAULT,
-        allow_null=False,
-        definitions=None,
-        def_name=None,
+        title: str = "",
+        description: str = "",
+        default: typing.Any = NO_DEFAULT,
+        allow_null: bool = False,
     ):
-        definitions = {} if (definitions is None) else dict(definitions)
-
         assert isinstance(title, str)
         assert isinstance(description, str)
-        assert isinstance(definitions, dict)
-        assert all(isinstance(k, str) for k in definitions.keys())
-        assert all(isinstance(v, Validator) for v in definitions.values())
 
         if allow_null and default is NO_DEFAULT:
             default = None
@@ -45,35 +38,35 @@ class Field:
         self.title = title
         self.description = description
         self.allow_null = allow_null
-        self.definitions = definitions
-        self.def_name = def_name
 
         # We need this global counter to determine what order fields have
         # been declared in when used with `Schema`.
         self._creation_counter = Field._creation_counter
         Field._creation_counter += 1
 
-    def validate(self, value, strict=False):
+    def validate(self, value: typing.Any, strict: bool = False) -> ValidationResult:
         result = self.validate_value(value, strict=strict)
 
         if isinstance(result, ValidationError):
             return ValidationResult(value=None, error=result)
         return ValidationResult(value=result, error=None)
 
-    def validate_value(self, value):
+    def validate_value(
+        self, value: typing.Any, strict: bool = False
+    ) -> typing.Union[typing.Any, ValidationError]:
         raise NotImplementedError()  # pragma: no cover
 
-    def serialize(self, obj):
+    def serialize(self, obj: typing.Any) -> typing.Any:
         return obj
 
-    def has_default(self):
+    def has_default(self) -> bool:
         return hasattr(self, "default")
 
-    def error(self, code):
+    def error(self, code: str) -> ValidationError:
         text = self.errors[code].format(**self.__dict__)
         return ValidationError(text=text, code=code)
 
-    def error_message(self, code, index=None):
+    def error_message(self, code: str, index: list = None) -> ErrorMessage:
         text = self.errors[code].format(**self.__dict__)
         return ErrorMessage(text=text, code=code, index=index)
 
@@ -91,14 +84,13 @@ class String(Field):
 
     def __init__(
         self,
-        allow_blank=False,
-        max_length=None,
-        min_length=None,
-        pattern=None,
-        format=None,
-        exact=None,
-        **kwargs
-    ):
+        allow_blank: bool = False,
+        max_length: int = None,
+        min_length: int = None,
+        pattern: str = None,
+        format: str = None,
+        **kwargs: typing.Any
+    ) -> None:
         super().__init__(**kwargs)
 
         assert max_length is None or isinstance(max_length, int)
@@ -112,7 +104,9 @@ class String(Field):
         self.pattern = pattern
         self.format = format
 
-    def validate_value(self, value, strict=False):
+    def validate_value(
+        self, value: typing.Any, strict: bool = False
+    ) -> typing.Union[typing.Any, ValidationError]:
         if value is None and self.allow_null:
             return None
         elif value is None:
@@ -142,7 +136,7 @@ class String(Field):
 
         return value
 
-    def serialize(self, obj):
+    def serialize(self, obj: typing.Any) -> typing.Any:
         if self.format in FORMATS:
             return FORMATS[self.format].serialize(obj)
         return obj
@@ -168,14 +162,13 @@ class NumericType(Field):
 
     def __init__(
         self,
-        minimum=None,
-        maximum=None,
-        exclusive_minimum=None,
-        exclusive_maximum=None,
-        precision=None,
-        multiple_of=None,
-        format=None,
-        **kwargs
+        minimum: typing.Union[int, float, decimal.Decimal] = None,
+        maximum: typing.Union[int, float, decimal.Decimal] = None,
+        exclusive_minimum: typing.Union[int, float, decimal.Decimal] = None,
+        exclusive_maximum: typing.Union[int, float, decimal.Decimal] = None,
+        precision: str = None,
+        multiple_of: int = None,
+        **kwargs: typing.Any
     ):
         super().__init__(**kwargs)
 
@@ -187,22 +180,18 @@ class NumericType(Field):
         assert exclusive_maximum is None or isinstance(
             exclusive_maximum, self.numeric_type
         )
-        assert (
-            multiple_of is None
-            or isinstance(multiple_of, int)
-            or multiple_of.is_integer()
-        )
-        assert format is None or isinstance(format, str)
+        assert multiple_of is None or isinstance(multiple_of, int)
 
         self.minimum = minimum
         self.maximum = maximum
         self.exclusive_minimum = exclusive_minimum
         self.exclusive_maximum = exclusive_maximum
         self.multiple_of = multiple_of
-        self.format = format
         self.precision = precision
 
-    def validate_value(self, value, strict=False):
+    def validate_value(
+        self, value: typing.Any, strict: bool = False
+    ) -> typing.Union[typing.Any, ValidationError]:
         if value is None and self.allow_null:
             return None
         elif value is None:
@@ -263,7 +252,7 @@ class Float(NumericType):
 class Decimal(NumericType):
     numeric_type = decimal.Decimal
 
-    def serialize(self, obj):
+    def serialize(self, obj: typing.Any) -> typing.Any:
         return float(obj)
 
 
@@ -280,9 +269,11 @@ class Boolean(Field):
         1: True,
         0: False,
     }
-    coerce_null_values = {"": None, "null": None, "none": None}
+    coerce_null_values = {"", "null", "none"}
 
-    def validate_value(self, value, strict=False):
+    def validate_value(
+        self, value: typing.Any, strict: bool = False
+    ) -> typing.Union[typing.Any, ValidationError]:
         if value is None and self.allow_null:
             return None
 
@@ -293,16 +284,14 @@ class Boolean(Field):
             if strict:
                 return self.error("type")
 
-            if self.allow_null:
-                values = dict(self.coerce_values)
-                values.update(self.coerce_null_values)
-            else:
-                values = self.coerce_values
+            if isinstance(value, str):
+                value = value.lower()
+
+            if self.allow_null and value in self.coerce_null_values:
+                return None
+
             try:
-                if isinstance(value, str):
-                    value = values[value.lower()]
-                else:
-                    value = values[value]
+                value = self.coerce_values[value]
             except KeyError:
                 return self.error("type")
 
@@ -312,7 +301,9 @@ class Boolean(Field):
 class Choice(Field):
     errors = {"null": "May not be null.", "choice": "Not a valid choice."}
 
-    def __init__(self, choices, **kwargs):
+    def __init__(
+        self, choices: typing.Union[dict, typing.Sequence], **kwargs: typing.Any
+    ) -> None:
         super().__init__(**kwargs)
         if isinstance(choices, dict):
             self.choice_items = list(choices.items())
@@ -322,7 +313,9 @@ class Choice(Field):
             self.choice_items = list(choices)
         self.choice_dict = dict(self.choice_items)
 
-    def validate_value(self, value, strict=False):
+    def validate_value(
+        self, value: typing.Any, strict: bool = False
+    ) -> typing.Union[typing.Any, ValidationError]:
         if value is None and self.allow_null:
             return None
         elif value is None:
@@ -346,15 +339,15 @@ class Object(Field):
 
     def __init__(
         self,
-        properties=None,
-        pattern_properties=None,
-        additional_properties=True,
-        min_properties=None,
-        max_properties=None,
-        required=None,
-        coerce=None,
-        **kwargs
-    ):
+        properties: typing.Dict[str, Field] = None,
+        pattern_properties: typing.Dict[str, Field] = None,
+        additional_properties: typing.Union[bool, None, Field] = True,
+        min_properties: int = None,
+        max_properties: int = None,
+        required: typing.Sequence[str] = None,
+        coerce: type = None,
+        **kwargs: typing.Any
+    ) -> None:
         super().__init__(**kwargs)
 
         properties = {} if (properties is None) else dict(properties)
@@ -365,11 +358,11 @@ class Object(Field):
         required = [] if (required is None) else required
 
         assert all(isinstance(k, str) for k in properties.keys())
-        assert all(hasattr(v, "validate") for v in properties.values())
+        assert all(isinstance(v, Field) for v in properties.values())
         assert all(isinstance(k, str) for k in pattern_properties.keys())
-        assert all(hasattr(v, "validate") for v in pattern_properties.values())
-        assert additional_properties in (None, True, False) or hasattr(
-            additional_properties, "validate"
+        assert all(isinstance(v, Field) for v in pattern_properties.values())
+        assert additional_properties in (None, True, False) or isinstance(
+            additional_properties, Field
         )
         assert min_properties is None or isinstance(min_properties, int)
         assert max_properties is None or isinstance(max_properties, int)
@@ -383,7 +376,9 @@ class Object(Field):
         self.required = required
         self.coerce = coerce
 
-    def validate_value(self, value, strict=False):
+    def validate_value(
+        self, value: typing.Any, strict: bool = False
+    ) -> typing.Union[typing.Any, ValidationError]:
         if value is None and self.allow_null:
             return None
         elif value is None:
@@ -423,13 +418,11 @@ class Object(Field):
                     validated[key] = child_schema.default
                 continue
             item = value[key]
-            child = child_schema.validate(item, strict=strict)
-            if child.is_valid:
-                validated[key] = child.value
+            child_value, error = child_schema.validate(item, strict=strict)
+            if not error:
+                validated[key] = child_value
             else:
-                for error in child.error.messages():
-                    error = error.with_index_prefix(prefix=key)
-                    error_messages.append(error)
+                error_messages += error.messages(add_prefix=key)
 
         # Pattern properties
         if self.pattern_properties:
@@ -437,14 +430,11 @@ class Object(Field):
                 for pattern, child_schema in self.pattern_properties.items():
                     if isinstance(key, str) and re.search(pattern, key):
                         item = value[key]
-                        child = child_schema.validate(item, strict=strict)
-                        if child.is_valid:
-                            validated[key] = child.value
+                        child_value, error = child_schema.validate(item, strict=strict)
+                        if not error:
+                            validated[key] = child_value
                         else:
-                            for error in child.error.messages():
-                                error_messages.append(
-                                    error.with_index_prefix(prefix=key)
-                                )
+                            error_messages += error.messages(add_prefix=key)
 
         # Additional properties
         validated_keys = set(validated.keys())
@@ -464,16 +454,15 @@ class Object(Field):
                 message = self.error_message("invalid_property", index=[key])
                 error_messages.append(message)
         elif self.additional_properties is not None:
+            assert isinstance(self.additional_properties, Field)
             child_schema = self.additional_properties
             for key in remaining:
                 item = value[key]
-                child = child_schema.validate(item, strict=strict)
-                if child.is_valid:
-                    validated[key] = child.value
+                child_value, error = child_schema.validate(item, strict=strict)
+                if not error:
+                    validated[key] = child_value
                 else:
-                    for error in child.error.messages():
-                        error = error.with_index_prefix(prefix=key)
-                        error_messages.append(error)
+                    error_messages += error.messages(add_prefix=key)
 
         if error_messages:
             return ValidationError(messages=error_messages)
@@ -589,22 +578,22 @@ class Object(Field):
 
 
 class Text(String):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: typing.Any) -> None:
         super().__init__(format="text", **kwargs)
 
 
 class Date(String):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: typing.Any) -> None:
         super().__init__(format="date", **kwargs)
 
 
 class Time(String):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: typing.Any) -> None:
         super().__init__(format="time", **kwargs)
 
 
 class DateTime(String):
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: typing.Any) -> None:
         super().__init__(format="datetime", **kwargs)
 
 

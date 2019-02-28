@@ -8,5 +8,6 @@ fi
 set -x
 
 PYTHONPATH=. ${PREFIX}pytest --ignore venv --cov=typesystem --cov=tests --cov-fail-under=100 --cov-report=term-missing ${@}
+${PREFIX}mypy typesystem --ignore-missing-imports --disallow-untyped-defs
 ${PREFIX}autoflake --recursive typesystem tests
 ${PREFIX}black typesystem tests --check
