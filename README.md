@@ -33,7 +33,7 @@ class User(typesystem.Schema):
 
 
 async def list_users(request):
-    return JSONResponse([dict(user) for user in users])
+    return JSONResponse({"users": [dict(user) for user in users]})
 
 
 async def add_user(request):

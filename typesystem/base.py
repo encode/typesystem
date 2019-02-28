@@ -2,33 +2,39 @@ import typing
 from collections.abc import Mapping
 
 
-class ErrorMessage:
+class Message:
     def __init__(self, *, text: str, code: str, index: list = None):
         self.text = text
         self.code = code
         self.index = [] if index is None else index
 
     def __eq__(self, other: typing.Any) -> bool:
-        return isinstance(other, ErrorMessage) and (
+        return isinstance(other, Message) and (
             self.text == other.text
             and self.code == other.code
             and self.index == other.index
         )
 
+    def __repr__(self) -> str:
+        class_name = self.__class__.__name__
+        if self.index:
+            return f"{class_name}(text={self.text!r}, code={self.code!r}, index={self.index!r})"
+        return f"{class_name}(text={self.text!r}, code={self.code!r})"
+
 
 class ValidationError(Mapping):
     def __init__(
         self,
+        messages: typing.List[Message] = None,
         *,
         text: str = None,
         code: str = None,
-        messages: typing.List[ErrorMessage] = None
     ):
         if messages is None:
             # Instantiated as a ValidationError with a single error message.
             assert text is not None
             assert code is not None
-            messages = [ErrorMessage(text=text, code=code)]
+            messages = [Message(text=text, code=code)]
         else:
             # Instantiated as a ValidationError with multiple error messages.
             assert text is None
@@ -49,10 +55,10 @@ class ValidationError(Mapping):
 
     def messages(
         self, *, add_prefix: typing.Union[str, int] = None
-    ) -> typing.List[ErrorMessage]:
+    ) -> typing.List[Message]:
         if add_prefix is not None:
             return [
-                ErrorMessage(
+                Message(
                     text=message.text,
                     code=message.code,
                     index=[add_prefix] + message.index,
@@ -73,6 +79,13 @@ class ValidationError(Mapping):
     def __eq__(self, other: typing.Any) -> bool:
         return isinstance(other, ValidationError) and self._messages == other._messages
 
+    def __repr__(self) -> str:
+        class_name = self.__class__.__name__
+        if len(self._messages) == 1 and not self._messages[0].index:
+            message = self._messages[0]
+            return f"{class_name}(text={message.text!r}, code={message.code!r})"
+        return f"{class_name}({self._messages!r})"
+
 
 class ValidationResult:
     def __init__(
@@ -87,3 +100,9 @@ class ValidationResult:
 
     def __bool__(self) -> bool:
         return self.error is None
+
+    def __repr__(self) -> str:
+        class_name = self.__class__.__name__
+        if self.error is not None:
+            return f"{class_name}(error={self.error!r})"
+        return f"{class_name}(value={self.value!r})"

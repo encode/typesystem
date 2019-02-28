@@ -1,6 +1,6 @@
 import datetime
 
-from typesystem.base import ErrorMessage, ValidationError
+from typesystem.base import Message, ValidationError
 from typesystem.fields import (
     Boolean,
     Choice,
@@ -524,8 +524,8 @@ def test_errors_dict_interface():
 
 def test_error_messages_interface():
     """
-    `errors.messages()` should return a list of ErrorMessage instances.
+    `errors.messages()` should return a list of Message instances.
     """
     validator = Integer()
     value, error = validator.validate("abc")
-    assert error.messages() == [ErrorMessage(text="Must be a number.", code="type")]
+    assert error.messages() == [Message(text="Must be a number.", code="type")]
