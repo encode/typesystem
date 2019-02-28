@@ -1,5 +1,6 @@
 import datetime
 import re
+import typing
 
 from typesystem.base import ValidationError
 
@@ -19,17 +20,19 @@ DATETIME_REGEX = re.compile(
 
 
 class BaseFormat:
-    def error(self, code, **context):
-        text = self.errors[code].format(**self.__dict__, **context)
+    errors = {}  # type: typing.Dict[str, str]
+
+    def error(self, code: str) -> ValidationError:
+        text = self.errors[code].format(**self.__dict__)
         return ValidationError(text=text, code=code)
 
-    def is_native_type(self, value):
+    def is_native_type(self, value: typing.Any) -> bool:
         raise NotImplementedError()  # pragma: no cover
 
-    def validate(self, value):
+    def validate(self, value: typing.Any) -> typing.Union[typing.Any, ValidationError]:
         raise NotImplementedError()  # pragma: no cover
 
-    def serialize(self, obj):
+    def serialize(self, obj: typing.Any) -> str:
         raise NotImplementedError()  # pragma: no cover
 
 
@@ -39,10 +42,12 @@ class DateFormat(BaseFormat):
         "invalid": "Must be a real date.",
     }
 
-    def is_native_type(self, value):
+    def is_native_type(self, value: typing.Any) -> bool:
         return isinstance(value, datetime.date)
 
-    def validate(self, value):
+    def validate(
+        self, value: typing.Any
+    ) -> typing.Union[datetime.date, ValidationError]:
         match = DATE_REGEX.match(value)
         if not match:
             return self.error("format")
@@ -53,7 +58,7 @@ class DateFormat(BaseFormat):
         except ValueError:
             return self.error("invalid")
 
-    def serialize(self, obj):
+    def serialize(self, obj: typing.Any) -> str:
         return obj.isoformat()
 
 
@@ -63,25 +68,27 @@ class TimeFormat(BaseFormat):
         "invalid": "Must be a real time.",
     }
 
-    def is_native_type(self, value):
+    def is_native_type(self, value: typing.Any) -> bool:
         return isinstance(value, datetime.time)
 
-    def validate(self, value):
+    def validate(
+        self, value: typing.Any
+    ) -> typing.Union[datetime.time, ValidationError]:
         match = TIME_REGEX.match(value)
         if not match:
             return self.error("format")
 
-        kwargs = match.groupdict()
-        kwargs["microsecond"] = kwargs["microsecond"] and kwargs["microsecond"].ljust(
-            6, "0"
-        )
-        kwargs = {k: int(v) for k, v in kwargs.items() if v is not None}
+        groups = match.groupdict()
+        if groups["microsecond"]:
+            groups["microsecond"] = groups["microsecond"].ljust(6, "0")
+
+        kwargs = {k: int(v) for k, v in groups.items() if v is not None}
         try:
-            return datetime.time(**kwargs)
+            return datetime.time(**kwargs, tzinfo=None)  # type: ignore
         except ValueError:
             return self.error("invalid")
 
-    # def serialize(self, obj):
+    # def serialize(self, obj: typing.Any) -> str:
     #     return obj.isoformat()
 
 
@@ -91,36 +98,40 @@ class DateTimeFormat(BaseFormat):
         "invalid": "Must be a real datetime.",
     }
 
-    def is_native_type(self, value):
+    def is_native_type(self, value: typing.Any) -> bool:
         return isinstance(value, datetime.datetime)
 
-    def validate(self, value):
+    def validate(
+        self, value: typing.Any
+    ) -> typing.Union[datetime.datetime, ValidationError]:
         match = DATETIME_REGEX.match(value)
         if not match:
             return self.error("format")
 
-        kwargs = match.groupdict()
-        kwargs["microsecond"] = kwargs["microsecond"] and kwargs["microsecond"].ljust(
-            6, "0"
-        )
-        tzinfo = kwargs.pop("tzinfo")
-        if tzinfo == "Z":
+        groups = match.groupdict()
+        if groups["microsecond"]:
+            groups["microsecond"] = groups["microsecond"].ljust(6, "0")
+
+        tzinfo_str = groups.pop("tzinfo")
+        if tzinfo_str == "Z":
             tzinfo = datetime.timezone.utc
-        elif tzinfo is not None:
-            offset_mins = int(tzinfo[-2:]) if len(tzinfo) > 3 else 0
-            offset_hours = int(tzinfo[1:3])
+        elif tzinfo_str is not None:
+            offset_mins = int(tzinfo_str[-2:]) if len(tzinfo_str) > 3 else 0
+            offset_hours = int(tzinfo_str[1:3])
             delta = datetime.timedelta(hours=offset_hours, minutes=offset_mins)
-            if tzinfo[0] == "-":
+            if tzinfo_str[0] == "-":
                 delta = -delta
             tzinfo = datetime.timezone(delta)
-        kwargs = {k: int(v) for k, v in kwargs.items() if v is not None}
-        kwargs["tzinfo"] = tzinfo
+        else:
+            tzinfo = None
+
+        kwargs = {k: int(v) for k, v in groups.items() if v is not None}
         try:
-            return datetime.datetime(**kwargs)
+            return datetime.datetime(**kwargs, tzinfo=tzinfo)  # type: ignore
         except ValueError:
             return self.error("invalid")
 
-    # def serialize(self, obj):
+    # def serialize(self, obj: typing.Any) -> str:
     #     value = value.isoformat()
     #     if value.endswith('+00:00'):
     #         value = value[:-6] + 'Z'

@@ -1,33 +1,44 @@
+import typing
 from abc import ABCMeta
 from collections.abc import Mapping
 
+from typesystem.base import ValidationResult
 from typesystem.fields import Field, Object
 
 
 class SchemaMetaclass(ABCMeta):
-    def __new__(cls, name, bases, attrs):
-        fields = []
+    def __new__(
+        cls: type, name: str, bases: typing.Sequence[type], attrs: dict
+    ) -> type:
+        fields = {}  # type: typing.Dict[str, Field]
+
         for key, value in list(attrs.items()):
             if isinstance(value, Field):
                 attrs.pop(key)
-                fields.append((key, value))
+                fields[key] = value
 
-        # If this class is subclassing another Type, add that Type's properties.
-        # Note that we loop over the bases in reverse. This is necessary in order
-        # to maintain the correct order of properties.
+        # If this class is subclassing other Schema classes, add their fields.
         for base in reversed(bases):
-            if hasattr(base, "fields"):
-                fields = [
-                    (key, base.fields[key]) for key in base.fields if key not in attrs
-                ] + fields
+            base_fields = getattr(base, "fields", {})
+            for key, value in base_fields.items():
+                if isinstance(value, Field) and key not in fields:
+                    fields[key] = value
 
-        fields = sorted(fields, key=lambda item: item[1]._creation_counter)
-        attrs["fields"] = dict(fields)
-        return super(SchemaMetaclass, cls).__new__(cls, name, bases, attrs)
+        #  Sort fields by their actual position in the source code,
+        # using `Field._creation_counter`
+        attrs["fields"] = dict(
+            sorted(fields.items(), key=lambda item: item[1]._creation_counter)
+        )
+
+        return super(SchemaMetaclass, cls).__new__(  # type: ignore
+            cls, name, bases, attrs
+        )
 
 
 class Schema(Mapping, metaclass=SchemaMetaclass):
-    def __init__(self, *args, **kwargs):
+    fields = {}  # type: typing.Dict[str, Field]
+
+    def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
         if args:
             assert len(args) == 1
             assert not kwargs
@@ -66,7 +77,9 @@ class Schema(Mapping, metaclass=SchemaMetaclass):
             raise TypeError(message)
 
     @classmethod
-    def validate(cls, value, strict=False):
+    def validate(
+        cls: typing.Type["Schema"], value: typing.Any, strict: bool = False
+    ) -> ValidationResult:
         required = [key for key, value in cls.fields.items() if not value.has_default()]
         validator = Object(
             properties=cls.fields,
@@ -76,7 +89,7 @@ class Schema(Mapping, metaclass=SchemaMetaclass):
         )
         return validator.validate(value, strict=strict)
 
-    def __eq__(self, other):
+    def __eq__(self, other: typing.Any) -> bool:
         if not isinstance(other, self.__class__):
             return False
 
@@ -85,17 +98,17 @@ class Schema(Mapping, metaclass=SchemaMetaclass):
                 return False
         return True
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: typing.Any) -> typing.Any:
         if key not in self.fields or not hasattr(self, key):
             raise KeyError(key)
         field = self.fields[key]
         value = getattr(self, key)
         return field.serialize(value)
 
-    def __iter__(self):
+    def __iter__(self) -> typing.Iterator[str]:
         for key in self.fields:
             if hasattr(self, key):
                 yield key
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len([key for key in self.fields if hasattr(self, key)])

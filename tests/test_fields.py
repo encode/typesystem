@@ -18,7 +18,6 @@ def test_string():
     validator = String()
     validated = validator.validate("abc")
     assert validated
-    assert validated.is_valid
     assert validated.value == "abc"
     assert validated.error is None
 
@@ -468,6 +467,10 @@ def test_datetime():
     validator = DateTime()
     value, error = validator.validate("2049-1-1 12:00:00")
     assert value == datetime.datetime(2049, 1, 1, 12, 0, 0)
+
+    validator = DateTime()
+    value, error = validator.validate("2049-1-1 12:00:00.001")
+    assert value == datetime.datetime(2049, 1, 1, 12, 0, 0, 1000)
 
     tzinfo = datetime.timezone.utc
     validator = DateTime()
