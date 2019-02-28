@@ -16,7 +16,7 @@ from typesystem.fields import (
 )
 
 
-__version__ = "0.0.3"
+__version__ = "0.1.0"
 __all__ = [
     "Jinja2Forms",
     "Schema",
