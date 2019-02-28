@@ -63,6 +63,12 @@ class Field:
     def has_default(self) -> bool:
         return hasattr(self, "default")
 
+    def get_default_value(self) -> typing.Any:
+        default = getattr(self, "default", None)
+        if callable(default):
+            return default()
+        return default
+
     def error(self, code: str) -> ValidationError:
         text = self.errors[code].format(**self.__dict__)
         return ValidationError(text=text, code=code)
@@ -423,7 +429,7 @@ class Object(Field):
         for key, child_schema in self.properties.items():
             if key not in value:
                 if child_schema.has_default():
-                    validated[key] = child_schema.default
+                    validated[key] = child_schema.get_default_value()
                 continue
             item = value[key]
             child_value, error = child_schema.validate(item, strict=strict)
