@@ -4,7 +4,7 @@ import typing
 from math import isfinite
 
 from typesystem import formats
-from typesystem.base import ErrorMessage, ValidationError, ValidationResult
+from typesystem.base import Message, ValidationError, ValidationResult
 
 NO_DEFAULT = object()
 
@@ -67,9 +67,9 @@ class Field:
         text = self.errors[code].format(**self.__dict__)
         return ValidationError(text=text, code=code)
 
-    def error_message(self, code: str, *, index: list = None) -> ErrorMessage:
+    def error_message(self, code: str, *, index: list = None) -> Message:
         text = self.errors[code].format(**self.__dict__)
-        return ErrorMessage(text=text, code=code, index=index)
+        return Message(text=text, code=code, index=index)
 
 
 class String(Field):
@@ -473,7 +473,7 @@ class Object(Field):
                     error_messages += error.messages(add_prefix=key)
 
         if error_messages:
-            return ValidationError(messages=error_messages)
+            return ValidationError(error_messages)
 
         if self.coerce is not None:
             return self.coerce(validated)
@@ -578,7 +578,7 @@ class Object(Field):
 #             for key, messages in errors.items():
 #                 for message in messages:
 #                     index = [key] if message.index is None else [key] + message.index
-#                     error_message = ErrorMessage(message.text, message.code, index)
+#                     error_message = Message(message.text, message.code, index)
 #                     error_messages.append(error_message)
 #             raise ValidationError(error_messages)
 #

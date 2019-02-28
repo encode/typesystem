@@ -2,14 +2,14 @@ import typing
 from collections.abc import Mapping
 
 
-class ErrorMessage:
+class Message:
     def __init__(self, *, text: str, code: str, index: list = None):
         self.text = text
         self.code = code
         self.index = [] if index is None else index
 
     def __eq__(self, other: typing.Any) -> bool:
-        return isinstance(other, ErrorMessage) and (
+        return isinstance(other, Message) and (
             self.text == other.text
             and self.code == other.code
             and self.index == other.index
@@ -25,16 +25,16 @@ class ErrorMessage:
 class ValidationError(Mapping):
     def __init__(
         self,
+        messages: typing.List[Message] = None,
         *,
         text: str = None,
         code: str = None,
-        messages: typing.List[ErrorMessage] = None,
     ):
         if messages is None:
             # Instantiated as a ValidationError with a single error message.
             assert text is not None
             assert code is not None
-            messages = [ErrorMessage(text=text, code=code)]
+            messages = [Message(text=text, code=code)]
         else:
             # Instantiated as a ValidationError with multiple error messages.
             assert text is None
@@ -55,10 +55,10 @@ class ValidationError(Mapping):
 
     def messages(
         self, *, add_prefix: typing.Union[str, int] = None
-    ) -> typing.List[ErrorMessage]:
+    ) -> typing.List[Message]:
         if add_prefix is not None:
             return [
-                ErrorMessage(
+                Message(
                     text=message.text,
                     code=message.code,
                     index=[add_prefix] + message.index,
@@ -81,10 +81,10 @@ class ValidationError(Mapping):
 
     def __repr__(self) -> str:
         class_name = self.__class__.__name__
-        if len(self.messages) == 1 and not self.messages[0].index:
-            message = self.messages[0]
+        if len(self._messages) == 1 and not self._messages[0].index:
+            message = self._messages[0]
             return f"{class_name}(text={message.text!r}, code={message.code!r})"
-        return f"{class_name}(messages={self._messages!r})"
+        return f"{class_name}({self._messages!r})"
 
 
 class ValidationResult:
