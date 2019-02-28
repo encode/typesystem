@@ -15,6 +15,12 @@ class ErrorMessage:
             and self.index == other.index
         )
 
+    def __repr__(self) -> str:
+        class_name = self.__class__.__name__
+        if self.index:
+            return f"{class_name}(text={self.text!r}, code={self.code!r}, index={self.index!r})"
+        return f"{class_name}(text={self.text!r}, code={self.code!r})"
+
 
 class ValidationError(Mapping):
     def __init__(
@@ -22,7 +28,7 @@ class ValidationError(Mapping):
         *,
         text: str = None,
         code: str = None,
-        messages: typing.List[ErrorMessage] = None
+        messages: typing.List[ErrorMessage] = None,
     ):
         if messages is None:
             # Instantiated as a ValidationError with a single error message.
@@ -73,6 +79,13 @@ class ValidationError(Mapping):
     def __eq__(self, other: typing.Any) -> bool:
         return isinstance(other, ValidationError) and self._messages == other._messages
 
+    def __repr__(self) -> str:
+        class_name = self.__class__.__name__
+        if len(self.messages) == 1 and not self.messages[0].index:
+            message = self.messages[0]
+            return f"{class_name}(text={message.text!r}, code={message.code!r})"
+        return f"{class_name}(messages={self._messages!r})"
+
 
 class ValidationResult:
     def __init__(
@@ -87,3 +100,9 @@ class ValidationResult:
 
     def __bool__(self) -> bool:
         return self.error is None
+
+    def __repr__(self) -> str:
+        class_name = self.__class__.__name__
+        if self.error is not None:
+            return f"{class_name}(error={self.error!r})"
+        return f"{class_name}(value={self.value!r})"
