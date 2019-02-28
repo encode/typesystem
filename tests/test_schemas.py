@@ -42,6 +42,14 @@ def test_schema_eq():
     assert tom != tshirt
 
 
+def test_schema_repr():
+    tom = Person(name="Tom", age=123)
+    assert repr(tom) == "Person(name='Tom', age=123)"
+
+    tom = Person(name="Tom")
+    assert repr(tom) == "Person(name='Tom')"
+
+
 def test_schema_instantiation():
     tshirt = Product(name="T-Shirt")
     assert tshirt.name == "T-Shirt"

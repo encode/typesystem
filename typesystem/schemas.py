@@ -112,3 +112,13 @@ class Schema(Mapping, metaclass=SchemaMetaclass):
 
     def __len__(self) -> int:
         return len([key for key in self.fields if hasattr(self, key)])
+
+    def __repr__(self) -> str:
+        class_name = self.__class__.__name__
+        arguments = {
+            key: getattr(self, key) for key in self.fields.keys() if hasattr(self, key)
+        }
+        argument_str = ", ".join(
+            [f"{key}={value!r}" for key, value in arguments.items()]
+        )
+        return f"{class_name}({argument_str})"
