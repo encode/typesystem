@@ -147,11 +147,7 @@ class String(Field):
         return obj
 
 
-class NumericType(Field):
-    """
-    Base class for both `Number` and `Integer`.
-    """
-
+class Number(Field):
     numeric_type = None  # type: type
     errors = {
         "type": "Must be a number.",
@@ -178,13 +174,13 @@ class NumericType(Field):
     ):
         super().__init__(**kwargs)
 
-        assert minimum is None or isinstance(minimum, self.numeric_type)
-        assert maximum is None or isinstance(maximum, self.numeric_type)
+        assert minimum is None or isinstance(minimum, (int, float, decimal.Decimal))
+        assert maximum is None or isinstance(maximum, (int, float, decimal.Decimal))
         assert exclusive_minimum is None or isinstance(
-            exclusive_minimum, self.numeric_type
+            exclusive_minimum, (int, float, decimal.Decimal)
         )
         assert exclusive_maximum is None or isinstance(
-            exclusive_maximum, self.numeric_type
+            exclusive_maximum, (int, float, decimal.Decimal)
         )
         assert multiple_of is None or isinstance(multiple_of, int)
 
@@ -214,17 +210,19 @@ class NumericType(Field):
             raise self.validation_error("finite")
 
         try:
-            value = self.numeric_type(value)
+            if self.numeric_type is not None:
+                value = self.numeric_type(value)
         except (TypeError, ValueError):
             raise self.validation_error("type")
 
         if self.precision is not None:
+            numeric_type = self.numeric_type or type(value)
             quantize_val = decimal.Decimal(self.precision)
             decimal_val = decimal.Decimal(value)
             decimal_val = decimal_val.quantize(
                 quantize_val, rounding=decimal.ROUND_HALF_UP
             )
-            value = self.numeric_type(decimal_val)
+            value = numeric_type(decimal_val)
 
         if self.minimum is not None and value < self.minimum:
             raise self.validation_error("minimum")
@@ -245,15 +243,15 @@ class NumericType(Field):
         return value
 
 
-class Integer(NumericType):
+class Integer(Number):
     numeric_type = int
 
 
-class Float(NumericType):
+class Float(Number):
     numeric_type = float
 
 
-class Decimal(NumericType):
+class Decimal(Number):
     numeric_type = decimal.Decimal
 
     def serialize(self, obj: typing.Any) -> typing.Any:
@@ -512,7 +510,10 @@ class Array(Field):
         assert isinstance(unique_items, bool)
 
         if isinstance(items, list) and (additional_items is False):
-            exact_items = len(items)
+            if min_items is None:
+                min_items = len(items)
+            if max_items is None:
+                max_items = len(items)
 
         if exact_items is not None:
             min_items = exact_items
