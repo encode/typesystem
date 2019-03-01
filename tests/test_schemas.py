@@ -17,18 +17,18 @@ class Product(typesystem.Schema):
 
 
 def test_schema_validation():
-    value, error = Person.validate({"name": "Tom", "age": "123"})
+    value, error = Person.validate_or_error({"name": "Tom", "age": "123"})
     assert not error
     assert value == Person(name="Tom", age=123)
 
-    value, error = Person.validate({"name": "Tom", "age": "123"})
+    value, error = Person.validate_or_error({"name": "Tom", "age": "123"})
     assert not error
     assert value == Person(name="Tom", age=123)
 
-    value, error = Person.validate({"name": "Tom", "age": "abc"})
+    value, error = Person.validate_or_error({"name": "Tom", "age": "abc"})
     assert dict(error) == {"age": "Must be a number."}
 
-    value, error = Person.validate({"name": "Tom"})
+    value, error = Person.validate_or_error({"name": "Tom"})
     assert dict(error) == {"age": "This field is required."}
 
 
@@ -131,6 +131,6 @@ def test_schema_with_callable_default():
     class Example(typesystem.Schema):
         created = typesystem.Date(default=datetime.date.today)
 
-    value, error = Example.validate({})
+    value, error = Example.validate_or_error({})
     print(value)
     assert value.created == datetime.date.today()

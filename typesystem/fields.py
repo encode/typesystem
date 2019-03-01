@@ -45,17 +45,17 @@ class Field:
         self._creation_counter = Field._creation_counter
         Field._creation_counter += 1
 
-    def validate(self, value: typing.Any, *, strict: bool = False) -> ValidationResult:
-        result = self.validate_value(value, strict=strict)
-
-        if isinstance(result, ValidationError):
-            return ValidationResult(value=None, error=result)
-        return ValidationResult(value=result, error=None)
-
-    def validate_value(
-        self, value: typing.Any, *, strict: bool = False
-    ) -> typing.Union[typing.Any, ValidationError]:
+    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
         raise NotImplementedError()  # pragma: no cover
+
+    def validate_or_error(
+        self, value: typing.Any, *, strict: bool = False
+    ) -> ValidationResult:
+        try:
+            value = self.validate(value, strict=strict)
+        except ValidationError as error:
+            return ValidationResult(value=None, error=error)
+        return ValidationResult(value=value, error=None)
 
     def serialize(self, obj: typing.Any) -> typing.Any:
         return obj
@@ -69,13 +69,12 @@ class Field:
             return default()
         return default
 
-    def error(self, code: str) -> ValidationError:
-        text = self.errors[code].format(**self.__dict__)
+    def validation_error(self, code: str) -> ValidationError:
+        text = self.get_error_text(code)
         return ValidationError(text=text, code=code)
 
-    def error_message(self, code: str, *, index: list = None) -> Message:
-        text = self.errors[code].format(**self.__dict__)
-        return Message(text=text, code=code, index=index)
+    def get_error_text(self, code: str) -> str:
+        return self.errors[code].format(**self.__dict__)
 
 
 class String(Field):
@@ -112,32 +111,30 @@ class String(Field):
         self.pattern = pattern
         self.format = format
 
-    def validate_value(
-        self, value: typing.Any, *, strict: bool = False
-    ) -> typing.Union[typing.Any, ValidationError]:
+    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
         if value is None and self.allow_null:
             return None
         elif value is None:
-            return self.error("null")
+            raise self.validation_error("null")
         elif self.format in FORMATS and FORMATS[self.format].is_native_type(value):
             return value
         elif not isinstance(value, str):
-            return self.error("type")
+            raise self.validation_error("type")
 
         if not self.allow_blank and not value:
-            return self.error("blank")
+            raise self.validation_error("blank")
 
         if self.min_length is not None:
             if len(value) < self.min_length:
-                return self.error("min_length")
+                raise self.validation_error("min_length")
 
         if self.max_length is not None:
             if len(value) > self.max_length:
-                return self.error("max_length")
+                raise self.validation_error("max_length")
 
         if self.pattern is not None:
             if not re.search(self.pattern, value):
-                return self.error("pattern")
+                raise self.validation_error("pattern")
 
         if self.format in FORMATS:
             return FORMATS[self.format].validate(value)
@@ -198,30 +195,28 @@ class NumericType(Field):
         self.multiple_of = multiple_of
         self.precision = precision
 
-    def validate_value(
-        self, value: typing.Any, *, strict: bool = False
-    ) -> typing.Union[typing.Any, ValidationError]:
+    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
         if value is None and self.allow_null:
             return None
         elif value is None:
-            return self.error("null")
+            raise self.validation_error("null")
         elif isinstance(value, bool):
-            return self.error("type")
+            raise self.validation_error("type")
         elif (
             self.numeric_type is int
             and isinstance(value, float)
             and not value.is_integer()
         ):
-            return self.error("integer")
+            raise self.validation_error("integer")
         elif not isinstance(value, (int, float)) and strict:
-            return self.error("type")
+            raise self.validation_error("type")
         elif isinstance(value, float) and not isfinite(value):
-            return self.error("finite")
+            raise self.validation_error("finite")
 
         try:
             value = self.numeric_type(value)
         except (TypeError, ValueError):
-            return self.error("type")
+            raise self.validation_error("type")
 
         if self.precision is not None:
             quantize_val = decimal.Decimal(self.precision)
@@ -232,20 +227,20 @@ class NumericType(Field):
             value = self.numeric_type(decimal_val)
 
         if self.minimum is not None and value < self.minimum:
-            return self.error("minimum")
+            raise self.validation_error("minimum")
 
         if self.exclusive_minimum is not None and value <= self.exclusive_minimum:
-            return self.error("exclusive_minimum")
+            raise self.validation_error("exclusive_minimum")
 
         if self.maximum is not None and value > self.maximum:
-            return self.error("maximum")
+            raise self.validation_error("maximum")
 
         if self.exclusive_maximum is not None and value >= self.exclusive_maximum:
-            return self.error("exclusive_maximum")
+            raise self.validation_error("exclusive_maximum")
 
         if self.multiple_of is not None:
             if value % self.multiple_of:
-                return self.error("multiple_of")
+                raise self.validation_error("multiple_of")
 
         return value
 
@@ -280,18 +275,16 @@ class Boolean(Field):
     }
     coerce_null_values = {"", "null", "none"}
 
-    def validate_value(
-        self, value: typing.Any, *, strict: bool = False
-    ) -> typing.Union[typing.Any, ValidationError]:
+    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
         if value is None and self.allow_null:
             return None
 
         elif value is None:
-            return self.error("null")
+            raise self.validation_error("null")
 
         elif not isinstance(value, bool):
             if strict:
-                return self.error("type")
+                raise self.validation_error("type")
 
             if isinstance(value, str):
                 value = value.lower()
@@ -302,7 +295,7 @@ class Boolean(Field):
             try:
                 value = self.coerce_values[value]
             except KeyError:
-                return self.error("type")
+                raise self.validation_error("type")
 
         return value
 
@@ -326,15 +319,13 @@ class Choice(Field):
             self.choice_items = list(choices)
         self.choice_dict = dict(self.choice_items)
 
-    def validate_value(
-        self, value: typing.Any, *, strict: bool = False
-    ) -> typing.Union[typing.Any, ValidationError]:
+    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
         if value is None and self.allow_null:
             return None
         elif value is None:
-            return self.error("null")
+            raise self.validation_error("null")
         elif value not in self.choice_dict:
-            return self.error("choice")
+            raise self.validation_error("choice")
         return value
 
 
@@ -390,15 +381,13 @@ class Object(Field):
         self.required = required
         self.coerce = coerce
 
-    def validate_value(
-        self, value: typing.Any, *, strict: bool = False
-    ) -> typing.Union[typing.Any, ValidationError]:
+    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
         if value is None and self.allow_null:
             return None
         elif value is None:
-            return self.error("null")
+            raise self.validation_error("null")
         elif not isinstance(value, (dict, typing.Mapping)):
-            return self.error("type")
+            raise self.validation_error("type")
 
         validated = {}
         error_messages = []
@@ -406,23 +395,24 @@ class Object(Field):
         # Ensure all property keys are strings.
         for key in value.keys():
             if not isinstance(key, str):
-                return self.error("invalid_key")
+                raise self.validation_error("invalid_key")
 
         # Min/Max properties
         if self.min_properties is not None:
             if len(value) < self.min_properties:
                 if self.min_properties == 1:
-                    return self.error("empty")
+                    raise self.validation_error("empty")
                 else:
-                    return self.error("min_properties")
+                    raise self.validation_error("min_properties")
         if self.max_properties is not None:
             if len(value) > self.max_properties:
-                return self.error("max_properties")
+                raise self.validation_error("max_properties")
 
         # Required properties
         for key in self.required:
             if key not in value:
-                message = self.error_message("required", index=[key])
+                text = self.get_error_text("required")
+                message = Message(text=text, code="required", index=[key])
                 error_messages.append(message)
 
         # Properties
@@ -432,7 +422,7 @@ class Object(Field):
                     validated[key] = child_schema.get_default_value()
                 continue
             item = value[key]
-            child_value, error = child_schema.validate(item, strict=strict)
+            child_value, error = child_schema.validate_or_error(item, strict=strict)
             if not error:
                 validated[key] = child_value
             else:
@@ -444,7 +434,9 @@ class Object(Field):
                 for pattern, child_schema in self.pattern_properties.items():
                     if isinstance(key, str) and re.search(pattern, key):
                         item = value[key]
-                        child_value, error = child_schema.validate(item, strict=strict)
+                        child_value, error = child_schema.validate_or_error(
+                            item, strict=strict
+                        )
                         if not error:
                             validated[key] = child_value
                         else:
@@ -465,21 +457,22 @@ class Object(Field):
                 validated[key] = value[key]
         elif self.additional_properties is False:
             for key in remaining:
-                message = self.error_message("invalid_property", index=[key])
+                text = self.get_error_text("invalid_property")
+                message = Message(text=text, code="invalid_property", index=[key])
                 error_messages.append(message)
         elif self.additional_properties is not None:
             assert isinstance(self.additional_properties, Field)
             child_schema = self.additional_properties
             for key in remaining:
                 item = value[key]
-                child_value, error = child_schema.validate(item, strict=strict)
+                child_value, error = child_schema.validate_or_error(item, strict=strict)
                 if not error:
                     validated[key] = child_value
                 else:
                     error_messages += error.messages(add_prefix=key)
 
         if error_messages:
-            return ValidationError(error_messages)
+            raise ValidationError(error_messages)
 
         if self.coerce is not None:
             return self.coerce(validated)

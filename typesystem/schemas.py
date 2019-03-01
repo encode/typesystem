@@ -2,7 +2,7 @@ import typing
 from abc import ABCMeta
 from collections.abc import Mapping
 
-from typesystem.base import ValidationResult
+from typesystem.base import ValidationError, ValidationResult
 from typesystem.fields import Field, Object
 
 
@@ -56,7 +56,7 @@ class Schema(Mapping, metaclass=SchemaMetaclass):
         for key, schema in self.fields.items():
             if key in kwargs:
                 value = kwargs.pop(key)
-                value, error = schema.validate(value)
+                value, error = schema.validate_or_error(value)
                 if error:
                     class_name = self.__class__.__name__
                     error_text = " ".join(
@@ -79,7 +79,7 @@ class Schema(Mapping, metaclass=SchemaMetaclass):
     @classmethod
     def validate(
         cls: typing.Type["Schema"], value: typing.Any, *, strict: bool = False
-    ) -> ValidationResult:
+    ) -> typing.Type["Schema"]:
         required = [key for key, value in cls.fields.items() if not value.has_default()]
         validator = Object(
             properties=cls.fields,
@@ -88,6 +88,16 @@ class Schema(Mapping, metaclass=SchemaMetaclass):
             coerce=cls,
         )
         return validator.validate(value, strict=strict)
+
+    @classmethod
+    def validate_or_error(
+        cls: typing.Type["Schema"], value: typing.Any, *, strict: bool = False
+    ) -> ValidationResult:
+        try:
+            value = cls.validate(value, strict=strict)
+        except ValidationError as error:
+            return ValidationResult(value=None, error=error)
+        return ValidationResult(value=value, error=None)
 
     @property
     def is_sparse(self) -> bool:

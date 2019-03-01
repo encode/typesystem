@@ -22,7 +22,7 @@ DATETIME_REGEX = re.compile(
 class BaseFormat:
     errors = {}  # type: typing.Dict[str, str]
 
-    def error(self, code: str) -> ValidationError:
+    def validation_error(self, code: str) -> ValidationError:
         text = self.errors[code].format(**self.__dict__)
         return ValidationError(text=text, code=code)
 
@@ -45,18 +45,16 @@ class DateFormat(BaseFormat):
     def is_native_type(self, value: typing.Any) -> bool:
         return isinstance(value, datetime.date)
 
-    def validate(
-        self, value: typing.Any
-    ) -> typing.Union[datetime.date, ValidationError]:
+    def validate(self, value: typing.Any) -> datetime.date:
         match = DATE_REGEX.match(value)
         if not match:
-            return self.error("format")
+            raise self.validation_error("format")
 
         kwargs = {k: int(v) for k, v in match.groupdict().items()}
         try:
             return datetime.date(**kwargs)
         except ValueError:
-            return self.error("invalid")
+            raise self.validation_error("invalid")
 
     def serialize(self, obj: typing.Any) -> str:
         return obj.isoformat()
@@ -71,12 +69,10 @@ class TimeFormat(BaseFormat):
     def is_native_type(self, value: typing.Any) -> bool:
         return isinstance(value, datetime.time)
 
-    def validate(
-        self, value: typing.Any
-    ) -> typing.Union[datetime.time, ValidationError]:
+    def validate(self, value: typing.Any) -> datetime.time:
         match = TIME_REGEX.match(value)
         if not match:
-            return self.error("format")
+            raise self.validation_error("format")
 
         groups = match.groupdict()
         if groups["microsecond"]:
@@ -86,7 +82,7 @@ class TimeFormat(BaseFormat):
         try:
             return datetime.time(**kwargs, tzinfo=None)  # type: ignore
         except ValueError:
-            return self.error("invalid")
+            raise self.validation_error("invalid")
 
     # def serialize(self, obj: typing.Any) -> str:
     #     return obj.isoformat()
@@ -101,12 +97,10 @@ class DateTimeFormat(BaseFormat):
     def is_native_type(self, value: typing.Any) -> bool:
         return isinstance(value, datetime.datetime)
 
-    def validate(
-        self, value: typing.Any
-    ) -> typing.Union[datetime.datetime, ValidationError]:
+    def validate(self, value: typing.Any) -> datetime.datetime:
         match = DATETIME_REGEX.match(value)
         if not match:
-            return self.error("format")
+            raise self.validation_error("format")
 
         groups = match.groupdict()
         if groups["microsecond"]:
@@ -129,7 +123,7 @@ class DateTimeFormat(BaseFormat):
         try:
             return datetime.datetime(**kwargs, tzinfo=tzinfo)  # type: ignore
         except ValueError:
-            return self.error("invalid")
+            raise self.validation_error("invalid")
 
     # def serialize(self, obj: typing.Any) -> str:
     #     value = value.isoformat()
