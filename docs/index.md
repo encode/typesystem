@@ -12,12 +12,6 @@
 </a>
 </p>
 
----
-
-**Documentation**: [https://www.encode.io/typesystem/](https://www.encode.io/typesystem/)
-
----
-
 TypeSystem is a comprehensive data validation library that gives you:
 
 * Data validation.
