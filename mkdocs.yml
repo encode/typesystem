@@ -1,0 +1,17 @@
+site_name: TypeSystem
+site_description: Data validation, serialization, and forms.
+
+theme:
+    name: 'material'
+
+repo_name: encode/typesystem
+repo_url: https://github.com/encode/typesystem
+edit_uri: ""
+
+nav:
+    - Introduction: 'index.md'
+    - Examples: 'examples.md'
+
+markdown_extensions:
+  - markdown.extensions.codehilite:
+      guess_lang: false
