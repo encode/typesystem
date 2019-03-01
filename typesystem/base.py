@@ -22,7 +22,7 @@ class Message:
         return f"{class_name}(text={self.text!r}, code={self.code!r})"
 
 
-class ValidationError(Mapping):
+class ValidationError(Mapping, Exception):
     def __init__(
         self,
         messages: typing.List[Message] = None,
