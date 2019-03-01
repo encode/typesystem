@@ -494,6 +494,14 @@ def test_array():
     value, error = validator.validate_or_error(["a", "123", "456"])
     assert value == ["a", 123, 456]
 
+    validator = Array(items=String(), unique_items=True)
+    value, error = validator.validate_or_error(["a", "b"])
+    assert value == ["a", "b"]
+
+    validator = Array(items=String(), unique_items=True)
+    value, error = validator.validate_or_error(["a", "a"])
+    assert dict(error) == {1: "Items must be unique."}
+
 
 def test_date():
     validator = Date()

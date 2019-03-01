@@ -484,7 +484,7 @@ class Array(Field):
         "min_items": "Must have at least {min_items} items.",
         "max_items": "Must have no more than {max_items} items.",
         "additional_items": "May not contain additional items.",
-        "unique_items": "This item is not unique.",
+        "unique_items": "Items must be unique.",
     }
 
     def __init__(
@@ -548,8 +548,8 @@ class Array(Field):
         # Ensure all items are of the right type.
         validated = []
         error_messages = []  # type: typing.List[Message]
-        # if self.unique_items:
-        #     seen_items = Uniqueness()
+        if self.unique_items:
+            seen_items = set()  # type: typing.Set[typing.Any]
 
         for pos, item in enumerate(value):
             validator = None
@@ -570,11 +570,13 @@ class Array(Field):
                 else:
                     validated.append(item)
 
-                # if self.unique_items:
-                #     if item in seen_items:
-                #         raise self.validation_error('unique_items')
-                #     else:
-                #         seen_items.add(item)
+                if self.unique_items:
+                    if item in seen_items:
+                        text = self.get_error_text("unique_items")
+                        message = Message(text=text, code="unique_items", index=[pos])
+                        error_messages.append(message)
+                    else:
+                        seen_items.add(item)
 
         if error_messages:
             raise ValidationError(error_messages)
