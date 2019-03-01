@@ -602,3 +602,15 @@ class Time(String):
 class DateTime(String):
     def __init__(self, **kwargs: typing.Any) -> None:
         super().__init__(format="datetime", **kwargs)
+
+
+class Nested(Field):
+    def __init__(self, schema: typing.Any, **kwargs: typing.Any) -> None:
+        super().__init__(**kwargs)
+        self.schema = schema
+
+    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
+        return self.schema.validate(value, strict=strict)
+
+    def serialize(self, obj: typing.Any) -> typing.Any:
+        return dict(obj)
