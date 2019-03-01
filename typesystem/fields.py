@@ -475,108 +475,113 @@ class Object(Field):
         return validated
 
 
-# class Array(Field):
-#     errors = {
-#         'type': 'Must be an array.',
-#         'null': 'May not be null.',
-#         'empty': 'Must not be empty.',
-#         'exact_items': 'Must have {min_items} items.',
-#         'min_items': 'Must have at least {min_items} items.',
-#         'max_items': 'Must have no more than {max_items} items.',
-#         'additional_items': 'May not contain additional items.',
-#         'unique_items': 'This item is not unique.',
-#     }
-#
-#     def __init__(self, items=None, additional_items=None, min_items=None,
-#                  max_items=None, unique_items=False, **kwargs):
-#         super().__init__(**kwargs)
-#
-#         items = list(items) if isinstance(items, (list, tuple)) else items
-#
-#         assert items is None or hasattr(items, 'validate') or (
-#             isinstance(items, list) and
-#             all(hasattr(i, 'validate') for i in items)
-#         )
-#         assert additional_items in (None, True, False) or hasattr(additional_items, 'validate')
-#         assert min_items is None or isinstance(min_items, int)
-#         assert max_items is None or isinstance(max_items, int)
-#         assert isinstance(unique_items, bool)
-#
-#         self.items = items
-#         self.additional_items = additional_items
-#         self.min_items = min_items
-#         self.max_items = max_items
-#         self.unique_items = unique_items
-#
-#     def validate(self, value, definitions=None, allow_coerce=False):
-#         if value is None and self.allow_null:
-#             return None
-#         elif value is None:
-#             self.error('null')
-#         elif not isinstance(value, list):
-#             self.error('type')
-#
-#         definitions = self.get_definitions(definitions)
-#         validated = []
-#
-#         if self.min_items is not None and self.min_items == self.max_items and len(value) != self.min_items:
-#             self.error('exact_items')
-#         if self.min_items is not None and len(value) < self.min_items:
-#             if self.min_items == 1:
-#                 self.error('empty')
-#             self.error('min_items')
-#         elif self.max_items is not None and len(value) > self.max_items:
-#             self.error('max_items')
-#         elif isinstance(self.items, list) and (self.additional_items is False) and len(value) > len(self.items):
-#             self.error('additional_items')
-#
-#         # Ensure all items are of the right type.
-#         errors = {}
-#         if self.unique_items:
-#             seen_items = Uniqueness()
-#
-#         for pos, item in enumerate(value):
-#             try:
-#                 if isinstance(self.items, list):
-#                     if pos < len(self.items):
-#                         item = self.items[pos].validate(
-#                             item,
-#                             definitions=definitions,
-#                             allow_coerce=allow_coerce
-#                         )
-#                     elif isinstance(self.additional_items, Validator):
-#                         item = self.additional_items.validate(
-#                             item,
-#                             definitions=definitions,
-#                             allow_coerce=allow_coerce
-#                         )
-#                 elif self.items is not None:
-#                     item = self.items.validate(
-#                         item,
-#                         definitions=definitions,
-#                         allow_coerce=allow_coerce
-#                     )
-#
-#                 if self.unique_items:
-#                     if item in seen_items:
-#                         self.error('unique_items')
-#                     else:
-#                         seen_items.add(item)
-#
-#                 validated.append(item)
-#             except ValidationError as exc:
-#                 errors[pos] = exc.messages
-#
-#         if errors:
-#             error_messages = []
-#             for key, messages in errors.items():
-#                 for message in messages:
-#                     index = [key] if message.index is None else [key] + message.index
-#                     error_message = Message(message.text, message.code, index)
-#                     error_messages.append(error_message)
-#             raise ValidationError(error_messages)
-#
-#         return validated
+class Array(Field):
+    errors = {
+        "type": "Must be an array.",
+        "null": "May not be null.",
+        "empty": "Must not be empty.",
+        "exact_items": "Must have {min_items} items.",
+        "min_items": "Must have at least {min_items} items.",
+        "max_items": "Must have no more than {max_items} items.",
+        "additional_items": "May not contain additional items.",
+        "unique_items": "Items must be unique.",
+    }
+
+    def __init__(
+        self,
+        items: typing.Union[Field, typing.Sequence[Field]] = None,
+        additional_items: typing.Union[Field, bool] = False,
+        min_items: int = None,
+        max_items: int = None,
+        exact_items: int = None,
+        unique_items: bool = False,
+        **kwargs: typing.Any,
+    ) -> None:
+        super().__init__(**kwargs)
+
+        items = list(items) if isinstance(items, (list, tuple)) else items
+
+        assert (
+            items is None
+            or isinstance(items, Field)
+            or (isinstance(items, list) and all(isinstance(i, Field) for i in items))
+        )
+        assert isinstance(additional_items, bool) or isinstance(additional_items, Field)
+        assert min_items is None or isinstance(min_items, int)
+        assert max_items is None or isinstance(max_items, int)
+        assert isinstance(unique_items, bool)
+
+        if isinstance(items, list) and (additional_items is False):
+            exact_items = len(items)
+
+        if exact_items is not None:
+            min_items = exact_items
+            max_items = exact_items
+
+        self.items = items
+        self.additional_items = additional_items
+        self.min_items = min_items
+        self.max_items = max_items
+        self.unique_items = unique_items
+
+    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
+        if value is None and self.allow_null:
+            return None
+        elif value is None:
+            raise self.validation_error("null")
+        elif not isinstance(value, list):
+            raise self.validation_error("type")
+
+        if (
+            self.min_items is not None
+            and self.min_items == self.max_items
+            and len(value) != self.min_items
+        ):
+            raise self.validation_error("exact_items")
+        if self.min_items is not None and len(value) < self.min_items:
+            if self.min_items == 1:
+                raise self.validation_error("empty")
+            raise self.validation_error("min_items")
+        elif self.max_items is not None and len(value) > self.max_items:
+            raise self.validation_error("max_items")
+
+        # Ensure all items are of the right type.
+        validated = []
+        error_messages = []  # type: typing.List[Message]
+        if self.unique_items:
+            seen_items = set()  # type: typing.Set[typing.Any]
+
+        for pos, item in enumerate(value):
+            validator = None
+            if isinstance(self.items, list):
+                if pos < len(self.items):
+                    validator = self.items[pos]
+                elif isinstance(self.additional_items, Field):
+                    validator = self.additional_items
+            elif self.items is not None:
+                validator = self.items
+
+            if validator is None:
+                validated.append(item)
+            else:
+                item, error = validator.validate_or_error(item, strict=strict)
+                if error:
+                    error_messages += error.messages(add_prefix=pos)
+                else:
+                    validated.append(item)
+
+                if self.unique_items:
+                    if item in seen_items:
+                        text = self.get_error_text("unique_items")
+                        message = Message(text=text, code="unique_items", index=[pos])
+                        error_messages.append(message)
+                    else:
+                        seen_items.add(item)
+
+        if error_messages:
+            raise ValidationError(error_messages)
+
+        return validated
 
 
 class Text(String):

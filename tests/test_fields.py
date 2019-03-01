@@ -2,6 +2,7 @@ import datetime
 
 from typesystem.base import Message, ValidationError
 from typesystem.fields import (
+    Array,
     Boolean,
     Choice,
     Date,
@@ -417,6 +418,89 @@ def test_object():
     validator = Object(additional_properties=Object(additional_properties=Integer()))
     value, error = validator.validate_or_error({"example": {"nested": "abc"}})
     assert dict(error) == {"example": {"nested": "Must be a number."}}
+
+
+def test_array():
+    validator = Array()
+    value, error = validator.validate_or_error([])
+    assert value == []
+
+    validator = Array()
+    value, error = validator.validate_or_error(None)
+    assert error == ValidationError(text="May not be null.", code="null")
+
+    validator = Array()
+    value, error = validator.validate_or_error(123)
+    assert error == ValidationError(text="Must be an array.", code="type")
+
+    validator = Array(allow_null=True)
+    value, error = validator.validate_or_error(None)
+    assert value is None
+    assert error is None
+
+    validator = Array(min_items=1)
+    value, error = validator.validate_or_error([])
+    assert error == ValidationError(text="Must not be empty.", code="empty")
+
+    validator = Array(min_items=1)
+    value, error = validator.validate_or_error([1])
+    assert value == [1]
+
+    validator = Array(min_items=2)
+    value, error = validator.validate_or_error([])
+    assert error == ValidationError(
+        text="Must have at least 2 items.", code="min_items"
+    )
+
+    validator = Array(min_items=2)
+    value, error = validator.validate_or_error([1, 2])
+    assert value == [1, 2]
+
+    validator = Array(max_items=2)
+    value, error = validator.validate_or_error([])
+    assert value == []
+
+    validator = Array(max_items=2)
+    value, error = validator.validate_or_error([1, 2, 3])
+    assert error == ValidationError(
+        text="Must have no more than 2 items.", code="max_items"
+    )
+
+    validator = Array(exact_items=2)
+    value, error = validator.validate_or_error([1, 2])
+    assert value == [1, 2]
+
+    validator = Array(exact_items=2)
+    value, error = validator.validate_or_error([1, 2, 3])
+    assert error == ValidationError(text="Must have 2 items.", code="exact_items")
+
+    validator = Array(items=Integer())
+    value, error = validator.validate_or_error(["1", 2, "3"])
+    assert value == [1, 2, 3]
+
+    validator = Array(items=Integer())
+    value, error = validator.validate_or_error(["a", 2, "c"])
+    assert dict(error) == {0: "Must be a number.", 2: "Must be a number."}
+
+    validator = Array(items=[String(), Integer()])
+    value, error = validator.validate_or_error(["a", "b", "c"])
+    assert error == ValidationError(text="Must have 2 items.", code="exact_items")
+
+    validator = Array(items=[String(), Integer()])
+    value, error = validator.validate_or_error(["a", "123"])
+    assert value == ["a", 123]
+
+    validator = Array(items=[String(), Integer()], additional_items=Integer())
+    value, error = validator.validate_or_error(["a", "123", "456"])
+    assert value == ["a", 123, 456]
+
+    validator = Array(items=String(), unique_items=True)
+    value, error = validator.validate_or_error(["a", "b"])
+    assert value == ["a", "b"]
+
+    validator = Array(items=String(), unique_items=True)
+    value, error = validator.validate_or_error(["a", "a"])
+    assert dict(error) == {1: "Items must be unique."}
 
 
 def test_date():
