@@ -1,4 +1,5 @@
 import datetime
+import decimal
 
 from typesystem.base import Message, ValidationError
 from typesystem.fields import (
@@ -7,10 +8,11 @@ from typesystem.fields import (
     Choice,
     Date,
     DateTime,
+    Decimal,
     Float,
     Integer,
-    Object,
     Number,
+    Object,
     String,
     Time,
 )
@@ -229,6 +231,22 @@ def test_float():
     validator = Float(precision="0.01")
     value, error = validator.validate_or_error("123.456")
     assert value == 123.46
+
+    validator = Float(multiple_of=0.05, precision="0.01")
+    value, error = validator.validate_or_error("123.05")
+    assert value == 123.05
+
+    validator = Float(multiple_of=0.05, precision="0.01")
+    value, error = validator.validate_or_error("123.06")
+    assert error == ValidationError(
+        text="Must be a multiple of 0.05.", code="multiple_of"
+    )
+
+
+def test_decimal():
+    validator = Decimal(precision="0.01")
+    value, error = validator.validate_or_error(123.01)
+    assert value == decimal.Decimal("123.01")
 
 
 def test_number():

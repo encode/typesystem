@@ -169,7 +169,7 @@ class Number(Field):
         exclusive_minimum: typing.Union[int, float, decimal.Decimal] = None,
         exclusive_maximum: typing.Union[int, float, decimal.Decimal] = None,
         precision: str = None,
-        multiple_of: int = None,
+        multiple_of: typing.Union[int, float, decimal.Decimal] = None,
         **kwargs: typing.Any,
     ):
         super().__init__(**kwargs)
@@ -182,7 +182,9 @@ class Number(Field):
         assert exclusive_maximum is None or isinstance(
             exclusive_maximum, (int, float, decimal.Decimal)
         )
-        assert multiple_of is None or isinstance(multiple_of, int)
+        assert multiple_of is None or isinstance(
+            multiple_of, (int, float, decimal.Decimal)
+        )
 
         self.minimum = minimum
         self.maximum = maximum
@@ -237,8 +239,12 @@ class Number(Field):
             raise self.validation_error("exclusive_maximum")
 
         if self.multiple_of is not None:
-            if value % self.multiple_of:
-                raise self.validation_error("multiple_of")
+            if isinstance(self.multiple_of, int):
+                if value % self.multiple_of:
+                    raise self.validation_error("multiple_of")
+            else:
+                if not (value * (1 / self.multiple_of)).is_integer():
+                    raise self.validation_error("multiple_of")
 
         return value
 
