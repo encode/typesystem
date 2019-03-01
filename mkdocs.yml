@@ -10,6 +10,9 @@ edit_uri: ""
 
 nav:
     - Introduction: 'index.md'
+    - Schemas: 'schemas.md'
+    - Fields: 'fields.md'
+    - Forms: 'forms.md'
     - Examples: 'examples.md'
 
 markdown_extensions:

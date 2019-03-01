@@ -68,3 +68,6 @@ print(album['release_date'])
 print(dict(album))
 # {'title': 'Double Negative', 'release_date': '2018-09-14', 'artist': {'name': 'Low'}}
 ```
+
+<p align="center">&mdash; ⭐️ &mdash;</p>
+<p align="center"><i>TypeSystem is <a href="https://github.com/encode/typesystem/blob/master/LICENSE.md">BSD licensed</a> code. Designed & built in Brighton, England.</i></p>
