@@ -45,15 +45,17 @@ class Field:
         self._creation_counter = Field._creation_counter
         Field._creation_counter += 1
 
-    def validate(self, value: typing.Any, *, strict: bool = False) -> ValidationResult:
+    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
+        raise NotImplementedError()  # pragma: no cover
+
+    def validate_or_error(
+        self, value: typing.Any, *, strict: bool = False
+    ) -> ValidationResult:
         try:
-            validated_value = self.validate_value(value, strict=strict)
+            value = self.validate(value, strict=strict)
         except ValidationError as error:
             return ValidationResult(value=None, error=error)
-        return ValidationResult(value=validated_value, error=None)
-
-    def validate_value(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
-        raise NotImplementedError()  # pragma: no cover
+        return ValidationResult(value=value, error=None)
 
     def serialize(self, obj: typing.Any) -> typing.Any:
         return obj
@@ -109,7 +111,7 @@ class String(Field):
         self.pattern = pattern
         self.format = format
 
-    def validate_value(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
+    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
         if value is None and self.allow_null:
             return None
         elif value is None:
@@ -193,7 +195,7 @@ class NumericType(Field):
         self.multiple_of = multiple_of
         self.precision = precision
 
-    def validate_value(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
+    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
         if value is None and self.allow_null:
             return None
         elif value is None:
@@ -273,7 +275,7 @@ class Boolean(Field):
     }
     coerce_null_values = {"", "null", "none"}
 
-    def validate_value(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
+    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
         if value is None and self.allow_null:
             return None
 
@@ -317,7 +319,7 @@ class Choice(Field):
             self.choice_items = list(choices)
         self.choice_dict = dict(self.choice_items)
 
-    def validate_value(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
+    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
         if value is None and self.allow_null:
             return None
         elif value is None:
@@ -379,7 +381,7 @@ class Object(Field):
         self.required = required
         self.coerce = coerce
 
-    def validate_value(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
+    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
         if value is None and self.allow_null:
             return None
         elif value is None:
@@ -420,7 +422,7 @@ class Object(Field):
                     validated[key] = child_schema.get_default_value()
                 continue
             item = value[key]
-            child_value, error = child_schema.validate(item, strict=strict)
+            child_value, error = child_schema.validate_or_error(item, strict=strict)
             if not error:
                 validated[key] = child_value
             else:
@@ -432,7 +434,9 @@ class Object(Field):
                 for pattern, child_schema in self.pattern_properties.items():
                     if isinstance(key, str) and re.search(pattern, key):
                         item = value[key]
-                        child_value, error = child_schema.validate(item, strict=strict)
+                        child_value, error = child_schema.validate_or_error(
+                            item, strict=strict
+                        )
                         if not error:
                             validated[key] = child_value
                         else:
@@ -461,7 +465,7 @@ class Object(Field):
             child_schema = self.additional_properties
             for key in remaining:
                 item = value[key]
-                child_value, error = child_schema.validate(item, strict=strict)
+                child_value, error = child_schema.validate_or_error(item, strict=strict)
                 if not error:
                     validated[key] = child_value
                 else:

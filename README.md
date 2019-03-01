@@ -38,7 +38,7 @@ async def list_users(request):
 
 async def add_user(request):
     data = await request.json()
-    user, errors = User.validate(data)
+    user, errors = User.validate_or_error(data)
     if errors:
         return JSONResponse(dict(errors), status_code=400)
     users.append(user)
@@ -80,7 +80,7 @@ async def homepage(request):
 
 async def add_user(request):
     data = await request.form()
-    user, errors = User.validate(data)
+    user, errors = User.validate_or_error(data)
     if errors:
         form = forms.Form(User, values=data, errors=errors)
         return templates.TemplateResponse('index.html', {'form': form}, status_code=400)
