@@ -10,6 +10,7 @@ from typesystem.fields import (
     Float,
     Integer,
     Object,
+    Number,
     String,
     Time,
 )
@@ -228,6 +229,24 @@ def test_float():
     validator = Float(precision="0.01")
     value, error = validator.validate_or_error("123.456")
     assert value == 123.46
+
+
+def test_number():
+    validator = Number()
+    value, error = validator.validate_or_error(123.0)
+    assert value == 123.0
+
+    validator = Number()
+    value, error = validator.validate_or_error(123)
+    assert value == 123
+
+    validator = Number(precision="0.1")
+    value, error = validator.validate_or_error(123)
+    assert value == 123
+
+    validator = Number(precision="0.1")
+    value, error = validator.validate_or_error(123.123)
+    assert value == 123.1
 
 
 def test_boolean():
@@ -501,6 +520,24 @@ def test_array():
     validator = Array(items=String(), unique_items=True)
     value, error = validator.validate_or_error(["a", "a"])
     assert dict(error) == {1: "Items must be unique."}
+
+    validator = Array(items=[String(), Integer(), Boolean()], min_items=1)
+    value, error = validator.validate_or_error(["a"])
+    assert value == ["a"]
+
+    validator = Array(items=[String(), Integer(), Boolean()], min_items=1)
+    value, error = validator.validate_or_error(["a", "123"])
+    assert value == ["a", 123]
+
+    validator = Array(items=[String(), Integer(), Boolean()], min_items=1)
+    value, error = validator.validate_or_error([])
+    assert error == ValidationError(text="Must not be empty.", code="empty")
+
+    validator = Array(items=[String(), Integer(), Boolean()], min_items=2)
+    value, error = validator.validate_or_error([])
+    assert error == ValidationError(
+        text="Must have at least 2 items.", code="min_items"
+    )
 
 
 def test_date():
