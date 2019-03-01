@@ -17,7 +17,7 @@ from typesystem.fields import (
 )
 
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 __all__ = [
     "Boolean",
     "Choice",
