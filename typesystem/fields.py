@@ -350,7 +350,6 @@ class Object(Field):
         min_properties: int = None,
         max_properties: int = None,
         required: typing.Sequence[str] = None,
-        coerce: type = None,
         **kwargs: typing.Any,
     ) -> None:
         super().__init__(**kwargs)
@@ -379,7 +378,6 @@ class Object(Field):
         self.min_properties = min_properties
         self.max_properties = max_properties
         self.required = required
-        self.coerce = coerce
 
     def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
         if value is None and self.allow_null:
@@ -473,9 +471,6 @@ class Object(Field):
 
         if error_messages:
             raise ValidationError(error_messages)
-
-        if self.coerce is not None:
-            return self.coerce(validated)
 
         return validated
 

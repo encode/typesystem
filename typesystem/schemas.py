@@ -79,15 +79,15 @@ class Schema(Mapping, metaclass=SchemaMetaclass):
     @classmethod
     def validate(
         cls: typing.Type["Schema"], value: typing.Any, *, strict: bool = False
-    ) -> typing.Type["Schema"]:
+    ) -> "Schema":
         required = [key for key, value in cls.fields.items() if not value.has_default()]
         validator = Object(
             properties=cls.fields,
             required=required,
             additional_properties=False if strict else None,
-            coerce=cls,
         )
-        return validator.validate(value, strict=strict)
+        value = validator.validate(value, strict=strict)
+        return cls(value)
 
     @classmethod
     def validate_or_error(
