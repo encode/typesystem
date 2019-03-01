@@ -31,6 +31,14 @@ def test_validation_error_repr():
     )
 
 
+def test_validation_error_str():
+    result = Example.validate_or_error({"a": "a"})
+    assert str(result.error) == "{'b': 'This field is required.'}"
+
+    result = typesystem.String(max_length=10).validate_or_error("a" * 100)
+    assert str(result.error) == "Must have no more than 10 characters."
+
+
 def test_validation_message_repr():
     result = Example.validate_or_error({"a": "a"})
     message = result.error.messages()[0]

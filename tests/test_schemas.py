@@ -132,5 +132,26 @@ def test_schema_with_callable_default():
         created = typesystem.Date(default=datetime.date.today)
 
     value, error = Example.validate_or_error({})
-    print(value)
     assert value.created == datetime.date.today()
+
+
+def test_nested_schema():
+    class Artist(typesystem.Schema):
+        name = typesystem.String(max_length=100)
+
+    class Album(typesystem.Schema):
+        title = typesystem.String(max_length=100)
+        release_year = typesystem.Integer()
+        artist = typesystem.Nested(Artist)
+
+    value = Album.validate(
+        {"title": "Double Negative", "release_year": "2018", "artist": {"name": "Low"}}
+    )
+    assert dict(value) == {
+        "title": "Double Negative",
+        "release_year": 2018,
+        "artist": {"name": "Low"},
+    }
+    assert value == Album(
+        title="Double Negative", release_year=2018, artist=Artist(name="Low")
+    )

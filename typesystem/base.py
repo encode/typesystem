@@ -86,6 +86,11 @@ class ValidationError(Mapping, Exception):
             return f"{class_name}(text={message.text!r}, code={message.code!r})"
         return f"{class_name}({self._messages!r})"
 
+    def __str__(self) -> str:
+        if len(self._messages) == 1 and not self._messages[0].index:
+            return self._messages[0].text
+        return str(dict(self))
+
 
 class ValidationResult:
     def __init__(
