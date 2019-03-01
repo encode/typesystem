@@ -474,6 +474,26 @@ def test_array():
     value, error = validator.validate_or_error([1, 2, 3])
     assert error == ValidationError(text="Must have 2 items.", code="exact_items")
 
+    validator = Array(items=Integer())
+    value, error = validator.validate_or_error(["1", 2, "3"])
+    assert value == [1, 2, 3]
+
+    validator = Array(items=Integer())
+    value, error = validator.validate_or_error(["a", 2, "c"])
+    assert dict(error) == {0: "Must be a number.", 2: "Must be a number."}
+
+    validator = Array(items=[String(), Integer()])
+    value, error = validator.validate_or_error(["a", "b", "c"])
+    assert error == ValidationError(text="Must have 2 items.", code="exact_items")
+
+    validator = Array(items=[String(), Integer()])
+    value, error = validator.validate_or_error(["a", "123"])
+    assert value == ["a", 123]
+
+    validator = Array(items=[String(), Integer()], additional_items=Integer())
+    value, error = validator.validate_or_error(["a", "123", "456"])
+    assert value == ["a", 123, 456]
+
 
 def test_date():
     validator = Date()
