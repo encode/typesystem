@@ -16,6 +16,50 @@ class Product(typesystem.Schema):
     rating = typesystem.Integer(default=None)
 
 
+def test_required():
+    class Example(typesystem.Schema):
+        field = typesystem.Integer()
+
+    value, error = Example.validate_or_error({})
+    assert dict(error) == {"field": "This field is required."}
+
+    class Example(typesystem.Schema):
+        field = typesystem.Integer(allow_null=True)
+
+    value, error = Example.validate_or_error({})
+    assert dict(value) == {"field": None}
+
+    class Example(typesystem.Schema):
+        field = typesystem.Integer(default=0)
+
+    value, error = Example.validate_or_error({})
+    assert dict(value) == {"field": 0}
+
+    class Example(typesystem.Schema):
+        field = typesystem.Integer(allow_null=True, default=0)
+
+    value, error = Example.validate_or_error({})
+    assert dict(value) == {"field": 0}
+
+    class Example(typesystem.Schema):
+        field = typesystem.String()
+
+    value, error = Example.validate_or_error({})
+    assert dict(error) == {"field": "This field is required."}
+
+    class Example(typesystem.Schema):
+        field = typesystem.String(allow_blank=True)
+
+    value, error = Example.validate_or_error({})
+    assert dict(value) == {"field": ""}
+
+    class Example(typesystem.Schema):
+        field = typesystem.String(allow_null=True, allow_blank=True)
+
+    value, error = Example.validate_or_error({})
+    assert dict(value) == {"field": None}
+
+
 def test_schema_validation():
     value, error = Person.validate_or_error({"name": "Tom", "age": "123"})
     assert not error

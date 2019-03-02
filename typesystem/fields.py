@@ -105,6 +105,9 @@ class String(Field):
         assert pattern is None or isinstance(pattern, str)
         assert format is None or isinstance(format, str)
 
+        if allow_blank and not self.has_default():
+            self.default = ""
+
         self.allow_blank = allow_blank
         self.max_length = max_length
         self.min_length = min_length
