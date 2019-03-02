@@ -92,6 +92,7 @@ class String(Field):
         self,
         *,
         allow_blank: bool = False,
+        trim_whitespace: bool = True,
         max_length: int = None,
         min_length: int = None,
         pattern: str = None,
@@ -109,6 +110,7 @@ class String(Field):
             self.default = ""
 
         self.allow_blank = allow_blank
+        self.trim_whitespace = trim_whitespace
         self.max_length = max_length
         self.min_length = min_length
         self.pattern = pattern
@@ -123,6 +125,10 @@ class String(Field):
             return value
         elif not isinstance(value, str):
             raise self.validation_error("type")
+
+        value = value.replace("\0", "")
+        if self.trim_whitespace:
+            value = value.strip()
 
         if not self.allow_blank and not value:
             raise self.validation_error("blank")
@@ -353,6 +359,10 @@ class Object(Field):
         **kwargs: typing.Any,
     ) -> None:
         super().__init__(**kwargs)
+
+        if isinstance(properties, Field):
+            additional_properties = properties
+            properties = None
 
         properties = {} if (properties is None) else dict(properties)
         pattern_properties = (

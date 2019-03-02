@@ -68,6 +68,22 @@ def test_string():
         text="Must match the pattern /^[abc]*$/.", code="pattern"
     )
 
+    validator = String()
+    value, error = validator.validate_or_error(" ")
+    assert error == ValidationError(text="Must not be blank.", code="blank")
+
+    validator = String()
+    value, error = validator.validate_or_error(" test ")
+    assert value == "test"
+
+    validator = String(trim_whitespace=False)
+    value, error = validator.validate_or_error(" ")
+    assert value == " "
+
+    validator = String(trim_whitespace=False)
+    value, error = validator.validate_or_error(" test ")
+    assert value == " test "
+
 
 def test_integer():
     validator = Integer()
@@ -418,11 +434,11 @@ def test_object():
     value, error = validator.validate_or_error({"example": "abc"})
     assert value == {}
 
-    validator = Object(additional_properties=Integer())
+    validator = Object(properties=Integer())
     value, error = validator.validate_or_error({"example": "123"})
     assert value == {"example": 123}
 
-    validator = Object(additional_properties=Integer())
+    validator = Object(properties=Integer())
     value, error = validator.validate_or_error({"example": "abc"})
     assert dict(error) == {"example": "Must be a number."}
 
