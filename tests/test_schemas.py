@@ -199,3 +199,27 @@ def test_nested_schema():
     assert value == Album(
         title="Double Negative", release_year=2018, artist=Artist(name="Low")
     )
+
+    value, error = Album.validate_or_error(
+        {"title": "Double Negative", "release_year": "2018", "artist": None}
+    )
+    assert dict(error) == {"artist": "May not be null."}
+
+    value, error = Album.validate_or_error(
+        {"title": "Double Negative", "release_year": "2018", "artist": "Low"}
+    )
+    assert dict(error) == {"artist": "Must be an object."}
+
+    class Album(typesystem.Schema):
+        title = typesystem.String(max_length=100)
+        release_year = typesystem.Integer()
+        artist = typesystem.Nested(Artist, allow_null=True)
+
+    value = Album.validate(
+        {"title": "Double Negative", "release_year": "2018", "artist": None}
+    )
+    assert dict(value) == {
+        "title": "Double Negative",
+        "release_year": 2018,
+        "artist": None,
+    }
