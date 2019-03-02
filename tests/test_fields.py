@@ -308,30 +308,16 @@ def test_boolean():
 
 
 def test_choice():
-    validator = Choice(choices=["red", "blue", "green"])
-    value, error = validator.validate_or_error("red")
-    assert value == "red"
-
-    validator = Choice(choices=["red", "blue", "green"])
-    value, error = validator.validate_or_error("foo")
-    assert error == ValidationError(text="Not a valid choice.", code="choice")
-
-    validator = Choice(choices=["red", "blue", "green"])
+    validator = Choice(choices=[("R", "red"), ("B", "blue"), ("G", "green")])
     value, error = validator.validate_or_error(None)
     assert error == ValidationError(text="May not be null.", code="null")
 
-    validator = Choice(choices=["red", "blue", "green"], allow_null=True)
+    validator = Choice(
+        choices=[("R", "red"), ("B", "blue"), ("G", "green")], allow_null=True
+    )
     value, error = validator.validate_or_error(None)
     assert value is None
     assert error is None
-
-    validator = Choice(choices={"R": "red", "B": "blue", "G": "green"})
-    value, error = validator.validate_or_error("Z")
-    assert error == ValidationError(text="Not a valid choice.", code="choice")
-
-    validator = Choice(choices={"R": "red", "B": "blue", "G": "green"})
-    value, error = validator.validate_or_error("R")
-    assert value == "R"
 
     validator = Choice(choices=[("R", "red"), ("B", "blue"), ("G", "green")])
     value, error = validator.validate_or_error("Z")

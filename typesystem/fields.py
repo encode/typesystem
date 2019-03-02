@@ -308,27 +308,20 @@ class Choice(Field):
     errors = {"null": "May not be null.", "choice": "Not a valid choice."}
 
     def __init__(
-        self, *, choices: typing.Union[dict, typing.Sequence], **kwargs: typing.Any
+        self,
+        *,
+        choices: typing.Sequence[typing.Tuple[str, str]] = None,
+        **kwargs: typing.Any,
     ) -> None:
         super().__init__(**kwargs)
-        if isinstance(choices, dict):
-            #  Instantiated with a dictionary.
-            self.choice_items = list(choices.items())
-        elif all([isinstance(choice, str) for choice in choices]):
-            # Instantiated with a list of strings.
-            self.choice_items = [(choice, choice) for choice in choices]
-        else:
-            # Instantiated with a list of two-tuples.
-            assert all([len(item) == 2 for item in choices])
-            self.choice_items = list(choices)
-        self.choice_dict = dict(self.choice_items)
+        self.choices = [] if choices is None else list(choices)
 
     def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
         if value is None and self.allow_null:
             return None
         elif value is None:
             raise self.validation_error("null")
-        elif value not in self.choice_dict:
+        elif value not in dict(self.choices):
             raise self.validation_error("choice")
         return value
 
