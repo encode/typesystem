@@ -57,6 +57,7 @@ For example: `username = typesystem.String(max_length=100)`
 **Arguments**:
 
 * `allow_blank` - A boolean indicating if the empty string should validate. **Default: `False`**
+* `trim_whitespace` - A boolean indicating if leading/trailing whitespace should be removed on validation. **Default: `True`**
 * `max_length` - A maximum number of characters that valid input stings may contain. **Default: `None`**
 * `min_length` - A minimum number of characters that valid input stings may contain. **Default: `None`**
 * `pattern` - A string to be used as a regex that must match. Eg. `patern="^[A-Za-z]+$"` **Default: `None`**
