@@ -72,7 +72,11 @@ Represented in HTML forms as a `<textarea>`.
 
 Represented in HTML forms as a `<checkbox>`.
 
-For example: `is_admin = typesystem.Boolean(default=False)`
+For example:
+
+```python
+is_admin = typesystem.Boolean(default=False)
+```
 
 Because all fields are required unless a `default` is given, you'll typically
 want to use `default=False`. This is particularly true if you want to render
@@ -110,17 +114,33 @@ Takes the same arguments as `Number`. Returns instances of `decimal.Decimal`.
 
 ### Choice
 
+Provides a fixed set of options to select from.
+
+Represented in HTML forms as a `<select>`.
+
 **Arguments**:
 
 * `choices` - A list of two-tuples of `(choice, description)`. **Default: None**
 
 ## Date and time data types
 
+### DateTime
+
+Validates ISO 8601 formatted datetimes. For example `"2020-02-29T12:34:56Z"`.
+
+Returns `datetime.datetime` instances.
+
 ### Date
+
+Validates ISO 8601 formatted dates. For example `"2020-02-29"`.
+
+Returns `datetime.date` instances.
 
 ### Time
 
-### DateTime
+Validates ISO 8601 formatted times. For example `"12:34:56"`.
+
+Returns `datetime.time` instances.
 
 ## Composite data types
 
@@ -129,6 +149,7 @@ Takes the same arguments as `Number`. Returns instances of `decimal.Decimal`.
 Used to validate a list of data. For example:
 
 ```python
+# Validates data like `[8, 7, 0, 8, 4, 5]`
 ratings = typesystem.Array(items=typesystem.Integer(min_value=0, max_value=10))
 ```
 
@@ -143,17 +164,31 @@ ratings = typesystem.Array(items=typesystem.Integer(min_value=0, max_value=10))
 
 ### Object
 
+Used to validate a dictionary of data.
+
+```python
+# Validates data like `{"address": "12 Steeple close", "delivery note": "Leave by porch"}`
+extra_metadata = typesystem.Object(properties=typesystem.String(max_length=100))
+```
+
+Schema classes implement their validation behaviour by generating an `Object`
+field, and automatically determining the `properties` and `required` attributes.
+
+You'll typically want to use `typesystem.Nested(schema=SomeSchema)` rather than
+using the `Object` field directly, but it can be useful if you have a more
+complex data structure that you need to validate.
+
 **Arguments**:
 
-* `properties`
-* `pattern_properties`
-* `additional_properties`
-* `min_properties`
-* `max_properties`
-* `required`
+* `properties` - Either a `Field`, used to validate each value in the object. Or a dictionary of `Field` instances, used to validate each item in the list, by field name.  **Default: `None`**
+* `pattern_properties` - A dictionary mapping regex-style strings to field instances. Used to validate any items not in `properties` that have a key matching the regex. **Default: `None`**
+* `additional_properties` - Either a boolean, used to indicate if additional properties are allowed, or a `Field` used to validate any items not in `properties` or `pattern_properties`. If `None` then additional properties are allowed, but are not included in the validated value. **Default: `None`**
+* `min_properties` - An integer representing the minimum number of properties that must be included.
+* `max_properties` - An integer representing the maximum number of properties that may be included.
+* `required` - A list of strings indicating any fields that are strictly required in the input.
 
 ### Nested
 
-* `schema` - A schema class. **Required**
+Used to validate a nested schema.
 
-## Custom field types
+* `schema` - A schema class. **Required**
