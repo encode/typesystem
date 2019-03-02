@@ -92,7 +92,7 @@ will validate *either* int or float instances.
 * `exclusive_minimum` - A number representing an exclusive minimum. Inputs must be greater than this to validate. **Default: `None`**
 * `exclusive_maximum` - A number representing an exclusive maximum. Inputs must be less than this to validate. **Default: `None`**
 * `precision` - A string representing the decimal precision to truncate input with. Eg. `precision="0.001"`. **Default: `None`**
-* `multiple_of` - A number giving a value that inputs must be a strict multiple of in order to validate. Eg. `multiple_of=2` will only validate even integers.
+* `multiple_of` - A number giving a value that inputs must be a strict multiple of in order to validate. Eg. `multiple_of=2` will only validate even integers. **Default: `None`**
 
 ### Integer
 
