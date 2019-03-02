@@ -74,6 +74,10 @@ Represented in HTML forms as a `<checkbox>`.
 
 For example: `is_admin = typesystem.Boolean(default=False)`
 
+Because all fields are required unless a `default` is given, you'll typically
+want to use `default=False`. This is particularly true if you want to render
+boolean fields as HTML checkboxes, since they do not submit any input if unchecked.
+
 ## Numeric data types
 
 ### Number
