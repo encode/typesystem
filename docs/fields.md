@@ -59,7 +59,7 @@ For example: `username = typesystem.String(max_length=100)`
 * `max_length` - A maximum number of characters that valid input stings may contain. **Default: `None`**
 * `min_length` - A minimum number of characters that valid input stings may contain. **Default: `None`**
 * `pattern` - A string to be used as a regex that must match. Eg. `patern="^[A-Za-z]+$"` **Default: `None`**
-* `format` - **TODO**
+* `format` - A string used to indicate a semantic type, such as `"email"`, `"url"`, or `"color"`. **Default: `None`**
 
 ### Text
 
@@ -190,5 +190,13 @@ complex data structure that you need to validate.
 ### Nested
 
 Used to validate a nested schema.
+
+For example:
+
+```python
+owner = typesystem.Nested(schema=User, allow_null=True)
+```
+
+**Arguments**:
 
 * `schema` - A schema class. **Required**
