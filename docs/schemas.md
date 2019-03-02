@@ -68,7 +68,7 @@ you can access each individual message with `error.messages()`:
 album, error = Album.validate_or_error(invalid_data)
 
 for message in error.messages():
-    print(f'* {message.index!r}, {message.code!r}, {message.text!r})')
+    print(f'{message.index!r}, {message.code!r}, {message.text!r})')
 # ['release_date'], 'format', 'Must be a valid date format.'
 # ['artist', 'name'], 'max_length', 'Must have no more than 100 characters.'
 ```
