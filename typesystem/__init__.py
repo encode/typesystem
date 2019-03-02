@@ -16,7 +16,7 @@ from typesystem.fields import (
 from typesystem.forms import Jinja2Forms
 from typesystem.schemas import Schema
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 __all__ = [
     "Boolean",
     "Choice",
