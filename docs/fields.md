@@ -1,5 +1,3 @@
-## Overview
-
 Fields are usually declared as attributes on schema classes:
 
 ```python
