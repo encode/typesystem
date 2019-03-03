@@ -86,8 +86,10 @@ boolean fields as HTML checkboxes, since they do not submit any input if uncheck
 
 ### Number
 
-A base class for `Integer`, `Float`, and `Decimal`. If used directly, `Number`
-will validate *either* int or float instances.
+The base class for `Integer`, `Float`, and `Decimal`.
+
+You won't typically want to use this class directly, since the subclasses
+provide more precise behaviour.
 
 **Arguments**:
 
