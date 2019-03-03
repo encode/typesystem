@@ -119,6 +119,9 @@ class String(Field):
     def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
         if value is None and self.allow_null:
             return None
+        elif value is None and self.allow_blank and not strict:
+            # Leniently cast nulls to empty strings if allow_blank.
+            return ""
         elif value is None:
             raise self.validation_error("null")
         elif self.format in FORMATS and FORMATS[self.format].is_native_type(value):
@@ -126,11 +129,17 @@ class String(Field):
         elif not isinstance(value, str):
             raise self.validation_error("type")
 
+        # The null character is always invalid.
         value = value.replace("\0", "")
+
+        # Strip leading/trailing whitespace by default.
         if self.trim_whitespace:
             value = value.strip()
 
         if not self.allow_blank and not value:
+            if self.allow_null and not strict:
+                # Leniently cast empty strings (after trimming) to null if allow_null.
+                return None
             raise self.validation_error("blank")
 
         if self.min_length is not None:
@@ -205,6 +214,8 @@ class Number(Field):
     def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
         if value is None and self.allow_null:
             return None
+        elif value == "" and self.allow_null and not strict:
+            return None
         elif value is None:
             raise self.validation_error("null")
         elif isinstance(value, bool):
@@ -217,14 +228,19 @@ class Number(Field):
             raise self.validation_error("integer")
         elif not isinstance(value, (int, float)) and strict:
             raise self.validation_error("type")
-        elif isinstance(value, float) and not isfinite(value):
-            raise self.validation_error("finite")
 
         try:
+            if isinstance(value, str):
+                # Casting to a decimal first gives more lenient parsing.
+                value = decimal.Decimal(value)
             if self.numeric_type is not None:
                 value = self.numeric_type(value)
-        except (TypeError, ValueError):
+        except (TypeError, ValueError, decimal.InvalidOperation):
             raise self.validation_error("type")
+
+        if not isfinite(value):
+            # inf, -inf, nan, are all invalid.
+            raise self.validation_error("finite")
 
         if self.precision is not None:
             numeric_type = self.numeric_type or type(value)
@@ -331,6 +347,8 @@ class Choice(Field):
         elif value is None:
             raise self.validation_error("null")
         elif value not in dict(self.choices):
+            if value == "" and self.allow_null and not strict:
+                return None
             raise self.validation_error("choice")
         return value
 

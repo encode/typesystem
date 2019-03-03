@@ -53,8 +53,26 @@ def test_string():
     value, error = validator.validate_or_error("")
     assert error == ValidationError(text="Must not be blank.", code="blank")
 
+    validator = String(allow_blank=True)
+    value, error = validator.validate_or_error("")
+    assert value == ""
+
+    validator = String(allow_blank=True)
+    value, error = validator.validate_or_error(None)
+    assert value == ""
+
     validator = String(allow_null=True)
     value, error = validator.validate_or_error(None)
+    assert value is None
+    assert error is None
+
+    validator = String(allow_null=True)
+    value, error = validator.validate_or_error("")
+    assert value is None
+    assert error is None
+
+    validator = String(allow_null=True)
+    value, error = validator.validate_or_error(" ")
     assert value is None
     assert error is None
 
@@ -99,6 +117,10 @@ def test_integer():
     assert value == 123
 
     validator = Integer()
+    value, error = validator.validate_or_error("123.0")
+    assert value == 123
+
+    validator = Integer()
     value, error = validator.validate_or_error(None)
     assert error == ValidationError(text="May not be null.", code="null")
 
@@ -130,6 +152,15 @@ def test_integer():
     value, error = validator.validate_or_error(None)
     assert value is None
     assert error is None
+
+    validator = Integer(allow_null=True)
+    value, error = validator.validate_or_error("")
+    assert value is None
+    assert error is None
+
+    validator = Integer(allow_null=True)
+    value, error = validator.validate_or_error("", strict=True)
+    assert error == ValidationError(text="Must be a number.", code="type")
 
     validator = Integer(maximum=10)
     value, error = validator.validate_or_error(100)
@@ -335,6 +366,13 @@ def test_choice():
     assert value is None
     assert error is None
 
+    validator = Choice(
+        choices=[("R", "red"), ("B", "blue"), ("G", "green")], allow_null=True
+    )
+    value, error = validator.validate_or_error("")
+    assert value is None
+    assert error is None
+
     validator = Choice(choices=[("R", "red"), ("B", "blue"), ("G", "green")])
     value, error = validator.validate_or_error("Z")
     assert error == ValidationError(text="Not a valid choice.", code="choice")
@@ -342,6 +380,20 @@ def test_choice():
     validator = Choice(choices=[("R", "red"), ("B", "blue"), ("G", "green")])
     value, error = validator.validate_or_error("R")
     assert value == "R"
+
+    validator = Choice(
+        choices=[("", "empty"), ("R", "red"), ("B", "blue"), ("G", "green")],
+        allow_null=True,
+    )
+    value, error = validator.validate_or_error("")
+    assert value == ""
+
+    validator = Choice(
+        choices=[("", "empty"), ("R", "red"), ("B", "blue"), ("G", "green")],
+        allow_null=True,
+    )
+    value, error = validator.validate_or_error(None)
+    assert value is None
 
 
 def test_object():
