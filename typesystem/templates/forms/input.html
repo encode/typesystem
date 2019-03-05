@@ -1,13 +1,20 @@
-<div class="form-group">
-    <label for="{{ field_id }}">
-        {{ label }}
-    </label>
-
-    <input type="text" class="form-control {% if error %}is-invalid{% endif %}" id="{{ field_id }}" name="{{ field_name }}" {% if required %}required{% endif %} {% if value is not none %}value="{{ value }}"{% endif %}>
-
+<tr>
+    <td>
+        <label for="{{ field_id }}">{{ label }}</label>
+    </td>
+    <td>
+        <input type="{{ input_type }}" id="{{ field_id }}" name="{{ field_name }}" {% if required %}required{% endif %} {% if value is not none %}value="{{ value }}"{% endif %}>
+    </td>
+</tr>
+{% if error or field.description %}
+<tr>
+    <td></td>
+    <td>
     {% if error %}
-        <small class="invalid-feedback">{{ error }}</small>
+        <em class="error">{{ error }}</em>
     {% elif field.description %}
-        <small class="form-text text-muted">{{ field.description }}</small>
+        <em>{{ field.description }}</em>
     {% endif %}
-</div>
+    </td>
+</tr>
+{% endif %}

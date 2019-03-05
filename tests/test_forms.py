@@ -7,7 +7,7 @@ class Contact(typesystem.Schema):
     a = typesystem.Boolean()
     b = typesystem.String(max_length=10)
     c = typesystem.Text()
-    d = typesystem.Choice(choices=["abc", "def", "ghi"])
+    d = typesystem.Choice(choices=[("abc", "Abc"), ("def", "Def"), ("ghi", "Ghi")])
 
 
 forms = typesystem.Jinja2Forms(package="typesystem")

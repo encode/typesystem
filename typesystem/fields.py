@@ -330,7 +330,11 @@ class Boolean(Field):
 
 
 class Choice(Field):
-    errors = {"null": "May not be null.", "choice": "Not a valid choice."}
+    errors = {
+        "null": "May not be null.",
+        "required": "This field is required.",
+        "choice": "Not a valid choice.",
+    }
 
     def __init__(
         self,
@@ -347,8 +351,10 @@ class Choice(Field):
         elif value is None:
             raise self.validation_error("null")
         elif value not in dict(self.choices):
-            if value == "" and self.allow_null and not strict:
-                return None
+            if value == "":
+                if self.allow_null and not strict:
+                    return None
+                raise self.validation_error("required")
             raise self.validation_error("choice")
         return value
 

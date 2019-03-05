@@ -366,6 +366,10 @@ def test_choice():
     assert value is None
     assert error is None
 
+    validator = Choice(choices=[("R", "red"), ("B", "blue"), ("G", "green")])
+    value, error = validator.validate_or_error("")
+    assert error == ValidationError(text="This field is required.", code="required")
+
     validator = Choice(
         choices=[("R", "red"), ("B", "blue"), ("G", "green")], allow_null=True
     )
