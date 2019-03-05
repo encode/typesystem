@@ -11,6 +11,25 @@ from typesystem.schemas import Schema
 
 
 class Form:
+    # Does not include "checkbox", "radio", "file", "image", "reset", "submit", "button"
+    FORMAT_TO_INPUTTYPE = {
+        "color": "color",
+        "datetime": "datetime-local",
+        "date": "date",
+        "email": "email",
+        "hidden": "hidden",
+        "month": "month",
+        "number": "number",
+        "password": "password",
+        "range": "range",
+        "search": "search",
+        "tel": "tel",
+        "text": "text",
+        "time": "time",
+        "url": "url",
+        "week": "week",
+    }
+
     def __init__(
         self,
         *,
@@ -47,6 +66,7 @@ class Form:
         label = field.title or field_name
         allow_empty = field.allow_null or getattr(field, "allow_blank", False)
         required = not field.has_default() and not allow_empty
+        input_type = self.input_type_for_field(field)
         template_name = self.template_for_field(field)
         template = self.env.get_template(template_name)
         return template.render(
@@ -56,6 +76,7 @@ class Form:
                 "field": field,
                 "label": label,
                 "required": required,
+                "input_type": input_type,
                 "value": value,
                 "error": error,
             }
@@ -73,6 +94,12 @@ class Form:
         if isinstance(field, String) and field.format == "text":
             return "forms/textarea.html"
         return "forms/input.html"
+
+    def input_type_for_field(self, field: Field) -> str:
+        format = getattr(field, "format", None)
+        if not format:
+            return "text"
+        return self.FORMAT_TO_INPUTTYPE.get(format, "text")
 
     def __str__(self) -> str:
         return self.render_fields()
