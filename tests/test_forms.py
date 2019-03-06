@@ -26,6 +26,15 @@ def test_form_rendering():
     assert html.count("<select ") == 1
 
 
+def test_password_rendering():
+    class PasswordForm(typesystem.Schema):
+        password = typesystem.String(format="password")
+
+    form = forms.Form(PasswordForm, values={"password": "secret"})
+    html = str(form)
+    assert "secret" not in html
+
+
 def test_form_html():
     form = forms.Form(Contact)
 
