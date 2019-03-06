@@ -69,6 +69,7 @@ class Form:
         input_type = self.input_type_for_field(field)
         template_name = self.template_for_field(field)
         template = self.env.get_template(template_name)
+        value = "" if input_type == "password" else value
         return template.render(
             {
                 "field_id": field_id,
