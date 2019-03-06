@@ -13,7 +13,7 @@ nav:
     - Schemas: 'schemas.md'
     - Fields: 'fields.md'
     - Forms: 'forms.md'
-    - Tokenize Errors: 'tokenized_errors.md'
+    - Tokenized Errors: 'tokenized_errors.md'
     - Examples: 'examples.md'
 
 markdown_extensions:

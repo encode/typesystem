@@ -29,3 +29,6 @@ The two functions for parsing content and providing positional error messages ar
 * `validate_yaml(text_or_bytes, validator)`
 
 In both cases `validator` may either be a `Schema` class, or a `Field` instance.
+
+Both functions return a two-tuple of `(value, messages)`. If the `messages` list
+is non-empty, then `value` will be `None`.
