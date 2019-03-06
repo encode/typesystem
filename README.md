@@ -23,6 +23,7 @@ TypeSystem is a comprehensive data validation library that gives you:
 * Data validation.
 * Object serialization & deserialization.
 * Form rendering.
+* Tokenizing JSON or YAML to provide positional error messages.
 * 100% type annotated codebase.
 * 100% test coverage.
 * Zero hard dependencies.
@@ -41,6 +42,12 @@ If you'd like you use the form rendering you'll also want to install `jinja2`.
 
 ```shell
 $ pip3 install jinja2
+```
+
+If you'd like you use the YAML tokenization you'll also want to install `pyyaml`.
+
+```shell
+$ pip3 install pyyaml
 ```
 
 ## Quickstart

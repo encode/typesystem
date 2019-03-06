@@ -490,7 +490,7 @@ class Object(Field):
         elif self.additional_properties is False:
             for key in remaining:
                 text = self.get_error_text("invalid_property")
-                message = Message(text=text, code="invalid_property", index=[key])
+                message = Message(text=text, code="invalid_property", key=key)
                 error_messages.append(message)
         elif self.additional_properties is not None:
             assert isinstance(self.additional_properties, Field)
@@ -504,7 +504,7 @@ class Object(Field):
                     error_messages += error.messages(add_prefix=key)
 
         if error_messages:
-            raise ValidationError(error_messages)
+            raise ValidationError(messages=error_messages)
 
         return validated
 
@@ -610,13 +610,13 @@ class Array(Field):
                 if self.unique_items:
                     if item in seen_items:
                         text = self.get_error_text("unique_items")
-                        message = Message(text=text, code="unique_items", index=[pos])
+                        message = Message(text=text, code="unique_items", key=pos)
                         error_messages.append(message)
                     else:
                         seen_items.add(item)
 
         if error_messages:
-            raise ValidationError(error_messages)
+            raise ValidationError(messages=error_messages)
 
         return validated
 
