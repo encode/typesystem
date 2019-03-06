@@ -105,7 +105,7 @@ print(dict(album))
 Index lookup on schema instances returns serialized datatypes.
 
 ```python
-print(type(album.release_date))
+print(type(album['release_date']))
 # <class 'str'>
 ```
 
