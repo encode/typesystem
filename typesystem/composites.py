@@ -2,7 +2,7 @@
 # but are undocumented as we don't recommend using them directly.
 import typing
 
-from typesystem.fields import Field
+from typesystem.fields import Any, Field
 
 
 class NeverMatch(Field):
@@ -92,3 +92,31 @@ class Not(Field):
         if error:
             return value
         raise self.validation_error("negated")
+
+
+class IfThenElse(Field):
+    """
+    Conditional sub-item matching.
+
+    You should use custom validation instead.
+    """
+
+    def __init__(
+        self,
+        if_clause: Field,
+        then_clause: Field = None,
+        else_clause: Field = None,
+        **kwargs: typing.Any
+    ) -> None:
+        assert "allow_null" not in kwargs
+        super().__init__(**kwargs)
+        self.if_clause = if_clause
+        self.then_clause = Any() if then_clause is None else then_clause
+        self.else_clause = Any() if else_clause is None else else_clause
+
+    def validate(self, value: typing.Any, strict: bool = False) -> typing.Any:
+        _, error = self.if_clause.validate_or_error(value, strict=strict)
+        if error is None:
+            return self.then_clause.validate(value, strict=strict)
+        else:
+            return self.else_clause.validate(value, strict=strict)

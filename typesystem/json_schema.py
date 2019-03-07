@@ -1,6 +1,6 @@
 import typing
 
-from typesystem.composites import AllOf, NeverMatch, Not, OneOf
+from typesystem.composites import AllOf, IfThenElse, NeverMatch, Not, OneOf
 from typesystem.fields import (
     NO_DEFAULT,
     Any,
@@ -71,6 +71,8 @@ def from_json_schema(data: typing.Union[bool, dict]) -> Field:
         constraints.append(one_of_from_json_schema(data))
     if "not" in data:
         constraints.append(not_from_json_schema(data))
+    if "if" in data:
+        constraints.append(if_then_else_from_json_schema(data))
 
     if len(constraints) == 1:
         return constraints[0]
@@ -283,3 +285,16 @@ def not_from_json_schema(data: dict) -> Field:
     negated = from_json_schema(data["not"])
     kwargs = {"negated": negated, "default": data.get("default", NO_DEFAULT)}
     return Not(**kwargs)
+
+
+def if_then_else_from_json_schema(data: dict) -> Field:
+    if_clause = from_json_schema(data["if"])
+    then_clause = from_json_schema(data["then"]) if "then" in data else None
+    else_clause = from_json_schema(data["else"]) if "else" in data else None
+    kwargs = {
+        "if_clause": if_clause,
+        "then_clause": then_clause,
+        "else_clause": else_clause,
+        "default": data.get("default", NO_DEFAULT),
+    }
+    return IfThenElse(**kwargs)  # type: ignore

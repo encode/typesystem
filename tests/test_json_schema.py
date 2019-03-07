@@ -19,7 +19,7 @@ filenames = [
     "enum.json",
     "exclusiveMaximum.json",
     "exclusiveMinimum.json",
-    # "if-then-else.json",
+    "if-then-else.json",
     "items.json",
     "maxItems.json",
     "maxLength.json",
