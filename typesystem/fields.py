@@ -660,6 +660,18 @@ class Union(Field):
         raise self.validation_error("union")
 
 
+class Any(Field):
+    def validate(self, value: typing.Any, strict: bool = False) -> typing.Any:
+        return value
+
+
+class Never(Field):
+    errors = {'never': 'This never validates'}
+
+    def validate(self, value: typing.Any, strict: bool = False) -> typing.Any:
+        raise self.validation_error("never")
+
+
 class Text(String):
     def __init__(self, **kwargs: typing.Any) -> None:
         super().__init__(format="text", **kwargs)

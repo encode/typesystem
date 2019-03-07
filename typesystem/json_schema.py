@@ -1,8 +1,11 @@
-from typesystem.fields import Field, Float, Integer, Union, String, Boolean, Object, Array
+from typesystem.fields import Field, Float, Integer, Union, String, Boolean, Object, Array, Any, Never
 import typing
 
 
-def from_json_schema(data: typing.Any) -> Field:
+def from_json_schema(data: typing.Union[bool, dict]) -> Field:
+    if isinstance(data, bool):
+        return {True: Any(), False: Never()}[data]
+
     type_strings, allow_null = get_valid_types(data)
 
     if len(type_strings) > 1:
@@ -46,27 +49,62 @@ def get_valid_types(data: dict) -> typing.Tuple[typing.Set[str], bool]:
 def from_json_schema_type(data: dict, type_string: str, allow_null: bool) -> Field:
     if type_string == 'number':
         kwargs = {
+            'allow_null': allow_null,
             'minimum': data.get('minimum', None),
             'maximum': data.get('maximum', None),
             'exclusive_minimum': data.get('exclusiveMinimum', None),
             'exclusive_maximum': data.get('exclusiveMaximum', None),
-            'allow_null': allow_null
+            'multiple_of': data.get('multipleOf', None),
         }
         return Float(**kwargs)
     elif type_string == 'integer':
         kwargs = {
+            'allow_null': allow_null,
             'minimum': data.get('minimum', None),
             'maximum': data.get('maximum', None),
             'exclusive_minimum': data.get('exclusiveMinimum', None),
             'exclusive_maximum': data.get('exclusiveMaximum', None),
-            'allow_null': allow_null
+            'multiple_of': data.get('multipleOf', None),
         }
         return Integer(**kwargs)
     elif type_string == 'string':
-        return String(allow_blank=True)
+        min_length = data.get('minLength', 0)
+        kwargs = {
+            'allow_null': allow_null,
+            'allow_blank': min_length == 0,
+            'min_length': min_length if min_length > 1 else None,
+            'max_length': data.get('maxLength', None),
+            'pattern': data.get('pattern', None),
+        }
+        return String(**kwargs)
     elif type_string == 'boolean':
-        return Boolean()
+        kwargs = {
+            'allow_null': allow_null,
+        }
+        return Boolean(**kwargs)
     elif type_string == 'array':
-        return Array()
+        # items = data.get('items', None)
+        # if items is None:
+        #     items_argument = None
+        # elif isinstance(items, list):
+        #     items_argument = [from_json_schema(item) for item in items]
+        # else:
+        #     items_argument = from_json_schema(items)
+
+        kwargs = {
+            'allow_null': allow_null,
+            'min_items': data.get('minItems', None),
+            'max_items': data.get('maxItems', None),
+            #'items': items_argument
+        }
+        return Array(**kwargs)
     elif type_string == 'object':
-        return Object()
+        kwargs = {
+            'allow_null': allow_null,
+            'min_properties': data.get('minProperties', None),
+            'max_properties': data.get('maxProperties', None),
+            'required': data.get('required', None)
+        }
+        return Object(**kwargs)
+
+    assert False, f'Invalid argument type_string={type_string!r}'  # pragma: no cover
