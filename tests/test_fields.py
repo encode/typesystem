@@ -416,7 +416,11 @@ def test_object():
 
     validator = Object()
     value, error = validator.validate_or_error({1: 123})
-    assert dict(error) == {"": "All object keys must be strings."}
+    assert dict(error) == {1: "All object keys must be strings."}
+
+    validator = Object(property_names=String(min_length=3))
+    value, error = validator.validate_or_error({"a": 123})
+    assert dict(error) == {"a": "Invalid property name."}
 
     validator = Object(allow_null=True)
     value, error = validator.validate_or_error(None)

@@ -378,6 +378,7 @@ class Object(Field):
         properties: typing.Dict[str, Field] = None,
         pattern_properties: typing.Dict[str, Field] = None,
         additional_properties: typing.Union[bool, None, Field] = True,
+        property_names: Field = None,
         min_properties: int = None,
         max_properties: int = None,
         required: typing.Sequence[str] = None,
@@ -410,6 +411,7 @@ class Object(Field):
         self.properties = properties
         self.pattern_properties = pattern_properties
         self.additional_properties = additional_properties
+        self.property_names = property_names
         self.min_properties = min_properties
         self.max_properties = max_properties
         self.required = required
@@ -428,7 +430,15 @@ class Object(Field):
         # Ensure all property keys are strings.
         for key in value.keys():
             if not isinstance(key, str):
-                raise self.validation_error("invalid_key")
+                text = self.get_error_text("invalid_key")
+                message = Message(text=text, code="invalid_key", index=[key])
+                error_messages.append(message)
+            elif self.property_names is not None:
+                _, error = self.property_names.validate_or_error(key)
+                if error is not None:
+                    text = self.get_error_text("invalid_property")
+                    message = Message(text=text, code="invalid_property", index=[key])
+                    error_messages.append(message)
 
         # Min/Max properties
         if self.min_properties is not None:

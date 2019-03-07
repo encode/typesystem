@@ -35,7 +35,7 @@ filenames = [
     "pattern.json",
     "patternProperties.json",
     "properties.json",
-    # "propertyNames.json",
+    "propertyNames.json",
     # "ref.json",
     # "refRemote.json",
     "required.json",

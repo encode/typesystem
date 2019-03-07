@@ -159,11 +159,18 @@ def from_json_schema_type(data: dict, type_string: str, allow_null: bool) -> Fie
         else:
             additional_properties_argument = from_json_schema(additional_properties)
 
+        property_names = data.get("propertyNames", None)
+        if property_names is None:
+            property_names_argument = None  # type: typing.Optional[Field]
+        else:
+            property_names_argument = from_json_schema(property_names)
+
         kwargs = {
             "allow_null": allow_null,
             "properties": properties_argument,
             "pattern_properties": pattern_properties_argument,
             "additional_properties": additional_properties_argument,
+            "property_names": property_names_argument,
             "min_properties": data.get("minProperties", None),
             "max_properties": data.get("maxProperties", None),
             "required": data.get("required", None),
