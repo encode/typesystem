@@ -5,6 +5,7 @@ from math import isfinite
 
 from typesystem import formats
 from typesystem.base import Message, ValidationError, ValidationResult
+from typesystem.unique import Uniqueness
 
 NO_DEFAULT = object()
 
@@ -586,7 +587,7 @@ class Array(Field):
         validated = []
         error_messages = []  # type: typing.List[Message]
         if self.unique_items:
-            seen_items = set()  # type: typing.Set[typing.Any]
+            seen_items = Uniqueness()
 
         for pos, item in enumerate(value):
             validator = None
@@ -607,13 +608,13 @@ class Array(Field):
                 else:
                     validated.append(item)
 
-                if self.unique_items:
-                    if item in seen_items:
-                        text = self.get_error_text("unique_items")
-                        message = Message(text=text, code="unique_items", key=pos)
-                        error_messages.append(message)
-                    else:
-                        seen_items.add(item)
+            if self.unique_items:
+                if item in seen_items:
+                    text = self.get_error_text("unique_items")
+                    message = Message(text=text, code="unique_items", key=pos)
+                    error_messages.append(message)
+                else:
+                    seen_items.add(item)
 
         if error_messages:
             raise ValidationError(messages=error_messages)

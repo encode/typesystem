@@ -40,7 +40,7 @@ filenames = [
     # "refRemote.json",
     "required.json",
     "type.json",
-    # "uniqueItems.json"
+    "uniqueItems.json",
 ]
 
 

@@ -124,6 +124,7 @@ def from_json_schema_type(data: dict, type_string: str, allow_null: bool) -> Fie
             "max_items": data.get("maxItems", None),
             "additional_items": additional_items_argument,
             "items": items_argument,
+            "unique_items": data.get("uniqueItems", False),
             "default": data.get("default", NO_DEFAULT),
         }
         return Array(**kwargs)
