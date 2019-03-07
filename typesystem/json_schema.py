@@ -1,5 +1,6 @@
 import typing
 
+from typesystem.composites import AllOf, NeverMatch, Not, OneOf
 from typesystem.fields import (
     NO_DEFAULT,
     Any,
@@ -9,7 +10,6 @@ from typesystem.fields import (
     Field,
     Float,
     Integer,
-    Never,
     Null,
     Object,
     String,
@@ -54,16 +54,26 @@ TYPE_CONSTRAINTS = {
 
 def from_json_schema(data: typing.Union[bool, dict]) -> Field:
     if isinstance(data, bool):
-        return {True: Any(), False: Never()}[data]
+        return {True: Any(), False: NeverMatch()}[data]
 
     constraints = []  # typing.List[Field]
     if any([property_name in data for property_name in TYPE_CONSTRAINTS]):
         constraints.append(type_from_json_schema(data))
     if "enum" in data:
         constraints.append(enum_from_json_schema(data))
+    if "allOf" in data:
+        constraints.append(all_of_from_json_schema(data))
+    if "anyOf" in data:
+        constraints.append(any_of_from_json_schema(data))
+    if "oneOf" in data:
+        constraints.append(one_of_from_json_schema(data))
+    if "not" in data:
+        constraints.append(not_from_json_schema(data))
 
     if len(constraints) == 1:
         return constraints[0]
+    elif len(constraints) > 1:
+        return AllOf(constraints)
     return Any()
 
 
@@ -81,7 +91,7 @@ def type_from_json_schema(data: dict) -> Field:
         return Union(any_of=items, allow_null=allow_null)
 
     if len(type_strings) == 0:
-        return {True: Null(), False: Never()}[allow_null]
+        return {True: Null(), False: NeverMatch()}[allow_null]
 
     type_string = type_strings.pop()
     return from_json_schema_type(data, type_string=type_string, allow_null=allow_null)
@@ -241,3 +251,27 @@ def enum_from_json_schema(data: dict) -> Field:
     choices = [(item, item) for item in data["enum"]]
     kwargs = {"choices": choices, "default": data.get("default", NO_DEFAULT)}
     return Choice(**kwargs)
+
+
+def all_of_from_json_schema(data: dict) -> Field:
+    all_of = [from_json_schema(item) for item in data["allOf"]]
+    kwargs = {"all_of": all_of, "default": data.get("default", NO_DEFAULT)}
+    return AllOf(**kwargs)
+
+
+def any_of_from_json_schema(data: dict) -> Field:
+    any_of = [from_json_schema(item) for item in data["anyOf"]]
+    kwargs = {"any_of": any_of, "default": data.get("default", NO_DEFAULT)}
+    return Union(**kwargs)
+
+
+def one_of_from_json_schema(data: dict) -> Field:
+    one_of = [from_json_schema(item) for item in data["oneOf"]]
+    kwargs = {"one_of": one_of, "default": data.get("default", NO_DEFAULT)}
+    return OneOf(**kwargs)
+
+
+def not_from_json_schema(data: dict) -> Field:
+    negated = from_json_schema(data["not"])
+    kwargs = {"negated": negated, "default": data.get("default", NO_DEFAULT)}
+    return Not(**kwargs)

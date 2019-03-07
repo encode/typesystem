@@ -720,17 +720,6 @@ class Any(Field):
         return value
 
 
-class Never(Field):
-    """
-    Doesn't ever match.
-    """
-
-    errors = {"never": "This never validates."}
-
-    def validate(self, value: typing.Any, strict: bool = False) -> typing.Any:
-        raise self.validation_error("never")
-
-
 class Null(Field):
     """
     Only ever matches a literal `null`.
