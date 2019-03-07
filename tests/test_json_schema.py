@@ -2,6 +2,7 @@ import json
 import os
 
 import pytest
+
 from typesystem.json_schema import from_json_schema
 
 filenames = [
@@ -19,7 +20,7 @@ filenames = [
     "exclusiveMaximum.json",
     "exclusiveMinimum.json",
     # "if-then-else.json",
-    # "items.json",
+    "items.json",
     "maxItems.json",
     "maxLength.json",
     "maxProperties.json",
@@ -71,10 +72,10 @@ def load_test_cases():
 test_cases = load_test_cases()
 
 
-@pytest.mark.parametrize("schema,value,is_valid,description", test_cases)
-def test_json_schema(schema, value, is_valid, description):
+@pytest.mark.parametrize("schema,data,is_valid,description", test_cases)
+def test_json_schema(schema, data, is_valid, description):
     validator = from_json_schema(schema)
-    value, error = validator.validate_or_error(value, strict=True)
+    value, error = validator.validate_or_error(data, strict=True)
     if is_valid:
         assert error is None, description
     else:

@@ -545,10 +545,10 @@ class Array(Field):
         assert max_items is None or isinstance(max_items, int)
         assert isinstance(unique_items, bool)
 
-        if isinstance(items, list) and (additional_items is False):
+        if isinstance(items, list):
             if min_items is None:
                 min_items = len(items)
-            if max_items is None:
+            if max_items is None and (additional_items is False):
                 max_items = len(items)
 
         if exact_items is not None:
@@ -666,7 +666,7 @@ class Any(Field):
 
 
 class Never(Field):
-    errors = {'never': 'This never validates'}
+    errors = {"never": "This never validates"}
 
     def validate(self, value: typing.Any, strict: bool = False) -> typing.Any:
         raise self.validation_error("never")
