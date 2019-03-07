@@ -13,7 +13,7 @@ filenames = [
     "boolean_schema.json",
     # "const.json",
     # "contains.json",
-    # "default.json",
+    "default.json",
     # "definitions.json",
     # "dependencies.json",
     # "enum.json",

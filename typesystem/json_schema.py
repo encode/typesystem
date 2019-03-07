@@ -1,6 +1,7 @@
 import typing
 
 from typesystem.fields import (
+    NO_DEFAULT,
     Any,
     Array,
     Boolean,
@@ -68,6 +69,7 @@ def from_json_schema_type(data: dict, type_string: str, allow_null: bool) -> Fie
             "exclusive_minimum": data.get("exclusiveMinimum", None),
             "exclusive_maximum": data.get("exclusiveMaximum", None),
             "multiple_of": data.get("multipleOf", None),
+            "default": data.get("default", NO_DEFAULT),
         }
         return Float(**kwargs)
 
@@ -79,6 +81,7 @@ def from_json_schema_type(data: dict, type_string: str, allow_null: bool) -> Fie
             "exclusive_minimum": data.get("exclusiveMinimum", None),
             "exclusive_maximum": data.get("exclusiveMaximum", None),
             "multiple_of": data.get("multipleOf", None),
+            "default": data.get("default", NO_DEFAULT),
         }
         return Integer(**kwargs)
 
@@ -90,11 +93,12 @@ def from_json_schema_type(data: dict, type_string: str, allow_null: bool) -> Fie
             "min_length": min_length if min_length > 1 else None,
             "max_length": data.get("maxLength", None),
             "pattern": data.get("pattern", None),
+            "default": data.get("default", NO_DEFAULT),
         }
         return String(**kwargs)
 
     elif type_string == "boolean":
-        kwargs = {"allow_null": allow_null}
+        kwargs = {"allow_null": allow_null, "default": data.get("default", NO_DEFAULT)}
         return Boolean(**kwargs)
 
     elif type_string == "array":
@@ -120,6 +124,7 @@ def from_json_schema_type(data: dict, type_string: str, allow_null: bool) -> Fie
             "max_items": data.get("maxItems", None),
             "additional_items": additional_items_argument,
             "items": items_argument,
+            "default": data.get("default", NO_DEFAULT),
         }
         return Array(**kwargs)
 
@@ -161,6 +166,7 @@ def from_json_schema_type(data: dict, type_string: str, allow_null: bool) -> Fie
             "min_properties": data.get("minProperties", None),
             "max_properties": data.get("maxProperties", None),
             "required": data.get("required", None),
+            "default": data.get("default", NO_DEFAULT),
         }
         return Object(**kwargs)
 
