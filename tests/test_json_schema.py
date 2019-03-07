@@ -11,7 +11,7 @@ filenames = [
     "allOf.json",
     "anyOf.json",
     "boolean_schema.json",
-    # "const.json",
+    "const.json",
     # "contains.json",
     "default.json",
     # "definitions.json",

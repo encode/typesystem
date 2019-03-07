@@ -7,10 +7,10 @@ from typesystem.fields import (
     Array,
     Boolean,
     Choice,
+    Const,
     Field,
     Float,
     Integer,
-    Null,
     Object,
     String,
     Union,
@@ -61,6 +61,8 @@ def from_json_schema(data: typing.Union[bool, dict]) -> Field:
         constraints.append(type_from_json_schema(data))
     if "enum" in data:
         constraints.append(enum_from_json_schema(data))
+    if "const" in data:
+        constraints.append(const_from_json_schema(data))
     if "allOf" in data:
         constraints.append(all_of_from_json_schema(data))
     if "anyOf" in data:
@@ -91,7 +93,7 @@ def type_from_json_schema(data: dict) -> Field:
         return Union(any_of=items, allow_null=allow_null)
 
     if len(type_strings) == 0:
-        return {True: Null(), False: NeverMatch()}[allow_null]
+        return {True: Const(None), False: NeverMatch()}[allow_null]
 
     type_string = type_strings.pop()
     return from_json_schema_type(data, type_string=type_string, allow_null=allow_null)
@@ -251,6 +253,12 @@ def enum_from_json_schema(data: dict) -> Field:
     choices = [(item, item) for item in data["enum"]]
     kwargs = {"choices": choices, "default": data.get("default", NO_DEFAULT)}
     return Choice(**kwargs)
+
+
+def const_from_json_schema(data: dict) -> Field:
+    const = data["const"]
+    kwargs = {"const": const, "default": data.get("default", NO_DEFAULT)}
+    return Const(**kwargs)
 
 
 def all_of_from_json_schema(data: dict) -> Field:

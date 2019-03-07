@@ -720,14 +720,21 @@ class Any(Field):
         return value
 
 
-class Null(Field):
+class Const(Field):
     """
-    Only ever matches a literal `null`.
+    Only ever matches the given given value.
     """
 
-    errors = {"only_null": "Must be null."}
+    errors = {"only_null": "Must be null.", "const": "Must be the value '{const}'."}
+
+    def __init__(self, const: typing.Any, **kwargs: typing.Any):
+        assert "allow_null" not in kwargs
+        super().__init__(**kwargs)
+        self.const = const
 
     def validate(self, value: typing.Any, strict: bool = False) -> typing.Any:
-        if value is None:
-            return None
-        raise self.validation_error("only_null")
+        if value != self.const:
+            if self.const is None:
+                raise self.validation_error("only_null")
+            raise self.validation_error("const")
+        return value

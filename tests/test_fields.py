@@ -6,6 +6,7 @@ from typesystem.fields import (
     Array,
     Boolean,
     Choice,
+    Const,
     Date,
     DateTime,
     Decimal,
@@ -736,6 +737,28 @@ def test_union():
     assert error == ValidationError(
         text="Must be less than or equal to 1000.", code="maximum"
     )
+
+
+def test_const():
+    validator = Const(const=None)
+    value, error = validator.validate_or_error(None)
+    assert value is None
+    assert error is None
+
+    validator = Const(const=None)
+    value, error = validator.validate_or_error(123)
+    assert value is None
+    assert error == ValidationError(text="Must be null.", code="only_null")
+
+    validator = Const(const="abc")
+    value, error = validator.validate_or_error("def")
+    assert value is None
+    assert error == ValidationError(text="Must be the value 'abc'.", code="const")
+
+    validator = Const(const="abc")
+    value, error = validator.validate_or_error("abc")
+    assert value == "abc"
+    assert error is None
 
 
 def test_errors_dict_interface():
