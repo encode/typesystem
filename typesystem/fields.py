@@ -621,6 +621,45 @@ class Array(Field):
         return validated
 
 
+class Union(Field):
+    errors = {"null": "May not be null.", "union": "Did not match any valid type."}
+
+    def __init__(self, any_of: typing.List[Field], **kwargs: typing.Any):
+        super().__init__(**kwargs)
+
+        self.any_of = any_of
+        if any([child.allow_null for child in any_of]):
+            self.allow_null = True
+
+    def validate(self, value: typing.Any, strict: bool = False) -> typing.Any:
+        if value is None and self.allow_null:
+            return None
+        elif value is None:
+            raise self.validation_error("null")
+
+        candidate_errors = []
+        for child in self.any_of:
+            validated, error = child.validate_or_error(value, strict=strict)
+            if error is None:
+                return validated
+            else:
+                # If a child returned anything other than a type error, then
+                # it is a candidate for returning as the primary error.
+                messages = error.messages()
+                if (
+                    len(messages) != 1
+                    or messages[0].code != "type"
+                    or messages[0].index
+                ):
+                    candidate_errors.append(error)
+
+        if len(candidate_errors) == 1:
+            # If exactly one child was of the correct type, then we can use
+            # the error from the child.
+            raise candidate_errors[0]
+        raise self.validation_error("union")
+
+
 class Text(String):
     def __init__(self, **kwargs: typing.Any) -> None:
         super().__init__(format="text", **kwargs)

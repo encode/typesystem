@@ -12,6 +12,7 @@ from typesystem.fields import (
     String,
     Text,
     Time,
+    Union,
 )
 from typesystem.forms import Jinja2Forms
 from typesystem.schemas import Schema
@@ -35,6 +36,7 @@ __all__ = [
     "String",
     "Text",
     "Time",
+    "Union",
     "validate_json",
     "validate_yaml",
 ]

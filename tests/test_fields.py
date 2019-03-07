@@ -15,6 +15,7 @@ from typesystem.fields import (
     Object,
     String,
     Time,
+    Union,
 )
 
 
@@ -692,6 +693,45 @@ def test_datetime():
     validator = DateTime()
     value, error = validator.validate_or_error("2049-01-01 12:00:60")
     assert error == ValidationError(text="Must be a real datetime.", code="invalid")
+
+
+def test_union():
+    validator = Union(any_of=[Integer(), String()])
+    value, error = validator.validate_or_error("abc")
+    assert value == "abc"
+    assert error is None
+
+    validator = Union(any_of=[Integer(), String()])
+    value, error = validator.validate_or_error(123)
+    assert value == 123
+    assert error is None
+
+    validator = Union(any_of=[Integer(), String()])
+    value, error = validator.validate_or_error(None)
+    assert value is None
+    assert error == ValidationError(text="May not be null.", code="null")
+
+    validator = Union(any_of=[Integer(), String()])
+    value, error = validator.validate_or_error(True)
+    assert value is None
+    assert error == ValidationError(text="Did not match any valid type.", code="union")
+
+    validator = Union(any_of=[Integer(allow_null=True), String()])
+    value, error = validator.validate_or_error(None)
+    assert error is None
+    assert value is None
+
+    validator = Union(any_of=[Integer(), String()], allow_null=True)
+    value, error = validator.validate_or_error(None)
+    assert error is None
+    assert value is None
+
+    validator = Union(any_of=[Integer(maximum=1000), String()])
+    value, error = validator.validate_or_error(9999)
+    assert value is None
+    assert error == ValidationError(
+        text="Must be less than or equal to 1000.", code="maximum"
+    )
 
 
 def test_errors_dict_interface():
