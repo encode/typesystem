@@ -8,6 +8,7 @@ from typesystem.fields import (
     Float,
     Integer,
     Never,
+    Null,
     Object,
     String,
     Union,
@@ -26,6 +27,9 @@ def from_json_schema(data: typing.Union[bool, dict]) -> Field:
             for type_string in type_strings
         ]
         return Union(any_of=items, allow_null=allow_null)
+
+    if len(type_strings) == 0:
+        return {True: Null(), False: Any()}[allow_null]
 
     type_string = type_strings.pop()
     return from_json_schema_type(data, type_string=type_string, allow_null=allow_null)
@@ -66,6 +70,7 @@ def from_json_schema_type(data: dict, type_string: str, allow_null: bool) -> Fie
             "multiple_of": data.get("multipleOf", None),
         }
         return Float(**kwargs)
+
     elif type_string == "integer":
         kwargs = {
             "allow_null": allow_null,
@@ -76,6 +81,7 @@ def from_json_schema_type(data: dict, type_string: str, allow_null: bool) -> Fie
             "multiple_of": data.get("multipleOf", None),
         }
         return Integer(**kwargs)
+
     elif type_string == "string":
         min_length = data.get("minLength", 0)
         kwargs = {
@@ -86,31 +92,72 @@ def from_json_schema_type(data: dict, type_string: str, allow_null: bool) -> Fie
             "pattern": data.get("pattern", None),
         }
         return String(**kwargs)
+
     elif type_string == "boolean":
         kwargs = {"allow_null": allow_null}
         return Boolean(**kwargs)
+
     elif type_string == "array":
         items = data.get("items", None)
         if items is None:
-            items_argument = (
-                None
-            )  # type: typing.Optional[typing.Union[Field, typing.List[Field]]]
+            items_argument = None  # type: typing.Union[None, Field, typing.List[Field]]
         elif isinstance(items, list):
             items_argument = [from_json_schema(item) for item in items]
         else:
             items_argument = from_json_schema(items)
 
+        additional_items = data.get("additionalItems", None)
+        if additional_items is None:
+            additional_items_argument = True  # type: typing.Union[bool, Field]
+        elif isinstance(additional_items, bool):
+            additional_items_argument = additional_items
+        else:
+            additional_items_argument = from_json_schema(additional_items)
+
         kwargs = {
             "allow_null": allow_null,
             "min_items": data.get("minItems", 0),
             "max_items": data.get("maxItems", None),
-            "additional_items": data.get("additionalItems", True),
+            "additional_items": additional_items_argument,
             "items": items_argument,
         }
         return Array(**kwargs)
+
     elif type_string == "object":
+        properties = data.get("properties", None)
+        if properties is None:
+            properties_argument = None  # type: typing.Optional[typing.Dict[str, Field]]
+        else:
+            properties_argument = {
+                key: from_json_schema(value) for key, value in properties.items()
+            }
+
+        pattern_properties = data.get("patternProperties", None)
+        if pattern_properties is None:
+            pattern_properties_argument = (
+                None
+            )  # type: typing.Optional[typing.Dict[str, Field]]
+        else:
+            pattern_properties_argument = {
+                key: from_json_schema(value)
+                for key, value in pattern_properties.items()
+            }
+
+        additional_properties = data.get("additionalProperties", None)
+        if additional_properties is None:
+            additional_properties_argument = (
+                None
+            )  # type: typing.Union[None, bool, Field]
+        elif isinstance(additional_properties, bool):
+            additional_properties_argument = additional_properties
+        else:
+            additional_properties_argument = from_json_schema(additional_properties)
+
         kwargs = {
             "allow_null": allow_null,
+            "properties": properties_argument,
+            "pattern_properties": pattern_properties_argument,
+            "additional_properties": additional_properties_argument,
             "min_properties": data.get("minProperties", None),
             "max_properties": data.get("maxProperties", None),
             "required": data.get("required", None),

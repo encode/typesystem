@@ -6,8 +6,8 @@ import pytest
 from typesystem.json_schema import from_json_schema
 
 filenames = [
-    # "additionalItems.json",
-    # "additionalProperties.json",
+    "additionalItems.json",
+    "additionalProperties.json",
     # "allOf.json",
     # "anyOf.json",
     "boolean_schema.json",
@@ -33,13 +33,13 @@ filenames = [
     # "not.json",
     # "oneOf.json",
     "pattern.json",
-    # "patternProperties.json",
-    # "properties.json",
+    "patternProperties.json",
+    "properties.json",
     # "propertyNames.json",
     # "ref.json",
     # "refRemote.json",
     "required.json",
-    # "type.json",
+    "type.json",
     # "uniqueItems.json"
 ]
 

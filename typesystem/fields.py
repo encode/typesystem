@@ -660,18 +660,6 @@ class Union(Field):
         raise self.validation_error("union")
 
 
-class Any(Field):
-    def validate(self, value: typing.Any, strict: bool = False) -> typing.Any:
-        return value
-
-
-class Never(Field):
-    errors = {"never": "This never validates"}
-
-    def validate(self, value: typing.Any, strict: bool = False) -> typing.Any:
-        raise self.validation_error("never")
-
-
 class Text(String):
     def __init__(self, **kwargs: typing.Any) -> None:
         super().__init__(format="text", **kwargs)
@@ -710,3 +698,36 @@ class Nested(Field):
         if obj is None:
             return None
         return dict(obj)
+
+
+class Any(Field):
+    """
+    Always matches.
+    """
+
+    def validate(self, value: typing.Any, strict: bool = False) -> typing.Any:
+        return value
+
+
+class Never(Field):
+    """
+    Doesn't ever match.
+    """
+
+    errors = {"never": "This never validates."}
+
+    def validate(self, value: typing.Any, strict: bool = False) -> typing.Any:
+        raise self.validation_error("never")
+
+
+class Null(Field):
+    """
+    Only ever matches a literal `null`.
+    """
+
+    errors = {"only_null": "Must be null."}
+
+    def validate(self, value: typing.Any, strict: bool = False) -> typing.Any:
+        if value is None:
+            return None
+        raise self.validation_error("only_null")
