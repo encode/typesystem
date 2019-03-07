@@ -15,7 +15,7 @@ from typesystem.fields import (
     Object,
     String,
     Time,
-    Union
+    Union,
 )
 
 
@@ -729,7 +729,9 @@ def test_union():
     validator = Union(any_of=[Integer(maximum=1000), String()])
     value, error = validator.validate_or_error(9999)
     assert value is None
-    assert error == ValidationError(text="Must be less than or equal to 1000.", code="maximum")
+    assert error == ValidationError(
+        text="Must be less than or equal to 1000.", code="maximum"
+    )
 
 
 def test_errors_dict_interface():

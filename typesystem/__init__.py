@@ -12,7 +12,7 @@ from typesystem.fields import (
     String,
     Text,
     Time,
-    Union
+    Union,
 )
 from typesystem.forms import Jinja2Forms
 from typesystem.schemas import Schema
