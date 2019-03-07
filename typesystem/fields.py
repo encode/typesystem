@@ -622,10 +622,7 @@ class Array(Field):
 
 
 class Union(Field):
-    errors = {
-        "null": "May not be null.",
-        "union": "Did not match any valid type.",
-    }
+    errors = {"null": "May not be null.", "union": "Did not match any valid type."}
 
     def __init__(self, any_of: typing.List[Field], **kwargs: typing.Any):
         super().__init__(**kwargs)
@@ -634,7 +631,7 @@ class Union(Field):
         if any([child.allow_null for child in any_of]):
             self.allow_null = True
 
-    def validate(self, value: typing.Any, strict: bool = False):
+    def validate(self, value: typing.Any, strict: bool = False) -> typing.Any:
         if value is None and self.allow_null:
             return None
         elif value is None:
@@ -649,7 +646,11 @@ class Union(Field):
                 # If a child returned anything other than a type error, then
                 # it is a candidate for returning as the primary error.
                 messages = error.messages()
-                if len(messages) != 1 or messages[0].code != 'type' or messages[0].index:
+                if (
+                    len(messages) != 1
+                    or messages[0].code != "type"
+                    or messages[0].index
+                ):
                     candidate_errors.append(error)
 
         if len(candidate_errors) == 1:
