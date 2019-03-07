@@ -12,8 +12,10 @@ class Uniqueness:
     TRUE = object()
     FALSE = object()
 
-    def __init__(self) -> None:
+    def __init__(self, items: list = None) -> None:
         self._set = set()  # type: set
+        for item in items or []:
+            self.add(item)
 
     def __contains__(self, item: typing.Any) -> bool:
         item = self.make_hashable(item)

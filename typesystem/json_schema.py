@@ -5,6 +5,7 @@ from typesystem.fields import (
     Any,
     Array,
     Boolean,
+    Choice,
     Field,
     Float,
     Integer,
@@ -15,11 +16,61 @@ from typesystem.fields import (
     Union,
 )
 
+TYPE_CONSTRAINTS = {
+    "additionalItems",
+    "additionalProperties",
+    "boolean_schema",
+    "contains",
+    "dependencies",
+    "exclusiveMaximum",
+    "exclusiveMinimum",
+    "items",
+    "maxItems",
+    "maxLength",
+    "maxProperties",
+    "maximum",
+    "minItems",
+    "minLength",
+    "minProperties",
+    "minimum",
+    "multipleOf",
+    "pattern",
+    "patternProperties",
+    "properties",
+    "propertyNames",
+    "required",
+    "type",
+    "uniqueItems",
+}
+
+# "allOf.json",
+# "anyOf.json",
+# "const.json",
+# "enum.json",
+# "if-then-else.json",
+# "not.json",
+# "oneOf.json",
+
 
 def from_json_schema(data: typing.Union[bool, dict]) -> Field:
     if isinstance(data, bool):
         return {True: Any(), False: Never()}[data]
 
+    constraints = []  # typing.List[Field]
+    if any([property_name in data for property_name in TYPE_CONSTRAINTS]):
+        constraints.append(type_from_json_schema(data))
+    if "enum" in data:
+        constraints.append(enum_from_json_schema(data))
+
+    if len(constraints) == 1:
+        return constraints[0]
+    return Any()
+
+
+def type_from_json_schema(data: dict) -> Field:
+    """
+    Build a typed field or union of typed fields from a JSON schema object.
+    """
     type_strings, allow_null = get_valid_types(data)
 
     if len(type_strings) > 1:
@@ -30,7 +81,7 @@ def from_json_schema(data: typing.Union[bool, dict]) -> Field:
         return Union(any_of=items, allow_null=allow_null)
 
     if len(type_strings) == 0:
-        return {True: Null(), False: Any()}[allow_null]
+        return {True: Null(), False: Never()}[allow_null]
 
     type_string = type_strings.pop()
     return from_json_schema_type(data, type_string=type_string, allow_null=allow_null)
@@ -40,6 +91,7 @@ def get_valid_types(data: dict) -> typing.Tuple[typing.Set[str], bool]:
     """
     Returns a two-tuple of `(type_strings, allow_null)`.
     """
+
     type_strings = data.get("type", [])
     if isinstance(type_strings, str):
         type_strings = {type_strings}
@@ -61,6 +113,10 @@ def get_valid_types(data: dict) -> typing.Tuple[typing.Set[str], bool]:
 
 
 def from_json_schema_type(data: dict, type_string: str, allow_null: bool) -> Field:
+    """
+    Build a typed field from a JSON schema object.
+    """
+
     if type_string == "number":
         kwargs = {
             "allow_null": allow_null,
@@ -179,3 +235,9 @@ def from_json_schema_type(data: dict, type_string: str, allow_null: bool) -> Fie
         return Object(**kwargs)
 
     assert False, f"Invalid argument type_string={type_string!r}"  # pragma: no cover
+
+
+def enum_from_json_schema(data: dict) -> Field:
+    choices = [(item, item) for item in data["enum"]]
+    kwargs = {"choices": choices, "default": data.get("default", NO_DEFAULT)}
+    return Choice(**kwargs)

@@ -16,7 +16,7 @@ filenames = [
     "default.json",
     # "definitions.json",
     # "dependencies.json",
-    # "enum.json",
+    "enum.json",
     "exclusiveMaximum.json",
     "exclusiveMinimum.json",
     # "if-then-else.json",
