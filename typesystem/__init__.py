@@ -17,6 +17,7 @@ from typesystem.fields import (
 )
 from typesystem.forms import Jinja2Forms
 from typesystem.json_schema import from_json_schema, to_json_schema
+from typesystem.namespaces import SchemaNamespace
 from typesystem.schemas import Schema
 from typesystem.tokenize.tokenize_json import validate_json
 from typesystem.tokenize.tokenize_yaml import validate_yaml
@@ -40,6 +41,7 @@ __all__ = [
     "Text",
     "Time",
     "Union",
+    "SchemaNamespace",
     "from_json_schema",
     "to_json_schema",
     "validate_json",

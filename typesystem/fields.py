@@ -656,22 +656,26 @@ class Nested(Field):
     errors = {"null": "May not be null."}
 
     def __init__(
-        self, schema: typing.Any, namespace: dict = None, **kwargs: typing.Any
+        self, schema: typing.Any, namespace: typing.Mapping = None, **kwargs: typing.Any
     ) -> None:
         super().__init__(**kwargs)
         self.schema = schema
         self.namespace = namespace
 
     def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
+        if isinstance(self.schema, str):
+            assert (
+                self.namespace is not None
+            ), "String-references can only be used within a schema namespace."
+            schema = self.namespace[self.schema]
+        else:
+            schema = self.schema
+
         if value is None and self.allow_null:
             return None
         elif value is None:
             raise self.validation_error("null")
-        if isinstance(self.schema, str):
-            assert self.namespace is not None
-            schema = self.namespace[self.schema]
-        else:
-            schema = self.schema
+
         return schema.validate(value, strict=strict)
 
     def serialize(self, obj: typing.Any) -> typing.Any:

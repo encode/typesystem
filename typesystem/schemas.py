@@ -49,15 +49,15 @@ class SchemaMetaclass(ABCMeta):
 
         # Determine the 'namespace' against which string-reference
         # Nested fields should resolve.
-        namespace = attrs.get("NAMESPACE", None)
+        namespace = None
         for base in reversed(bases):
             if namespace is None:
-                namespace = getattr(base, "NAMESPACE", namespace)
-        assert isinstance(namespace, dict)
+                namespace = getattr(base, "namespace", namespace)
 
         # Add the namespace to any `Nested` fields that we're referencing.
-        for field in fields.values():
-            set_namespace(field, namespace)
+        if namespace is not None:
+            for field in fields.values():
+                set_namespace(field, namespace)
 
         #  Sort fields by their actual position in the source code,
         # using `Field._creation_counter`
@@ -68,13 +68,13 @@ class SchemaMetaclass(ABCMeta):
         new_type = super(SchemaMetaclass, cls).__new__(  # type: ignore
             cls, name, bases, attrs
         )
-        namespace[name] = new_type
+        if namespace is not None:
+            namespace[name] = new_type
         return new_type
 
 
 class Schema(Mapping, metaclass=SchemaMetaclass):
-    NAMESPACE = {}  # type: typing.Dict[str, typing.Type[Schema]]
-
+    namespace = None  # type: typing.Optional[typing.Dict[str, typing.Type[Schema]]]
     fields = {}  # type: typing.Dict[str, Field]
 
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
