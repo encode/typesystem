@@ -1,3 +1,4 @@
+import re
 import typing
 
 from typesystem.composites import AllOf, IfThenElse, NeverMatch, Not, OneOf
@@ -318,8 +319,14 @@ def to_json_schema(
             data["minLength"] = field.min_length or 1
         if field.max_length is not None:
             data["maxLength"] = field.max_length
-        if field.pattern is not None:
-            data["pattern"] = field.pattern
+        if field.pattern_regex is not None:
+            if field.pattern_regex.flags != re.RegexFlag.UNICODE:
+                flags = re.RegexFlag(field.pattern_regex.flags)
+                raise ValueError(
+                    f"Cannot convert regular expression with non-standard flags "
+                    f"to JSON schema: {flags!s}"
+                )
+            data["pattern"] = field.pattern_regex.pattern
         if field.format is not None:
             data["format"] = field.format
         return data
