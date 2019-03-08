@@ -30,13 +30,13 @@ Python 3.6+
 ## Installation
 
 ```shell
-$ pip3 install typesystem
+$ python -m pip install typesystem
 ```
 
 If you'd like you use the form rendering you'll also want to install `jinja2`.
 
 ```shell
-$ pip3 install jinja2
+$ python -m pip install jinja2
 ```
 
 ## Quickstart
