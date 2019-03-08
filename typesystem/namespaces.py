@@ -1,12 +1,12 @@
 import typing
 from collections.abc import MutableMapping
 
-from typesystem.schemas import Schema
+from typesystem.fields import Array, Field, Nested, Object
 
 
 class SchemaNamespace(MutableMapping):
     def __init__(self) -> None:
-        self._namespace = {}  # type: typing.Dict[str, typing.Type[Schema]]
+        self._namespace = {}  # type: dict
 
     def __getitem__(self, key: typing.Any) -> typing.Any:
         return self._namespace[key]
@@ -23,6 +23,25 @@ class SchemaNamespace(MutableMapping):
     def __delitem__(self, key: typing.Any) -> None:
         del self._namespace[key]
 
-    @property
-    def Schema(self) -> typing.Type[Schema]:  # type: ignore
-        return type("NamespacedSchema", (Schema,), {"namespace": self})
+
+def set_namespace(field: Field, namespace: SchemaNamespace) -> None:
+    """
+    Recursively set the namespace that string-referenced `Nested` fields
+    should use.
+    """
+    if (
+        isinstance(field, Nested)
+        and isinstance(field.schema, str)
+        and field.namespace is None
+    ):
+        field.namespace = namespace
+    elif isinstance(field, Array):
+        if field.items is not None:
+            if isinstance(field.items, (tuple, list)):
+                for child in field.items:
+                    set_namespace(child, namespace)
+            else:
+                set_namespace(field.items, namespace)
+    elif isinstance(field, Object):
+        for child in field.properties.values():
+            set_namespace(child, namespace)

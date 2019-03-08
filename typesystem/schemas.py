@@ -3,35 +3,17 @@ from abc import ABCMeta
 from collections.abc import Mapping
 
 from typesystem.base import ValidationError, ValidationResult
-from typesystem.fields import Array, Field, Nested, Object
-
-
-def set_namespace(field: Field, namespace: dict) -> None:
-    """
-    Recursively set the namespace that string-referenced `Nested` fields
-    should use.
-    """
-    if (
-        isinstance(field, Nested)
-        and isinstance(field.schema, str)
-        and field.namespace is None
-    ):
-        field.namespace = namespace
-    elif isinstance(field, Array):
-        if field.items is not None:
-            if isinstance(field.items, (tuple, list)):
-                for child in field.items:
-                    set_namespace(child, namespace)
-            else:
-                set_namespace(field.items, namespace)
-    elif isinstance(field, Object):
-        for child in field.properties.values():
-            set_namespace(child, namespace)
+from typesystem.fields import Field, Object
+from typesystem.namespaces import SchemaNamespace, set_namespace
 
 
 class SchemaMetaclass(ABCMeta):
     def __new__(
-        cls: type, name: str, bases: typing.Sequence[type], attrs: dict
+        cls: type,
+        name: str,
+        bases: typing.Sequence[type],
+        attrs: dict,
+        namespace: SchemaNamespace = None,
     ) -> type:
         fields = {}  # type: typing.Dict[str, Field]
 
@@ -46,13 +28,6 @@ class SchemaMetaclass(ABCMeta):
             for key, value in base_fields.items():
                 if isinstance(value, Field) and key not in fields:
                     fields[key] = value
-
-        # Determine the 'namespace' against which string-reference
-        # Nested fields should resolve.
-        namespace = None
-        for base in reversed(bases):
-            if namespace is None:
-                namespace = getattr(base, "namespace", namespace)
 
         # Add the namespace to any `Nested` fields that we're referencing.
         if namespace is not None:
@@ -74,7 +49,6 @@ class SchemaMetaclass(ABCMeta):
 
 
 class Schema(Mapping, metaclass=SchemaMetaclass):
-    namespace = None  # type: typing.Optional[typing.Dict[str, typing.Type[Schema]]]
     fields = {}  # type: typing.Dict[str, Field]
 
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
