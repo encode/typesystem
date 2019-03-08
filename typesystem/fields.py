@@ -85,7 +85,7 @@ class String(Field):
         "blank": "Must not be blank.",
         "max_length": "Must have no more than {max_length} characters.",
         "min_length": "Must have at least {min_length} characters.",
-        "pattern": "Must match the pattern /{pattern.pattern}/.",
+        "pattern": "Must match the pattern /{pattern}/.",
         "format": "Must be a valid {format}.",
     }
 
@@ -110,14 +110,20 @@ class String(Field):
         if allow_blank and not self.has_default():
             self.default = ""
 
-        if isinstance(pattern, str):
-            pattern = re.compile(pattern)
+        if pattern is None:
+            pattern_regex = None
+        elif isinstance(pattern, str):
+            pattern_regex = re.compile(pattern)
+        elif isinstance(pattern, typing.Pattern):
+            pattern_regex = pattern
+            pattern = pattern_regex.pattern
 
         self.allow_blank = allow_blank
         self.trim_whitespace = trim_whitespace
         self.max_length = max_length
         self.min_length = min_length
         self.pattern = pattern
+        self.pattern_regex = pattern_regex
         self.format = format
 
     def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
@@ -154,8 +160,8 @@ class String(Field):
             if len(value) > self.max_length:
                 raise self.validation_error("max_length")
 
-        if self.pattern is not None:
-            if not self.pattern.search(value):
+        if self.pattern_regex is not None:
+            if not self.pattern_regex.search(value):
                 raise self.validation_error("pattern")
 
         if self.format in FORMATS:
