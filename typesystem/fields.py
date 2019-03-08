@@ -5,6 +5,7 @@ from math import isfinite
 
 from typesystem import formats
 from typesystem.base import Message, ValidationError, ValidationResult
+from typesystem.unique import Uniqueness
 
 NO_DEFAULT = object()
 
@@ -350,7 +351,7 @@ class Choice(Field):
             return None
         elif value is None:
             raise self.validation_error("null")
-        elif value not in dict(self.choices):
+        elif value not in Uniqueness([key for key, value in self.choices]):
             if value == "":
                 if self.allow_null and not strict:
                     return None
@@ -377,6 +378,7 @@ class Object(Field):
         properties: typing.Dict[str, Field] = None,
         pattern_properties: typing.Dict[str, Field] = None,
         additional_properties: typing.Union[bool, None, Field] = True,
+        property_names: Field = None,
         min_properties: int = None,
         max_properties: int = None,
         required: typing.Sequence[str] = None,
@@ -409,6 +411,7 @@ class Object(Field):
         self.properties = properties
         self.pattern_properties = pattern_properties
         self.additional_properties = additional_properties
+        self.property_names = property_names
         self.min_properties = min_properties
         self.max_properties = max_properties
         self.required = required
@@ -427,7 +430,15 @@ class Object(Field):
         # Ensure all property keys are strings.
         for key in value.keys():
             if not isinstance(key, str):
-                raise self.validation_error("invalid_key")
+                text = self.get_error_text("invalid_key")
+                message = Message(text=text, code="invalid_key", index=[key])
+                error_messages.append(message)
+            elif self.property_names is not None:
+                _, error = self.property_names.validate_or_error(key)
+                if error is not None:
+                    text = self.get_error_text("invalid_property")
+                    message = Message(text=text, code="invalid_property", index=[key])
+                    error_messages.append(message)
 
         # Min/Max properties
         if self.min_properties is not None:
@@ -545,10 +556,10 @@ class Array(Field):
         assert max_items is None or isinstance(max_items, int)
         assert isinstance(unique_items, bool)
 
-        if isinstance(items, list) and (additional_items is False):
+        if isinstance(items, list):
             if min_items is None:
                 min_items = len(items)
-            if max_items is None:
+            if max_items is None and (additional_items is False):
                 max_items = len(items)
 
         if exact_items is not None:
@@ -586,7 +597,7 @@ class Array(Field):
         validated = []
         error_messages = []  # type: typing.List[Message]
         if self.unique_items:
-            seen_items = set()  # type: typing.Set[typing.Any]
+            seen_items = Uniqueness()
 
         for pos, item in enumerate(value):
             validator = None
@@ -607,18 +618,58 @@ class Array(Field):
                 else:
                     validated.append(item)
 
-                if self.unique_items:
-                    if item in seen_items:
-                        text = self.get_error_text("unique_items")
-                        message = Message(text=text, code="unique_items", key=pos)
-                        error_messages.append(message)
-                    else:
-                        seen_items.add(item)
+            if self.unique_items:
+                if item in seen_items:
+                    text = self.get_error_text("unique_items")
+                    message = Message(text=text, code="unique_items", key=pos)
+                    error_messages.append(message)
+                else:
+                    seen_items.add(item)
 
         if error_messages:
             raise ValidationError(messages=error_messages)
 
         return validated
+
+
+class Text(String):
+    def __init__(self, **kwargs: typing.Any) -> None:
+        super().__init__(format="text", **kwargs)
+
+
+class Date(String):
+    def __init__(self, **kwargs: typing.Any) -> None:
+        super().__init__(format="date", **kwargs)
+
+
+class Time(String):
+    def __init__(self, **kwargs: typing.Any) -> None:
+        super().__init__(format="time", **kwargs)
+
+
+class DateTime(String):
+    def __init__(self, **kwargs: typing.Any) -> None:
+        super().__init__(format="datetime", **kwargs)
+
+
+class Nested(Field):
+    errors = {"null": "May not be null."}
+
+    def __init__(self, schema: typing.Any, **kwargs: typing.Any) -> None:
+        super().__init__(**kwargs)
+        self.schema = schema
+
+    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
+        if value is None and self.allow_null:
+            return None
+        elif value is None:
+            raise self.validation_error("null")
+        return self.schema.validate(value, strict=strict)
+
+    def serialize(self, obj: typing.Any) -> typing.Any:
+        if obj is None:
+            return None
+        return dict(obj)
 
 
 class Union(Field):
@@ -660,41 +711,30 @@ class Union(Field):
         raise self.validation_error("union")
 
 
-class Text(String):
-    def __init__(self, **kwargs: typing.Any) -> None:
-        super().__init__(format="text", **kwargs)
+class Any(Field):
+    """
+    Always matches.
+    """
+
+    def validate(self, value: typing.Any, strict: bool = False) -> typing.Any:
+        return value
 
 
-class Date(String):
-    def __init__(self, **kwargs: typing.Any) -> None:
-        super().__init__(format="date", **kwargs)
+class Const(Field):
+    """
+    Only ever matches the given given value.
+    """
 
+    errors = {"only_null": "Must be null.", "const": "Must be the value '{const}'."}
 
-class Time(String):
-    def __init__(self, **kwargs: typing.Any) -> None:
-        super().__init__(format="time", **kwargs)
-
-
-class DateTime(String):
-    def __init__(self, **kwargs: typing.Any) -> None:
-        super().__init__(format="datetime", **kwargs)
-
-
-class Nested(Field):
-    errors = {"null": "May not be null."}
-
-    def __init__(self, schema: typing.Any, **kwargs: typing.Any) -> None:
+    def __init__(self, const: typing.Any, **kwargs: typing.Any):
+        assert "allow_null" not in kwargs
         super().__init__(**kwargs)
-        self.schema = schema
+        self.const = const
 
-    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
-        if value is None and self.allow_null:
-            return None
-        elif value is None:
-            raise self.validation_error("null")
-        return self.schema.validate(value, strict=strict)
-
-    def serialize(self, obj: typing.Any) -> typing.Any:
-        if obj is None:
-            return None
-        return dict(obj)
+    def validate(self, value: typing.Any, strict: bool = False) -> typing.Any:
+        if value != self.const:
+            if self.const is None:
+                raise self.validation_error("only_null")
+            raise self.validation_error("const")
+        return value

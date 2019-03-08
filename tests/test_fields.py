@@ -6,6 +6,7 @@ from typesystem.fields import (
     Array,
     Boolean,
     Choice,
+    Const,
     Date,
     DateTime,
     Decimal,
@@ -416,7 +417,11 @@ def test_object():
 
     validator = Object()
     value, error = validator.validate_or_error({1: 123})
-    assert dict(error) == {"": "All object keys must be strings."}
+    assert dict(error) == {1: "All object keys must be strings."}
+
+    validator = Object(property_names=String(min_length=3))
+    value, error = validator.validate_or_error({"a": 123})
+    assert dict(error) == {"a": "Invalid property name."}
 
     validator = Object(allow_null=True)
     value, error = validator.validate_or_error(None)
@@ -732,6 +737,28 @@ def test_union():
     assert error == ValidationError(
         text="Must be less than or equal to 1000.", code="maximum"
     )
+
+
+def test_const():
+    validator = Const(const=None)
+    value, error = validator.validate_or_error(None)
+    assert value is None
+    assert error is None
+
+    validator = Const(const=None)
+    value, error = validator.validate_or_error(123)
+    assert value is None
+    assert error == ValidationError(text="Must be null.", code="only_null")
+
+    validator = Const(const="abc")
+    value, error = validator.validate_or_error("def")
+    assert value is None
+    assert error == ValidationError(text="Must be the value 'abc'.", code="const")
+
+    validator = Const(const="abc")
+    value, error = validator.validate_or_error("abc")
+    assert value == "abc"
+    assert error is None
 
 
 def test_errors_dict_interface():
