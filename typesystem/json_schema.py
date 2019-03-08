@@ -435,7 +435,9 @@ def to_json_schema(
         return data
 
     field_type = type(field)
-    raise TypeError("Unsupported field type {field_type} passed to 'to_json_schema'")
+    raise TypeError(
+        f"Unsupported field type {field_type.__qualname__!r} passed to 'to_json_schema'"
+    )
 
 
 def get_standard_properties(field: Field) -> dict:
