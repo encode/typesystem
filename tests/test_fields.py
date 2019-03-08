@@ -1,5 +1,6 @@
 import datetime
 import decimal
+import re
 
 from typesystem.base import Message, ValidationError
 from typesystem.fields import (
@@ -87,6 +88,10 @@ def test_string():
     assert error == ValidationError(
         text="Must match the pattern /^[abc]*$/.", code="pattern"
     )
+
+    validator = String(pattern=re.compile("ABC", re.IGNORECASE))
+    value, error = validator.validate_or_error("abc")
+    assert value == "abc"
 
     validator = String()
     value, error = validator.validate_or_error(" ")

@@ -85,7 +85,7 @@ class String(Field):
         "blank": "Must not be blank.",
         "max_length": "Must have no more than {max_length} characters.",
         "min_length": "Must have at least {min_length} characters.",
-        "pattern": "Must match the pattern /{pattern}/.",
+        "pattern": "Must match the pattern /{pattern.pattern}/.",
         "format": "Must be a valid {format}.",
     }
 
@@ -96,7 +96,7 @@ class String(Field):
         trim_whitespace: bool = True,
         max_length: int = None,
         min_length: int = None,
-        pattern: str = None,
+        pattern: typing.Union[str, typing.Pattern] = None,
         format: str = None,
         **kwargs: typing.Any,
     ) -> None:
@@ -104,11 +104,14 @@ class String(Field):
 
         assert max_length is None or isinstance(max_length, int)
         assert min_length is None or isinstance(min_length, int)
-        assert pattern is None or isinstance(pattern, str)
+        assert pattern is None or isinstance(pattern, (str, typing.Pattern))
         assert format is None or isinstance(format, str)
 
         if allow_blank and not self.has_default():
             self.default = ""
+
+        if isinstance(pattern, str):
+            pattern = re.compile(pattern)
 
         self.allow_blank = allow_blank
         self.trim_whitespace = trim_whitespace
@@ -152,7 +155,7 @@ class String(Field):
                 raise self.validation_error("max_length")
 
         if self.pattern is not None:
-            if not re.search(self.pattern, value):
+            if not self.pattern.search(value):
                 raise self.validation_error("pattern")
 
         if self.format in FORMATS:

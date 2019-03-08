@@ -58,7 +58,7 @@ For example: `username = typesystem.String(max_length=100)`
 * `trim_whitespace` - A boolean indicating if leading/trailing whitespace should be removed on validation. **Default: `True`**
 * `max_length` - A maximum number of characters that valid input stings may contain. **Default: `None`**
 * `min_length` - A minimum number of characters that valid input stings may contain. **Default: `None`**
-* `pattern` - A string to be used as a regex that must match. Eg. `patern="^[A-Za-z]+$"` **Default: `None`**
+* `pattern` - A regular expression that must match. This can be either a string or a compiled regular expression object (which can have flags). E.g. `pattern="^[A-Za-z]+$"` **Default: `None`**
 * `format` - A string used to indicate a semantic type, such as `"email"`, `"url"`, or `"color"`. **Default: `None`**
 
 ### Text
@@ -97,8 +97,8 @@ provide more precise behaviour.
 * `maximum` - A number representing the maximum allowed value. Inputs must be less than or equal to this to validate. **Default: `None`**
 * `exclusive_minimum` - A number representing an exclusive minimum. Inputs must be greater than this to validate. **Default: `None`**
 * `exclusive_maximum` - A number representing an exclusive maximum. Inputs must be less than this to validate. **Default: `None`**
-* `precision` - A string representing the decimal precision to truncate input with. Eg. `precision="0.001"`. **Default: `None`**
-* `multiple_of` - A number giving a value that inputs must be a strict multiple of in order to validate. Eg. `multiple_of=2` will only validate even integers. **Default: `None`**
+* `precision` - A string representing the decimal precision to truncate input with. E.g. `precision="0.001"`. **Default: `None`**
+* `multiple_of` - A number giving a value that inputs must be a strict multiple of in order to validate. E.g. `multiple_of=2` will only validate even integers. **Default: `None`**
 
 ### Integer
 
