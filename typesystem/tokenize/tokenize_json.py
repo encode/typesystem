@@ -27,7 +27,7 @@ def _TokenizingJSONObject(
     _ws: str = WHITESPACE_STR,
 ) -> typing.Tuple[dict, int]:
     s, end = s_and_end
-    pairs = []  # type: typing.List[typing.Tuple[Token, Token]]
+    pairs: typing.List[typing.Tuple[Token, Token]] = []
     pairs_append = pairs.append
     memo_get = memo.setdefault
     # Use a slice to prevent IndexError from being raised, the following

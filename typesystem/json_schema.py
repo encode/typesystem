@@ -247,7 +247,7 @@ def from_json_schema_type(
     elif type_string == "array":
         items = data.get("items", None)
         if items is None:
-            items_argument = None  # type: typing.Union[None, Field, typing.List[Field]]
+            items_argument: typing.Union[None, Field, typing.List[Field]] = None
         elif isinstance(items, list):
             items_argument = [
                 from_json_schema(item, definitions=definitions) for item in items
@@ -257,7 +257,7 @@ def from_json_schema_type(
 
         additional_items = data.get("additionalItems", None)
         if additional_items is None:
-            additional_items_argument = True  # type: typing.Union[bool, Field]
+            additional_items_argument: typing.Union[bool, Field] = True
         elif isinstance(additional_items, bool):
             additional_items_argument = additional_items
         else:
@@ -279,7 +279,7 @@ def from_json_schema_type(
     elif type_string == "object":
         properties = data.get("properties", None)
         if properties is None:
-            properties_argument = None  # type: typing.Optional[typing.Dict[str, Field]]
+            properties_argument: typing.Optional[typing.Dict[str, Field]] = None
         else:
             properties_argument = {
                 key: from_json_schema(value, definitions=definitions)
@@ -288,9 +288,9 @@ def from_json_schema_type(
 
         pattern_properties = data.get("patternProperties", None)
         if pattern_properties is None:
-            pattern_properties_argument = (
+            pattern_properties_argument: typing.Optional[typing.Dict[str, Field]] = (
                 None
-            )  # type: typing.Optional[typing.Dict[str, Field]]
+            )
         else:
             pattern_properties_argument = {
                 key: from_json_schema(value, definitions=definitions)
@@ -299,9 +299,7 @@ def from_json_schema_type(
 
         additional_properties = data.get("additionalProperties", None)
         if additional_properties is None:
-            additional_properties_argument = (
-                None
-            )  # type: typing.Union[None, bool, Field]
+            additional_properties_argument: typing.Union[None, bool, Field] = (None)
         elif isinstance(additional_properties, bool):
             additional_properties_argument = additional_properties
         else:
@@ -311,7 +309,7 @@ def from_json_schema_type(
 
         property_names = data.get("propertyNames", None)
         if property_names is None:
-            property_names_argument = None  # type: typing.Optional[Field]
+            property_names_argument: typing.Optional[Field] = None
         else:
             property_names_argument = from_json_schema(
                 property_names, definitions=definitions
@@ -405,7 +403,7 @@ def to_json_schema(
     elif isinstance(arg, NeverMatch):
         return False
 
-    data = {}  # type: dict
+    data: dict = {}
     is_root = _definitions is None
     definitions = {} if _definitions is None else _definitions
 

@@ -121,7 +121,7 @@ class Jinja2Forms:
         self, *, directory: str = None, package: str = None
     ) -> "jinja2.Environment":
         if directory is not None and package is None:
-            loader = jinja2.FileSystemLoader(directory)  # type: jinja2.BaseLoader
+            loader: jinja2.BaseLoader = jinja2.FileSystemLoader(directory)
         elif directory is None and package is not None:
             loader = jinja2.PackageLoader(package, "templates")
         else:

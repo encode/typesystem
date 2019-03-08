@@ -20,7 +20,7 @@ DATETIME_REGEX = re.compile(
 
 
 class BaseFormat:
-    errors = {}  # type: typing.Dict[str, str]
+    errors: typing.Dict[str, str] = {}
 
     def validation_error(self, code: str) -> ValidationError:
         text = self.errors[code].format(**self.__dict__)
@@ -80,7 +80,7 @@ class TimeFormat(BaseFormat):
 
         kwargs = {k: int(v) for k, v in groups.items() if v is not None}
         try:
-            return datetime.time(**kwargs, tzinfo=None)  # type: ignore
+            return datetime.time(tzinfo=None, **kwargs)
         except ValueError:
             raise self.validation_error("invalid")
 
