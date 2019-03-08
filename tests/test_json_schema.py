@@ -3,7 +3,8 @@ import os
 
 import pytest
 
-from typesystem.json_schema import from_json_schema
+from typesystem.fields import Field
+from typesystem.json_schema import from_json_schema, to_json_schema
 
 filenames = [
     "additionalItems.json",
@@ -80,3 +81,38 @@ def test_json_schema(schema, data, is_valid, description):
         assert error is None, description
     else:
         assert error is not None, description
+
+
+@pytest.mark.parametrize("schema,data,is_valid,description", test_cases)
+def test_to_from_json_schema(schema, data, is_valid, description):
+    """
+    Test that marshalling to and from JSON schema doens't affect the
+    behavior of the validation.
+
+    Ie. `new_field = from_json_schema(to_json_schema(initial_field))` should
+    always result in `new_field` having the same behavior as `initial_field`.
+    """
+    validator = from_json_schema(schema)
+
+    value_before_convert, error_before_convert = validator.validate_or_error(
+        data, strict=True
+    )
+
+    schema_after = to_json_schema(validator)
+    validator = from_json_schema(schema_after)
+
+    value_after_convert, error_after_convert = validator.validate_or_error(
+        data, strict=True
+    )
+
+    assert error_before_convert == error_after_convert
+    assert value_before_convert == value_after_convert
+
+
+def test_to_json_schema_invalid_field():
+    class CustomField(Field):
+        pass
+
+    field = CustomField()
+    with pytest.raises(TypeError):
+        to_json_schema(field)

@@ -8,6 +8,7 @@ from typesystem.fields import (
     Boolean,
     Choice,
     Const,
+    Decimal,
     Field,
     Float,
     Integer,
@@ -42,14 +43,6 @@ TYPE_CONSTRAINTS = {
     "type",
     "uniqueItems",
 }
-
-# "allOf.json",
-# "anyOf.json",
-# "const.json",
-# "enum.json",
-# "if-then-else.json",
-# "not.json",
-# "oneOf.json",
 
 
 def from_json_schema(data: typing.Union[bool, dict]) -> Field:
@@ -298,3 +291,144 @@ def if_then_else_from_json_schema(data: dict) -> Field:
         "default": data.get("default", NO_DEFAULT),
     }
     return IfThenElse(**kwargs)  # type: ignore
+
+
+def to_json_schema(field: Field) -> typing.Union[bool, dict]:
+
+    if isinstance(field, Any):
+        return True
+    elif isinstance(field, NeverMatch):
+        return False
+
+    data = {}  # type: dict
+
+    if isinstance(field, String):
+        data["type"] = ["string", "null"] if field.allow_null else "string"
+        data.update(get_standard_properties(field))
+        if field.min_length is not None or not field.allow_blank:
+            data["minLength"] = max(field.min_length, 1)
+        if field.max_length is not None:
+            data["maxLength"] = field.max_length
+        if field.pattern is not None:
+            data["pattern"] = field.pattern
+        return data
+
+    elif isinstance(field, (Integer, Float, Decimal)):
+        base_type = "integer" if isinstance(field, Integer) else "number"
+        data["type"] = [base_type, "null"] if field.allow_null else base_type
+        data.update(get_standard_properties(field))
+        if field.minimum is not None:
+            data["minimum"] = field.minimum
+        if field.maximum is not None:
+            data["maximum"] = field.maximum
+        if field.exclusive_minimum is not None:
+            data["exclusiveMinimum"] = field.exclusive_minimum
+        if field.exclusive_maximum is not None:
+            data["exclusiveMaximum"] = field.exclusive_maximum
+        if field.multiple_of is not None:
+            data["multipleOf"] = field.multiple_of
+        return data
+
+    elif isinstance(field, Boolean):
+        data["type"] = ["boolean", "null"] if field.allow_null else "boolean"
+        data.update(get_standard_properties(field))
+        return data
+
+    elif isinstance(field, Array):
+        data["type"] = ["array", "null"] if field.allow_null else "array"
+        data.update(get_standard_properties(field))
+        if field.min_items is not None:
+            data["minItems"] = field.min_items
+        if field.max_items is not None:
+            data["maxItems"] = field.max_items
+        if field.items is not None:
+            if isinstance(field.items, (list, tuple)):
+                data["items"] = [to_json_schema(item) for item in field.items]
+            else:
+                data["items"] = to_json_schema(field.items)
+        if field.additional_items is not None:
+            if isinstance(field.additional_items, bool):
+                data["additionalItems"] = field.additional_items
+            else:
+                data["additionalItems"] = to_json_schema(field.additional_items)
+        if field.unique_items is not False:
+            data["uniqueItems"] = True
+        return data
+
+    elif isinstance(field, Object):
+        data["type"] = ["object", "null"] if field.allow_null else "object"
+        data.update(get_standard_properties(field))
+        if field.properties:
+            data["properties"] = {
+                key: to_json_schema(value) for key, value in field.properties.items()
+            }
+        if field.pattern_properties:
+            data["patternProperties"] = {
+                key: to_json_schema(value)
+                for key, value in field.pattern_properties.items()
+            }
+        if field.additional_properties is not None:
+            if isinstance(field.additional_properties, bool):
+                data["additionalProperties"] = field.additional_properties
+            else:
+                data["additionalProperties"] = to_json_schema(
+                    field.additional_properties
+                )
+        if field.property_names is not None:
+            data["propertyNames"] = to_json_schema(field.property_names)
+        if field.max_properties is not None:
+            data["maxProperties"] = field.max_properties
+        if field.min_properties is not None:
+            data["minProperties"] = field.min_properties
+        if field.required:
+            data["required"] = field.required
+        return data
+
+    elif isinstance(field, Choice):
+        data["enum"] = [key for key, value in field.choices]
+        data.update(get_standard_properties(field))
+        return data
+
+    elif isinstance(field, Const):
+        data["const"] = field.const
+        data.update(get_standard_properties(field))
+        return data
+
+    elif isinstance(field, Union):
+        data["anyOf"] = [to_json_schema(item) for item in field.any_of]
+        data.update(get_standard_properties(field))
+        return data
+
+    elif isinstance(field, OneOf):
+        data["oneOf"] = [to_json_schema(item) for item in field.one_of]
+        data.update(get_standard_properties(field))
+        return data
+
+    elif isinstance(field, AllOf):
+        data["allOf"] = [to_json_schema(item) for item in field.all_of]
+        data.update(get_standard_properties(field))
+        return data
+
+    elif isinstance(field, IfThenElse):
+        data["if"] = to_json_schema(field.if_clause)
+        if field.then_clause is not None:
+            data["then"] = to_json_schema(field.then_clause)
+        if field.else_clause is not None:
+            data["else"] = to_json_schema(field.else_clause)
+        data.update(get_standard_properties(field))
+        return data
+
+    elif isinstance(field, Not):
+        data["not"] = to_json_schema(field.negated)
+        data.update(get_standard_properties(field))
+        return data
+
+    field_type = type(field)
+    raise TypeError("Unsupported field type {field_type} passed to 'to_json_schema'")
+
+
+def get_standard_properties(field: Field) -> dict:
+    data = {}
+    if field.has_default():
+        data["default"] = field.default
+    return data
