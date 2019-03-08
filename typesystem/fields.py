@@ -78,6 +78,25 @@ class Field:
         return self.errors[code].format(**self.__dict__)
 
 
+def normalize_regex(
+    pattern: typing.Union[str, typing.Pattern] = None
+) -> typing.Tuple[typing.Optional[str], typing.Optional[typing.Pattern]]:
+    """
+    Normalise and validate a regular expression-like input.
+
+    Returns a 2-tuple with a pattern string and a compiled regular expression.
+    """
+    if pattern is None:
+        return (None, None)
+
+    if isinstance(pattern, str):
+        pattern_regex = re.compile(pattern)
+    else:
+        pattern_regex = pattern
+
+    return pattern_regex.pattern, pattern_regex
+
+
 class String(Field):
     errors = {
         "type": "Must be a string.",
@@ -110,20 +129,11 @@ class String(Field):
         if allow_blank and not self.has_default():
             self.default = ""
 
-        if pattern is None:
-            pattern_regex = None
-        elif isinstance(pattern, str):
-            pattern_regex = re.compile(pattern)
-        elif isinstance(pattern, typing.Pattern):
-            pattern_regex = pattern
-            pattern = pattern_regex.pattern
-
         self.allow_blank = allow_blank
         self.trim_whitespace = trim_whitespace
         self.max_length = max_length
         self.min_length = min_length
-        self.pattern = pattern
-        self.pattern_regex = pattern_regex
+        self.pattern, self.pattern_regex = normalize_regex(pattern)
         self.format = format
 
     def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
