@@ -137,14 +137,14 @@ def test_schema_to_json_schema():
     }
 
 
-def test_to_json_schema_invalid_field():
-    class CustomField(typesystem.Field):
-        pass
+class CustomField(typesystem.Field):
+    pass
 
+
+def test_to_json_schema_invalid_field():
     field = CustomField()
-    with pytest.raises(TypeError) as exc_info:
+    with pytest.raises(ValueError) as exc_info:
         to_json_schema(field)
 
-    message = str(exc_info.value)
-    assert message.startswith("Unsupported field type")
-    assert "CustomField" in message
+    expected = "Cannot convert field type 'CustomField' to JSON Schema"
+    assert str(exc_info.value) == expected
