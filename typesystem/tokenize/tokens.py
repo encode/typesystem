@@ -13,13 +13,13 @@ class Token:
         self._content = content
 
     def _get_value(self) -> typing.Any:
-        raise NotImplemented()  # pragma: nocover
+        raise NotImplementedError  # pragma: nocover
 
     def _get_child_token(self, key: typing.Any) -> "Token":
-        raise NotImplemented()  # pragma: nocover
+        raise NotImplementedError  # pragma: nocover
 
     def _get_key_token(self, key: typing.Any) -> "Token":
-        raise NotImplemented()  # pragma: nocover
+        raise NotImplementedError  # pragma: nocover
 
     @property
     def string(self) -> str:
