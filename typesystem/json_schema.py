@@ -321,9 +321,10 @@ def to_json_schema(
             data["maxLength"] = field.max_length
         if field.pattern_regex is not None:
             if field.pattern_regex.flags != re.RegexFlag.UNICODE:
+                flags = re.RegexFlag(field.pattern_regex.flags)
                 raise ValueError(
                     f"Cannot convert regular expression with non-standard flags "
-                    f"to JSON schema: {re.RegexFlag(field.pattern_regex.flags)!s}"
+                    f"to JSON schema: {flags!s}"
                 )
             data["pattern"] = field.pattern_regex.pattern
         if field.format is not None:
