@@ -78,6 +78,25 @@ class Field:
         return self.errors[code].format(**self.__dict__)
 
 
+def normalize_regex(
+    pattern: typing.Union[str, typing.Pattern] = None
+) -> typing.Tuple[typing.Optional[str], typing.Optional[typing.Pattern]]:
+    """
+    Normalise and validate a regular expression-like input.
+
+    Returns a 2-tuple with a pattern string and a compiled regular expression.
+    """
+    if pattern is None:
+        return (None, None)
+
+    if isinstance(pattern, str):
+        pattern_regex = re.compile(pattern)
+    else:
+        pattern_regex = pattern
+
+    return pattern_regex.pattern, pattern_regex
+
+
 class String(Field):
     errors = {
         "type": "Must be a string.",
@@ -96,7 +115,7 @@ class String(Field):
         trim_whitespace: bool = True,
         max_length: int = None,
         min_length: int = None,
-        pattern: str = None,
+        pattern: typing.Union[str, typing.Pattern] = None,
         format: str = None,
         **kwargs: typing.Any,
     ) -> None:
@@ -104,7 +123,7 @@ class String(Field):
 
         assert max_length is None or isinstance(max_length, int)
         assert min_length is None or isinstance(min_length, int)
-        assert pattern is None or isinstance(pattern, str)
+        assert pattern is None or isinstance(pattern, (str, typing.Pattern))
         assert format is None or isinstance(format, str)
 
         if allow_blank and not self.has_default():
@@ -114,7 +133,7 @@ class String(Field):
         self.trim_whitespace = trim_whitespace
         self.max_length = max_length
         self.min_length = min_length
-        self.pattern = pattern
+        self.pattern, self.pattern_regex = normalize_regex(pattern)
         self.format = format
 
     def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
@@ -151,8 +170,8 @@ class String(Field):
             if len(value) > self.max_length:
                 raise self.validation_error("max_length")
 
-        if self.pattern is not None:
-            if not re.search(self.pattern, value):
+        if self.pattern_regex is not None:
+            if not self.pattern_regex.search(value):
                 raise self.validation_error("pattern")
 
         if self.format in FORMATS:
