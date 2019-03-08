@@ -16,6 +16,7 @@ from typesystem.fields import (
     String,
     Union,
 )
+from typesystem.schemas import Schema
 
 TYPE_CONSTRAINTS = {
     "additionalItems",
@@ -155,6 +156,7 @@ def from_json_schema_type(data: dict, type_string: str, allow_null: bool) -> Fie
             "allow_blank": min_length == 0,
             "min_length": min_length if min_length > 1 else None,
             "max_length": data.get("maxLength", None),
+            "format": data.get("format"),
             "pattern": data.get("pattern", None),
             "default": data.get("default", NO_DEFAULT),
         }
@@ -293,7 +295,14 @@ def if_then_else_from_json_schema(data: dict) -> Field:
     return IfThenElse(**kwargs)  # type: ignore
 
 
-def to_json_schema(field: Field) -> typing.Union[bool, dict]:
+def to_json_schema(
+    validator: typing.Union[Field, typing.Type[Schema]]
+) -> typing.Union[bool, dict]:
+
+    if isinstance(validator, Field):
+        field = validator
+    else:
+        field = validator.make_validator()
 
     if isinstance(field, Any):
         return True
@@ -306,11 +315,13 @@ def to_json_schema(field: Field) -> typing.Union[bool, dict]:
         data["type"] = ["string", "null"] if field.allow_null else "string"
         data.update(get_standard_properties(field))
         if field.min_length is not None or not field.allow_blank:
-            data["minLength"] = max(field.min_length, 1)
+            data["minLength"] = field.min_length or 1
         if field.max_length is not None:
             data["maxLength"] = field.max_length
         if field.pattern is not None:
             data["pattern"] = field.pattern
+        if field.format is not None:
+            data["format"] = field.format
         return data
 
     elif isinstance(field, (Integer, Float, Decimal)):

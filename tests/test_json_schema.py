@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-from typesystem.fields import Field
+import typesystem
 from typesystem.json_schema import from_json_schema, to_json_schema
 
 filenames = [
@@ -109,8 +109,36 @@ def test_to_from_json_schema(schema, data, is_valid, description):
     assert value_before_convert == value_after_convert
 
 
+def test_schema_to_json_schema():
+    class BookingSchema(typesystem.Schema):
+        start_date = typesystem.Date(title="Start date")
+        end_date = typesystem.Date(title="End date")
+        room = typesystem.Choice(
+            title="Room type",
+            choices=[
+                ("double", "Double room"),
+                ("twin", "Twin room"),
+                ("single", "Single room"),
+            ],
+        )
+        include_breakfast = typesystem.Boolean(title="Include breakfast", default=False)
+
+    schema = to_json_schema(BookingSchema)
+
+    assert schema == {
+        "type": "object",
+        "properties": {
+            "start_date": {"type": "string", "format": "date", "minLength": 1},
+            "end_date": {"type": "string", "format": "date", "minLength": 1},
+            "room": {"enum": ["double", "twin", "single"]},
+            "include_breakfast": {"type": "boolean", "default": False},
+        },
+        "required": ["start_date", "end_date", "room"],
+    }
+
+
 def test_to_json_schema_invalid_field():
-    class CustomField(Field):
+    class CustomField(typesystem.Field):
         pass
 
     field = CustomField()

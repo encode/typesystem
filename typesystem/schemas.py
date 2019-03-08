@@ -77,15 +77,19 @@ class Schema(Mapping, metaclass=SchemaMetaclass):
             raise TypeError(message)
 
     @classmethod
-    def validate(
-        cls: typing.Type["Schema"], value: typing.Any, *, strict: bool = False
-    ) -> "Schema":
+    def make_validator(cls: typing.Type["Schema"], *, strict: bool = False) -> Field:
         required = [key for key, value in cls.fields.items() if not value.has_default()]
-        validator = Object(
+        return Object(
             properties=cls.fields,
             required=required,
             additional_properties=False if strict else None,
         )
+
+    @classmethod
+    def validate(
+        cls: typing.Type["Schema"], value: typing.Any, *, strict: bool = False
+    ) -> "Schema":
+        validator = cls.make_validator(strict=strict)
         value = validator.validate(value, strict=strict)
         return cls(value)
 

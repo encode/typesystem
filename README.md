@@ -23,6 +23,7 @@ TypeSystem is a comprehensive data validation library that gives you:
 * Data validation.
 * Object serialization & deserialization.
 * Form rendering.
+* Marshaling validators to/from JSON schema.
 * Tokenizing JSON or YAML to provide positional error messages.
 * 100% type annotated codebase.
 * 100% test coverage.

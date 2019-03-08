@@ -13,9 +13,11 @@ nav:
     - Schemas: 'schemas.md'
     - Fields: 'fields.md'
     - Forms: 'forms.md'
+    - JSON Schema: 'json_schema.md'
     - Tokenized Errors: 'tokenized_errors.md'
     - Examples: 'examples.md'
 
 markdown_extensions:
+  - admonition
   - markdown.extensions.codehilite:
       guess_lang: false
