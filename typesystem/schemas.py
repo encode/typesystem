@@ -3,7 +3,30 @@ from abc import ABCMeta
 from collections.abc import Mapping
 
 from typesystem.base import ValidationError, ValidationResult
-from typesystem.fields import Field, Object
+from typesystem.fields import Array, Field, Nested, Object
+
+
+def set_namespace(field: Field, namespace: dict) -> None:
+    """
+    Recursively set the namespace that string-referenced `Nested` fields
+    should use.
+    """
+    if (
+        isinstance(field, Nested)
+        and isinstance(field.schema, str)
+        and field.namespace is None
+    ):
+        field.namespace = namespace
+    elif isinstance(field, Array):
+        if field.items is not None:
+            if isinstance(field.items, (tuple, list)):
+                for child in field.items:
+                    set_namespace(child, namespace)
+            else:
+                set_namespace(field.items, namespace)
+    elif isinstance(field, Object):
+        for child in field.properties.values():
+            set_namespace(child, namespace)
 
 
 class SchemaMetaclass(ABCMeta):
@@ -24,18 +47,34 @@ class SchemaMetaclass(ABCMeta):
                 if isinstance(value, Field) and key not in fields:
                     fields[key] = value
 
+        # Determine the 'namespace' against which string-reference
+        # Nested fields should resolve.
+        namespace = attrs.get("NAMESPACE", None)
+        for base in reversed(bases):
+            if namespace is None:
+                namespace = getattr(base, "NAMESPACE", namespace)
+        assert isinstance(namespace, dict)
+
+        # Add the namespace to any `Nested` fields that we're referencing.
+        for field in fields.values():
+            set_namespace(field, namespace)
+
         #  Sort fields by their actual position in the source code,
         # using `Field._creation_counter`
         attrs["fields"] = dict(
             sorted(fields.items(), key=lambda item: item[1]._creation_counter)
         )
 
-        return super(SchemaMetaclass, cls).__new__(  # type: ignore
+        new_type = super(SchemaMetaclass, cls).__new__(  # type: ignore
             cls, name, bases, attrs
         )
+        namespace[name] = new_type
+        return new_type
 
 
 class Schema(Mapping, metaclass=SchemaMetaclass):
+    NAMESPACE = {}  # type: typing.Dict[str, typing.Type[Schema]]
+
     fields = {}  # type: typing.Dict[str, Field]
 
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:

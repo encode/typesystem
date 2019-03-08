@@ -1,4 +1,5 @@
 from typesystem.fields import (
+    Array,
     Boolean,
     Choice,
     Date,
@@ -22,6 +23,7 @@ from typesystem.tokenize.tokenize_yaml import validate_yaml
 
 __version__ = "0.1.7"
 __all__ = [
+    "Array",
     "Boolean",
     "Choice",
     "Date",
