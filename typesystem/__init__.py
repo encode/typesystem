@@ -20,7 +20,7 @@ from typesystem.schemas import Schema
 from typesystem.tokenize.tokenize_json import validate_json
 from typesystem.tokenize.tokenize_yaml import validate_yaml
 
-__version__ = "0.1.6"
+__version__ = "0.1.7"
 __all__ = [
     "Boolean",
     "Choice",
