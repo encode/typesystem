@@ -71,5 +71,19 @@ print(dict(album))
 # {'title': 'Double Negative', 'release_date': '2018-09-14', 'artist': {'name': 'Low'}}
 ```
 
+## Alternatives
+
+There are plenty of other great validation libraries for Python out there,
+including [Marshmallow](https://github.com/marshmallow-code/marshmallow),
+[Schematics](https://github.com/schematics/schematics),
+[Voluptuous](https://github.com/alecthomas/voluptuous), and many others.
+
+TypeSystem exists because I want a data validation library that offers
+first-class support for:
+
+* Rendering validation classes into HTML forms.
+* Marshaling to/from JSON Schema.
+* Obtaining positional errors within JSON or YAML documents.
+
 <p align="center">&mdash; ⭐️ &mdash;</p>
 <p align="center"><i>TypeSystem is <a href="https://github.com/encode/typesystem/blob/master/LICENSE.md">BSD licensed</a> code. Designed & built in Brighton, England.</i></p>
