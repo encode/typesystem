@@ -20,6 +20,9 @@ class SchemaDefinitions(MutableMapping):
         return len(self._definitions)
 
     def __setitem__(self, key: typing.Any, value: typing.Any) -> None:
+        assert (
+            key not in self._definitions
+        ), r"Definition for {key!r} has already been set."
         self._definitions[key] = value
 
     def __delitem__(self, key: typing.Any) -> None:
