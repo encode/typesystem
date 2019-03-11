@@ -1,7 +1,6 @@
 import typing
 
 from typesystem.composites import AllOf, IfThenElse, NeverMatch, Not, OneOf
-from typesystem.definitions import SchemaDefinitions
 from typesystem.fields import (
     NO_DEFAULT,
     Any,
@@ -14,11 +13,10 @@ from typesystem.fields import (
     Float,
     Integer,
     Object,
-    Reference,
     String,
     Union,
 )
-from typesystem.schemas import Schema
+from typesystem.schemas import Reference, Schema, SchemaDefinitions
 
 TYPE_CONSTRAINTS = {
     "additionalItems",
@@ -358,11 +356,13 @@ def to_json_schema(
         root = data
 
     if isinstance(field, Reference):
-        data["$ref"] = f"#/definitions/{field.to}"
+        data["$ref"] = f"#/definitions/{field.target_string}"
         if "definitions" not in root:
             root["definitions"] = {}
         if field.to not in root["definitions"]:
-            root["definitions"][field.to] = to_json_schema(field.target, root=root)
+            root["definitions"][field.target_string] = to_json_schema(
+                field.target, root=root
+            )
         return data
 
     elif isinstance(field, String):

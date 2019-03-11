@@ -652,40 +652,6 @@ class DateTime(String):
         super().__init__(format="datetime", **kwargs)
 
 
-class Reference(Field):
-    errors = {"null": "May not be null."}
-
-    def __init__(
-        self, to: typing.Any, definitions: typing.Mapping = None, **kwargs: typing.Any
-    ) -> None:
-        super().__init__(**kwargs)
-        self.to = to
-        self.definitions = definitions
-        if not isinstance(to, str):
-            self._target = to
-
-    @property
-    def target(self) -> typing.Any:
-        if not hasattr(self, "_target"):
-            assert (
-                self.definitions is not None
-            ), "String reference missing 'definitions'."
-            self._target = self.definitions[self.to]
-        return self._target
-
-    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
-        if value is None and self.allow_null:
-            return None
-        elif value is None:
-            raise self.validation_error("null")
-        return self.target.validate(value, strict=strict)
-
-    def serialize(self, obj: typing.Any) -> typing.Any:
-        if obj is None:
-            return None
-        return dict(obj)
-
-
 class Union(Field):
     errors = {"null": "May not be null.", "union": "Did not match any valid type."}
 

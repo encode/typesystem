@@ -223,3 +223,34 @@ def test_nested_schema():
         "release_year": 2018,
         "artist": None,
     }
+
+
+def test_nested_schema_to_json_schema():
+    class Artist(typesystem.Schema):
+        name = typesystem.String(max_length=100)
+
+    class Album(typesystem.Schema):
+        title = typesystem.String(max_length=100)
+        release_date = typesystem.Date()
+        artist = typesystem.Reference(Artist)
+
+    schema = typesystem.to_json_schema(Album)
+
+    assert schema == {
+        "type": "object",
+        "properties": {
+            "title": {"type": "string", "minLength": 1, "maxLength": 100},
+            "release_date": {"type": "string", "minLength": 1, "format": "date"},
+            "artist": {"$ref": "#/definitions/Artist"},
+        },
+        "required": ["title", "release_date", "artist"],
+        "definitions": {
+            "Artist": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string", "minLength": 1, "maxLength": 100}
+                },
+                "required": ["name"],
+            }
+        },
+    }
