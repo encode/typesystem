@@ -338,32 +338,32 @@ def if_then_else_from_json_schema(data: dict, definitions: SchemaDefinitions) ->
 
 
 def to_json_schema(
-    validator: typing.Union[Field, typing.Type[Schema]], root: dict = None
+    arg: typing.Union[Field, typing.Type[Schema]], _definitions: dict = None
 ) -> typing.Union[bool, dict]:
 
-    if isinstance(validator, Field):
-        field = validator
-    else:
-        field = validator.make_validator()
-
-    if isinstance(field, Any):
+    if isinstance(arg, Any):
         return True
-    elif isinstance(field, NeverMatch):
+    elif isinstance(arg, NeverMatch):
         return False
 
     data = {}  # type: dict
-    if root is None:
-        root = data
+    is_root = _definitions is None
+    definitions = {} if _definitions is None else _definitions
+
+    if isinstance(arg, Field):
+        field = arg
+    elif isinstance(arg, SchemaDefinitions):
+        field = None
+        for key, value in arg.items():
+            definitions[key] = to_json_schema(value, _definitions=definitions)
+    else:
+        field = arg.make_validator()
 
     if isinstance(field, Reference):
         data["$ref"] = f"#/definitions/{field.target_string}"
-        if "definitions" not in root:
-            root["definitions"] = {}
-        if field.to not in root["definitions"]:
-            root["definitions"][field.target_string] = to_json_schema(
-                field.target, root=root
-            )
-        return data
+        definitions[field.target_string] = to_json_schema(
+            field.target, _definitions=definitions
+        )
 
     elif isinstance(field, String):
         data["type"] = ["string", "null"] if field.allow_null else "string"
@@ -376,7 +376,6 @@ def to_json_schema(
             data["pattern"] = field.pattern
         if field.format is not None:
             data["format"] = field.format
-        return data
 
     elif isinstance(field, (Integer, Float, Decimal)):
         base_type = "integer" if isinstance(field, Integer) else "number"
@@ -392,12 +391,10 @@ def to_json_schema(
             data["exclusiveMaximum"] = field.exclusive_maximum
         if field.multiple_of is not None:
             data["multipleOf"] = field.multiple_of
-        return data
 
     elif isinstance(field, Boolean):
         data["type"] = ["boolean", "null"] if field.allow_null else "boolean"
         data.update(get_standard_properties(field))
-        return data
 
     elif isinstance(field, Array):
         data["type"] = ["array", "null"] if field.allow_null else "array"
@@ -409,32 +406,32 @@ def to_json_schema(
         if field.items is not None:
             if isinstance(field.items, (list, tuple)):
                 data["items"] = [
-                    to_json_schema(item, root=root) for item in field.items
+                    to_json_schema(item, _definitions=definitions)
+                    for item in field.items
                 ]
             else:
-                data["items"] = to_json_schema(field.items, root=root)
+                data["items"] = to_json_schema(field.items, _definitions=definitions)
         if field.additional_items is not None:
             if isinstance(field.additional_items, bool):
                 data["additionalItems"] = field.additional_items
             else:
                 data["additionalItems"] = to_json_schema(
-                    field.additional_items, root=root
+                    field.additional_items, _definitions=definitions
                 )
         if field.unique_items is not False:
             data["uniqueItems"] = True
-        return data
 
     elif isinstance(field, Object):
         data["type"] = ["object", "null"] if field.allow_null else "object"
         data.update(get_standard_properties(field))
         if field.properties:
             data["properties"] = {
-                key: to_json_schema(value, root=root)
+                key: to_json_schema(value, _definitions=definitions)
                 for key, value in field.properties.items()
             }
         if field.pattern_properties:
             data["patternProperties"] = {
-                key: to_json_schema(value, root=root)
+                key: to_json_schema(value, _definitions=definitions)
                 for key, value in field.pattern_properties.items()
             }
         if field.additional_properties is not None:
@@ -442,59 +439,66 @@ def to_json_schema(
                 data["additionalProperties"] = field.additional_properties
             else:
                 data["additionalProperties"] = to_json_schema(
-                    field.additional_properties, root=root
+                    field.additional_properties, _definitions=definitions
                 )
         if field.property_names is not None:
-            data["propertyNames"] = to_json_schema(field.property_names, root=root)
+            data["propertyNames"] = to_json_schema(
+                field.property_names, _definitions=definitions
+            )
         if field.max_properties is not None:
             data["maxProperties"] = field.max_properties
         if field.min_properties is not None:
             data["minProperties"] = field.min_properties
         if field.required:
             data["required"] = field.required
-        return data
 
     elif isinstance(field, Choice):
         data["enum"] = [key for key, value in field.choices]
         data.update(get_standard_properties(field))
-        return data
 
     elif isinstance(field, Const):
         data["const"] = field.const
         data.update(get_standard_properties(field))
-        return data
 
     elif isinstance(field, Union):
-        data["anyOf"] = [to_json_schema(item, root=root) for item in field.any_of]
+        data["anyOf"] = [
+            to_json_schema(item, _definitions=definitions) for item in field.any_of
+        ]
         data.update(get_standard_properties(field))
-        return data
 
     elif isinstance(field, OneOf):
-        data["oneOf"] = [to_json_schema(item, root=root) for item in field.one_of]
+        data["oneOf"] = [
+            to_json_schema(item, _definitions=definitions) for item in field.one_of
+        ]
         data.update(get_standard_properties(field))
-        return data
 
     elif isinstance(field, AllOf):
-        data["allOf"] = [to_json_schema(item, root=root) for item in field.all_of]
+        data["allOf"] = [
+            to_json_schema(item, _definitions=definitions) for item in field.all_of
+        ]
         data.update(get_standard_properties(field))
-        return data
 
     elif isinstance(field, IfThenElse):
-        data["if"] = to_json_schema(field.if_clause, root=root)
+        data["if"] = to_json_schema(field.if_clause, _definitions=definitions)
         if field.then_clause is not None:
-            data["then"] = to_json_schema(field.then_clause, root=root)
+            data["then"] = to_json_schema(field.then_clause, _definitions=definitions)
         if field.else_clause is not None:
-            data["else"] = to_json_schema(field.else_clause, root=root)
+            data["else"] = to_json_schema(field.else_clause, _definitions=definitions)
         data.update(get_standard_properties(field))
-        return data
 
     elif isinstance(field, Not):
-        data["not"] = to_json_schema(field.negated, root=root)
+        data["not"] = to_json_schema(field.negated, _definitions=definitions)
         data.update(get_standard_properties(field))
-        return data
 
-    field_type = type(field)
-    raise TypeError("Unsupported field type {field_type} passed to 'to_json_schema'")
+    elif field is not None:
+        field_type = type(field)
+        raise TypeError(
+            "Unsupported field type {field_type} passed to 'to_json_schema'"
+        )
+
+    if is_root and definitions:
+        data["definitions"] = definitions
+    return data
 
 
 def get_standard_properties(field: Field) -> dict:
