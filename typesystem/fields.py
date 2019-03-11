@@ -662,23 +662,23 @@ class Reference(Field):
         self.to = to
         self.definitions = definitions
         if not isinstance(to, str):
-            self._resolved_target = to
+            self._target = to
 
     @property
-    def resolved_target(self) -> typing.Any:
-        if not hasattr(self, "_resolved_target"):
+    def target(self) -> typing.Any:
+        if not hasattr(self, "_target"):
             assert (
                 self.definitions is not None
             ), "String reference missing 'definitions'."
-            self._resolved_target = self.definitions[self.to]
-        return self._resolved_target
+            self._target = self.definitions[self.to]
+        return self._target
 
     def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
         if value is None and self.allow_null:
             return None
         elif value is None:
             raise self.validation_error("null")
-        return self.resolved_target.validate(value, strict=strict)
+        return self.target.validate(value, strict=strict)
 
     def serialize(self, obj: typing.Any) -> typing.Any:
         if obj is None:

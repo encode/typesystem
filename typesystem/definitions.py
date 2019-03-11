@@ -29,11 +29,7 @@ def set_definitions(field: Field, definitions: SchemaDefinitions) -> None:
     Recursively set the definitions that string-referenced `Reference` fields
     should use.
     """
-    if (
-        isinstance(field, Reference)
-        and isinstance(field.to, str)
-        and field.definitions is None
-    ):
+    if isinstance(field, Reference) and field.definitions is None:
         field.definitions = definitions
     elif isinstance(field, Array):
         if field.items is not None:

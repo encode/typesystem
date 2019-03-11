@@ -16,6 +16,7 @@ filenames = [
     # "contains.json",
     "default.json",
     # "definitions.json",
+    "definitionsRef.json",
     # "dependencies.json",
     "enum.json",
     "exclusiveMaximum.json",
