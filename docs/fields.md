@@ -4,7 +4,7 @@ Fields are usually declared as attributes on schema classes:
 class Organisation(typesystem.Schema):
     name = typesystem.String(title="Name", max_length=100)
     date_created = typesystem.Date(title="Date created", default=datetime.date.today)
-    owner = typesystem.Nested(title="Owner", schema=User, allow_null=True)
+    owner = typesystem.Reference(to=User, allow_null=True)
 ```
 
 Fields are always *required* in inputs, unless a *default* value is set.
