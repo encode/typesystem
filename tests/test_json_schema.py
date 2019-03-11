@@ -1,5 +1,6 @@
 import json
 import os
+import re
 
 import pytest
 
@@ -138,10 +139,26 @@ def test_schema_to_json_schema():
     }
 
 
-def test_to_json_schema_invalid_field():
-    class CustomField(typesystem.Field):
-        pass
+class CustomField(typesystem.Field):
+    pass
 
+
+def test_to_json_schema_invalid_field():
     field = CustomField()
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError) as exc_info:
         to_json_schema(field)
+
+    expected = "Cannot convert field type 'CustomField' to JSON Schema"
+    assert str(exc_info.value) == expected
+
+
+def test_to_json_schema_complex_regular_expression():
+    field = typesystem.String(pattern=re.compile("foo", re.IGNORECASE | re.VERBOSE))
+    with pytest.raises(ValueError) as exc_info:
+        to_json_schema(field)
+
+    expected = (
+        "Cannot convert regular expression with non-standard flags "
+        "to JSON schema: RegexFlag."
+    )
+    assert str(exc_info.value).startswith(expected)
