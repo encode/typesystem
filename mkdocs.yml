@@ -12,6 +12,7 @@ nav:
     - Introduction: 'index.md'
     - Schemas: 'schemas.md'
     - Fields: 'fields.md'
+    - References: 'references.md'
     - Forms: 'forms.md'
     - JSON Schema: 'json_schema.md'
     - Tokenized Errors: 'tokenized_errors.md'

@@ -4,7 +4,7 @@ Fields are usually declared as attributes on schema classes:
 class Organisation(typesystem.Schema):
     name = typesystem.String(title="Name", max_length=100)
     date_created = typesystem.Date(title="Date created", default=datetime.date.today)
-    owner = typesystem.Nested(title="Owner", schema=User, allow_null=True)
+    owner = typesystem.Reference(to=User, allow_null=True)
 ```
 
 Fields are always *required* in inputs, unless a *default* value is set.
@@ -176,7 +176,7 @@ extra_metadata = typesystem.Object(properties=typesystem.String(max_length=100))
 Schema classes implement their validation behaviour by generating an `Object`
 field, and automatically determining the `properties` and `required` attributes.
 
-You'll typically want to use `typesystem.Nested(schema=SomeSchema)` rather than
+You'll typically want to use `typesystem.Reference(to=SomeSchema)` rather than
 using the `Object` field directly, but it can be useful if you have a more
 complex data structure that you need to validate.
 
@@ -189,16 +189,16 @@ complex data structure that you need to validate.
 * `max_properties` - An integer representing the maximum number of properties that may be included.
 * `required` - A list of strings indicating any fields that are strictly required in the input.
 
-### Nested
+### Reference
 
-Used to validate a nested schema.
+Used to reference a nested schema.
 
 For example:
 
 ```python
-owner = typesystem.Nested(schema=User, allow_null=True)
+owner = typesystem.Reference(to=User, allow_null=True)
 ```
 
 **Arguments**:
 
-* `schema` - A schema class. **Required**
+* `to` - A schema class or field instance. **Required**

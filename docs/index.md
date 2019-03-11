@@ -50,7 +50,7 @@ class Artist(typesystem.Schema):
 class Album(typesystem.Schema):
     title = typesystem.String(max_length=100)
     release_date = typesystem.Date()
-    artist = typesystem.Nested(Artist)
+    artist = typesystem.Reference(Artist)
 
 album = Album.validate({
     "title": "Double Negative",

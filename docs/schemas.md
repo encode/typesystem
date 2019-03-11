@@ -9,7 +9,7 @@ class Artist(typesystem.Schema):
 class Album(typesystem.Schema):
     title = typesystem.String(max_length=100)
     release_date = typesystem.Date()
-    artist = typesystem.Nested(Artist)
+    artist = typesystem.Reference(Artist)
 ```
 
 We've got some incoming user data that we'd like to validate against our schema.

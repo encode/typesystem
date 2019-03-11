@@ -671,26 +671,6 @@ class DateTime(String):
         super().__init__(format="datetime", **kwargs)
 
 
-class Nested(Field):
-    errors = {"null": "May not be null."}
-
-    def __init__(self, schema: typing.Any, **kwargs: typing.Any) -> None:
-        super().__init__(**kwargs)
-        self.schema = schema
-
-    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
-        if value is None and self.allow_null:
-            return None
-        elif value is None:
-            raise self.validation_error("null")
-        return self.schema.validate(value, strict=strict)
-
-    def serialize(self, obj: typing.Any) -> typing.Any:
-        if obj is None:
-            return None
-        return dict(obj)
-
-
 class Union(Field):
     errors = {"null": "May not be null.", "union": "Did not match any valid type."}
 
