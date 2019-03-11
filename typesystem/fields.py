@@ -652,31 +652,33 @@ class DateTime(String):
         super().__init__(format="datetime", **kwargs)
 
 
-class Nested(Field):
+class Reference(Field):
     errors = {"null": "May not be null."}
 
     def __init__(
-        self, schema: typing.Any, namespace: typing.Mapping = None, **kwargs: typing.Any
+        self, to: typing.Any, definitions: typing.Mapping = None, **kwargs: typing.Any
     ) -> None:
         super().__init__(**kwargs)
-        self.schema = schema
-        self.namespace = namespace
+        self.to = to
+        self.definitions = definitions
+        if not isinstance(to, str):
+            self._resolved_target = to
+
+    @property
+    def resolved_target(self) -> typing.Any:
+        if not hasattr(self, "_resolved_target"):
+            assert (
+                self.definitions is not None
+            ), "String reference missing 'definitions'."
+            self._resolved_target = self.definitions[self.to]
+        return self._resolved_target
 
     def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
-        if isinstance(self.schema, str):
-            assert (
-                self.namespace is not None
-            ), "String-references can only be used within a schema namespace."
-            schema = self.namespace[self.schema]
-        else:
-            schema = self.schema
-
         if value is None and self.allow_null:
             return None
         elif value is None:
             raise self.validation_error("null")
-
-        return schema.validate(value, strict=strict)
+        return self.resolved_target.validate(value, strict=strict)
 
     def serialize(self, obj: typing.Any) -> typing.Any:
         if obj is None:

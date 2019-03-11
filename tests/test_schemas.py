@@ -186,7 +186,7 @@ def test_nested_schema():
     class Album(typesystem.Schema):
         title = typesystem.String(max_length=100)
         release_year = typesystem.Integer()
-        artist = typesystem.Nested(Artist)
+        artist = typesystem.Reference(Artist)
 
     value = Album.validate(
         {"title": "Double Negative", "release_year": "2018", "artist": {"name": "Low"}}
@@ -213,7 +213,7 @@ def test_nested_schema():
     class Album(typesystem.Schema):
         title = typesystem.String(max_length=100)
         release_year = typesystem.Integer()
-        artist = typesystem.Nested(Artist, allow_null=True)
+        artist = typesystem.Reference(Artist, allow_null=True)
 
     value = Album.validate(
         {"title": "Double Negative", "release_year": "2018", "artist": None}

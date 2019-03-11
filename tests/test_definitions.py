@@ -3,15 +3,15 @@ import datetime
 import typesystem
 
 
-def test_namespace():
-    namespace = typesystem.SchemaNamespace()
+def test_reference():
+    definitions = typesystem.SchemaDefinitions()
 
-    class Album(typesystem.Schema, namespace=namespace):
+    class Album(typesystem.Schema, definitions=definitions):
         title = typesystem.String(max_length=100)
         release_date = typesystem.Date()
-        artist = typesystem.Nested("Artist")
+        artist = typesystem.Reference("Artist")
 
-    class Artist(typesystem.Schema, namespace=namespace):
+    class Artist(typesystem.Schema, definitions=definitions):
         name = typesystem.String(max_length=100)
 
     album = Album.validate(
@@ -27,15 +27,15 @@ def test_namespace():
         artist=Artist(name="Low"),
     )
 
-    # Identical class names in an alternate namespace should not clash.
-    namespace = typesystem.SchemaNamespace()
+    # Identical class names in alternate definitions should not clash.
+    definitions = typesystem.SchemaDefinitions()
 
-    class Album(typesystem.Schema, namespace=namespace):
+    class Album(typesystem.Schema, definitions=definitions):
         renamed_title = typesystem.String(max_length=100)
         renamed_release_date = typesystem.Date()
-        renamed_artist = typesystem.Nested("Artist")
+        renamed_artist = typesystem.Reference("Artist")
 
-    class Artist(typesystem.Schema, namespace=namespace):
+    class Artist(typesystem.Schema, definitions=definitions):
         renamed_name = typesystem.String(max_length=100)
 
     album = Album.validate(
@@ -52,45 +52,45 @@ def test_namespace():
     )
 
 
-def test_namespace_as_mapping():
+def test_definitions_as_mapping():
     """
-    Ensure that namespaces support a mapping interface.
+    Ensure that definitions support a mapping interface.
     """
-    namespace = typesystem.SchemaNamespace()
+    definitions = typesystem.SchemaDefinitions()
 
-    class Album(typesystem.Schema, namespace=namespace):
+    class Album(typesystem.Schema, definitions=definitions):
         title = typesystem.String(max_length=100)
         release_date = typesystem.Date()
-        artist = typesystem.Nested("Artist")
+        artist = typesystem.Reference("Artist")
 
-    class Artist(typesystem.Schema, namespace=namespace):
+    class Artist(typesystem.Schema, definitions=definitions):
         name = typesystem.String(max_length=100)
 
-    assert namespace["Album"] == Album
-    assert namespace["Artist"] == Artist
-    assert dict(namespace) == {"Album": Album, "Artist": Artist}
-    assert len(namespace) == 2
-    del namespace["Artist"]
+    assert definitions["Album"] == Album
+    assert definitions["Artist"] == Artist
+    assert dict(definitions) == {"Album": Album, "Artist": Artist}
+    assert len(definitions) == 2
+    del definitions["Artist"]
 
 
 def test_string_references():
-    namespace = typesystem.SchemaNamespace()
+    definitions = typesystem.SchemaDefinitions()
 
-    class ExampleA(typesystem.Schema, namespace=namespace):
+    class ExampleA(typesystem.Schema, definitions=definitions):
         field_on_a = typesystem.Integer()
-        example_b = typesystem.Nested("ExampleB")
+        example_b = typesystem.Reference("ExampleB")
 
-    class ExampleB(typesystem.Schema, namespace=namespace):
+    class ExampleB(typesystem.Schema, definitions=definitions):
         field_on_b = typesystem.Integer()
 
     value = ExampleA.validate({"field_on_a": "123", "example_b": {"field_on_b": "456"}})
     assert value == ExampleA(field_on_a=123, example_b=ExampleB(field_on_b=456))
 
-    class ExampleC(typesystem.Schema, namespace=namespace):
+    class ExampleC(typesystem.Schema, definitions=definitions):
         field_on_c = typesystem.Integer()
-        example_d = typesystem.Array(items=typesystem.Nested("ExampleD"))
+        example_d = typesystem.Array(items=typesystem.Reference("ExampleD"))
 
-    class ExampleD(typesystem.Schema, namespace=namespace):
+    class ExampleD(typesystem.Schema, definitions=definitions):
         field_on_d = typesystem.Integer()
 
     value = ExampleC.validate(
@@ -98,11 +98,11 @@ def test_string_references():
     )
     assert value == ExampleC(field_on_c=123, example_d=[ExampleD(field_on_d=456)])
 
-    class ExampleE(typesystem.Schema, namespace=namespace):
+    class ExampleE(typesystem.Schema, definitions=definitions):
         field_on_e = typesystem.Integer()
-        example_f = typesystem.Array(items=[typesystem.Nested("ExampleF")])
+        example_f = typesystem.Array(items=[typesystem.Reference("ExampleF")])
 
-    class ExampleF(typesystem.Schema, namespace=namespace):
+    class ExampleF(typesystem.Schema, definitions=definitions):
         field_on_f = typesystem.Integer()
 
     value = ExampleE.validate(
@@ -110,11 +110,13 @@ def test_string_references():
     )
     assert value == ExampleE(field_on_e=123, example_f=[ExampleF(field_on_f=456)])
 
-    class ExampleG(typesystem.Schema, namespace=namespace):
+    class ExampleG(typesystem.Schema, definitions=definitions):
         field_on_g = typesystem.Integer()
-        example_h = typesystem.Object(properties={"h": typesystem.Nested("ExampleH")})
+        example_h = typesystem.Object(
+            properties={"h": typesystem.Reference("ExampleH")}
+        )
 
-    class ExampleH(typesystem.Schema, namespace=namespace):
+    class ExampleH(typesystem.Schema, definitions=definitions):
         field_on_h = typesystem.Integer()
 
     value = ExampleG.validate(

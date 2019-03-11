@@ -3,8 +3,8 @@ from abc import ABCMeta
 from collections.abc import Mapping
 
 from typesystem.base import ValidationError, ValidationResult
+from typesystem.definitions import SchemaDefinitions, set_definitions
 from typesystem.fields import Field, Object
-from typesystem.namespaces import SchemaNamespace, set_namespace
 
 
 class SchemaMetaclass(ABCMeta):
@@ -13,7 +13,7 @@ class SchemaMetaclass(ABCMeta):
         name: str,
         bases: typing.Sequence[type],
         attrs: dict,
-        namespace: SchemaNamespace = None,
+        definitions: SchemaDefinitions = None,
     ) -> type:
         fields = {}  # type: typing.Dict[str, Field]
 
@@ -29,10 +29,10 @@ class SchemaMetaclass(ABCMeta):
                 if isinstance(value, Field) and key not in fields:
                     fields[key] = value
 
-        # Add the namespace to any `Nested` fields that we're referencing.
-        if namespace is not None:
+        # Add the definitions to any `Reference` fields that we're including.
+        if definitions is not None:
             for field in fields.values():
-                set_namespace(field, namespace)
+                set_definitions(field, definitions)
 
         #  Sort fields by their actual position in the source code,
         # using `Field._creation_counter`
@@ -43,8 +43,8 @@ class SchemaMetaclass(ABCMeta):
         new_type = super(SchemaMetaclass, cls).__new__(  # type: ignore
             cls, name, bases, attrs
         )
-        if namespace is not None:
-            namespace[name] = new_type
+        if definitions is not None:
+            definitions[name] = new_type
         return new_type
 
 
