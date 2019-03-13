@@ -406,6 +406,10 @@ def test_choice():
     value, error = validator.validate_or_error(None)
     assert value is None
 
+    validator = Choice(choices=["red", "green", "blue"])
+    value, error = validator.validate_or_error("red")
+    assert value is "red"
+
 
 def test_object():
     validator = Object()

@@ -359,11 +359,15 @@ class Choice(Field):
     def __init__(
         self,
         *,
-        choices: typing.Sequence[typing.Tuple[str, str]] = None,
+        choices: typing.Sequence[typing.Union[str, typing.Tuple[str, str]]] = None,
         **kwargs: typing.Any,
     ) -> None:
         super().__init__(**kwargs)
-        self.choices = [] if choices is None else list(choices)
+        self.choices = [
+            (choice if isinstance(choice, (tuple, list)) else (choice, choice))
+            for choice in choices or []
+        ]
+        assert all(len(choice) == 2 for choice in self.choices)
 
     def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
         if value is None and self.allow_null:
