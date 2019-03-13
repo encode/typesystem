@@ -77,24 +77,18 @@ class Field:
     def get_error_text(self, code: str) -> str:
         return self.errors[code].format(**self.__dict__)
 
+    def __or__(self, other: "Field") -> "Union":
+        if isinstance(self, Union):
+            any_of = self.any_of
+        else:
+            any_of = [self]
 
-def normalize_regex(
-    pattern: typing.Union[str, typing.Pattern] = None
-) -> typing.Tuple[typing.Optional[str], typing.Optional[typing.Pattern]]:
-    """
-    Normalise and validate a regular expression-like input.
+        if isinstance(other, Union):
+            any_of += other.any_of
+        else:
+            any_of += [other]
 
-    Returns a 2-tuple with a pattern string and a compiled regular expression.
-    """
-    if pattern is None:
-        return (None, None)
-
-    if isinstance(pattern, str):
-        pattern_regex = re.compile(pattern)
-    else:
-        pattern_regex = pattern
-
-    return pattern_regex.pattern, pattern_regex
+        return Union(any_of=any_of)
 
 
 class String(Field):
@@ -133,8 +127,17 @@ class String(Field):
         self.trim_whitespace = trim_whitespace
         self.max_length = max_length
         self.min_length = min_length
-        self.pattern, self.pattern_regex = normalize_regex(pattern)
         self.format = format
+
+        if pattern is None:
+            self.pattern = None
+            self.pattern_regex = None
+        elif isinstance(pattern, str):
+            self.pattern = pattern
+            self.pattern_regex = re.compile(pattern)
+        else:
+            self.pattern = pattern.pattern
+            self.pattern_regex = pattern
 
     def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
         if value is None and self.allow_null:
@@ -343,7 +346,7 @@ class Boolean(Field):
 
             try:
                 value = self.coerce_values[value]
-            except KeyError:
+            except (KeyError, TypeError):
                 raise self.validation_error("type")
 
         return value

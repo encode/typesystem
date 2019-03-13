@@ -346,6 +346,10 @@ def test_boolean():
     value, error = validator.validate_or_error(2)
     assert error == ValidationError(text="Must be a boolean.", code="type")
 
+    validator = Boolean()
+    value, error = validator.validate_or_error([])
+    assert error == ValidationError(text="Must be a boolean.", code="type")
+
     validator = Boolean(allow_null=True)
     value, error = validator.validate_or_error(None)
     assert value is None
@@ -746,6 +750,14 @@ def test_union():
     assert error == ValidationError(
         text="Must be less than or equal to 1000.", code="maximum"
     )
+
+    validator = Integer() | String() | Boolean()
+    value, error = validator.validate_or_error(123)
+    assert value == 123
+
+    validator = Integer() | (String() | Boolean())
+    value, error = validator.validate_or_error(123)
+    assert value == 123
 
 
 def test_const():

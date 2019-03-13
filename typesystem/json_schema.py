@@ -1,3 +1,6 @@
+"""
+Provides 'typesystem.from_json_schema()' and 'typesystem.to_json_schema()'.
+"""
 import re
 import typing
 
@@ -13,6 +16,7 @@ from typesystem.fields import (
     Field,
     Float,
     Integer,
+    Number,
     Object,
     String,
     Union,
@@ -45,6 +49,62 @@ TYPE_CONSTRAINTS = {
     "type",
     "uniqueItems",
 }
+
+
+definitions = SchemaDefinitions()
+
+JSONSchema = (
+    Object(
+        properties={
+            "$ref": String(),
+            "type": String() | Array(items=String()),
+            "enum": Array(unique_items=True, min_items=1),
+            "definitions": Object(
+                additional_properties=Reference("JSONSchema", definitions=definitions)
+            ),
+            # String
+            "minLength": Integer(minimum=0),
+            "maxLength": Integer(minimum=0),
+            "pattern": String(format="regex"),
+            "format": String(),
+            # Numeric
+            "minimum": Number(),
+            "maximum": Number(),
+            "exclusiveMinimum": Number(),
+            "exclusiveMaximum": Number(),
+            "multipleOf": Number(exclusive_minimum=0),
+            # Object
+            "properties": Object(
+                additional_properties=Reference("JSONSchema", definitions=definitions)
+            ),
+            "minProperties": Integer(minimum=0),
+            "maxProperties": Integer(minimum=0),
+            "patternProperties": Object(
+                additional_properties=Reference("JSONSchema", definitions=definitions)
+            ),
+            "additionalProperties": (
+                Reference("JSONSchema", definitions=definitions) | Boolean()
+            ),
+            "required": Array(items=String(), unique_items=True),
+            # Array
+            "items": (
+                Reference("JSONSchema", definitions=definitions)
+                | Array(
+                    items=Reference("JSONSchema", definitions=definitions), min_items=1
+                )
+            ),
+            "additionalItems": (
+                Reference("JSONSchema", definitions=definitions) | Boolean()
+            ),
+            "minItems": Integer(minimum=0),
+            "maxItems": Integer(minimum=0),
+            "uniqueItems": Boolean(),
+        }
+    )
+    | Boolean()
+)
+
+definitions["JSONSchema"] = JSONSchema
 
 
 def from_json_schema(

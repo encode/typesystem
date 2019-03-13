@@ -5,7 +5,7 @@ import re
 import pytest
 
 import typesystem
-from typesystem.json_schema import from_json_schema, to_json_schema
+from typesystem.json_schema import from_json_schema, to_json_schema, JSONSchema
 
 filenames = [
     "additionalItems.json",
@@ -83,6 +83,14 @@ def test_json_schema(schema, data, is_valid, description):
         assert error is None, description
     else:
         assert error is not None, description
+
+
+@pytest.mark.parametrize("schema,data,is_valid,description", test_cases)
+def test_json_schema_validator(schema, data, is_valid, description):
+    """
+    Use the `JSONSchema` field to validate all the test case schemas.
+    """
+    JSONSchema.validate(schema)
 
 
 @pytest.mark.parametrize("schema,data,is_valid,description", test_cases)
