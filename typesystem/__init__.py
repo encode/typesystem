@@ -21,7 +21,7 @@ from typesystem.schemas import Reference, Schema, SchemaDefinitions
 from typesystem.tokenize.tokenize_json import validate_json
 from typesystem.tokenize.tokenize_yaml import validate_yaml
 
-__version__ = "0.1.10"
+__version__ = "0.1.11"
 __all__ = [
     "Array",
     "Boolean",
