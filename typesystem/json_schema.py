@@ -116,7 +116,8 @@ def from_json_schema(
     if definitions is None:
         definitions = SchemaDefinitions()
         for key, value in data.get("definitions", {}).items():
-            definitions[key] = from_json_schema(value, definitions=definitions)
+            ref = f"#/definitions/{key}"
+            definitions[ref] = from_json_schema(value, definitions=definitions)
 
     if "$ref" in data:
         return ref_from_json_schema(data, definitions=definitions)
@@ -334,11 +335,8 @@ def from_json_schema_type(
 
 def ref_from_json_schema(data: dict, definitions: SchemaDefinitions) -> Field:
     reference_string = data["$ref"]
-    assert reference_string.startswith(
-        "#/definitions/"
-    ), "Unsupported $ref style in document."
-    name = reference_string[len("#/definitions/") :]
-    return Reference(to=name, definitions=definitions)
+    assert reference_string.startswith("#/"), "Unsupported $ref style in document."
+    return Reference(to=reference_string, definitions=definitions)
 
 
 def enum_from_json_schema(data: dict, definitions: SchemaDefinitions) -> Field:

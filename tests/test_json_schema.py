@@ -5,7 +5,7 @@ import re
 import pytest
 
 import typesystem
-from typesystem.json_schema import from_json_schema, to_json_schema, JSONSchema
+from typesystem.json_schema import JSONSchema, from_json_schema, to_json_schema
 
 filenames = [
     "additionalItems.json",
