@@ -1,5 +1,7 @@
+from typesystem.base import ValidationError
 from typesystem.fields import (
     Array,
+    Any,
     Boolean,
     Choice,
     Date,
@@ -21,9 +23,10 @@ from typesystem.schemas import Reference, Schema, SchemaDefinitions
 from typesystem.tokenize.tokenize_json import validate_json
 from typesystem.tokenize.tokenize_yaml import validate_yaml
 
-__version__ = "0.1.11"
+__version__ = "0.1.12"
 __all__ = [
     "Array",
+    "Any",
     "Boolean",
     "Choice",
     "Date",
@@ -41,6 +44,7 @@ __all__ = [
     "Text",
     "Time",
     "Union",
+    "ValidationError",
     "SchemaDefinitions",
     "from_json_schema",
     "to_json_schema",
