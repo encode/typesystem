@@ -1,8 +1,6 @@
-from json.decoder import JSONDecodeError
-
 import pytest
 
-from typesystem.tokenize.tokenize_json import tokenize_json
+from typesystem import ParseError, tokenize_json
 from typesystem.tokenize.tokens import DictToken, ListToken, ScalarToken
 
 
@@ -89,38 +87,62 @@ def test_tokenize_whitespace():
 
 
 def test_tokenize_parse_errors():
-    with pytest.raises(JSONDecodeError) as exc_info:
+    with pytest.raises(ParseError) as exc_info:
+        tokenize_json(b"")
+    exc = exc_info.value
+    message = exc.messages()[0]
+    assert message.text == "No content."
+    assert message.start_position.char_index == 0
+    assert (
+        repr(message)
+        == "Message(text='No content.', code='no_content', position=Position(line_no=1, column_no=1, char_index=0))"
+    )
+
+    with pytest.raises(ParseError) as exc_info:
         tokenize_json("{")
     exc = exc_info.value
-    assert exc.msg == "Expecting property name enclosed in double quotes"
-    assert exc.pos == 1
+    message = exc.messages()[0]
+    assert message.text == "Expecting property name enclosed in double quotes."
+    assert message.start_position.char_index == 1
 
-    with pytest.raises(JSONDecodeError) as exc_info:
+    with pytest.raises(ParseError) as exc_info:
         tokenize_json('{"a"')
     exc = exc_info.value
-    assert exc.msg == "Expecting ':' delimiter"
-    assert exc.pos == 4
+    message = exc.messages()[0]
+    assert message.text == "Expecting ':' delimiter."
+    assert message.start_position.char_index == 4
 
-    with pytest.raises(JSONDecodeError) as exc_info:
+    with pytest.raises(ParseError) as exc_info:
         tokenize_json('{"a":')
     exc = exc_info.value
-    assert exc.msg == "Expecting value"
-    assert exc.pos == 5
+    message = exc.messages()[0]
+    assert message.text == "Expecting value."
+    assert message.start_position.char_index == 5
 
-    with pytest.raises(JSONDecodeError) as exc_info:
+    with pytest.raises(ParseError) as exc_info:
         tokenize_json('{"a":1')
     exc = exc_info.value
-    assert exc.msg == "Expecting ',' delimiter"
-    assert exc.pos == 6
+    message = exc.messages()[0]
+    assert message.text == "Expecting ',' delimiter."
+    assert message.start_position.char_index == 6
 
-    with pytest.raises(JSONDecodeError) as exc_info:
+    with pytest.raises(ParseError) as exc_info:
         tokenize_json('{"a":1,1')
     exc = exc_info.value
-    assert exc.msg == "Expecting property name enclosed in double quotes"
-    assert exc.pos == 7
+    message = exc.messages()[0]
+    assert message.text == "Expecting property name enclosed in double quotes."
+    assert message.start_position.char_index == 7
 
-    with pytest.raises(JSONDecodeError) as exc_info:
+    with pytest.raises(ParseError) as exc_info:
         tokenize_json('{"a":1 "b"')
     exc = exc_info.value
-    assert exc.msg == "Expecting ',' delimiter"
-    assert exc.pos == 7
+    message = exc.messages()[0]
+    assert message.text == "Expecting ',' delimiter."
+    assert message.start_position.char_index == 7
+
+    with pytest.raises(ParseError) as exc_info:
+        tokenize_json('{"a" 123}')
+    exc = exc_info.value
+    message = exc.messages()[0]
+    assert message.text == "Expecting ':' delimiter."
+    assert message.start_position.char_index == 5

@@ -2,9 +2,10 @@ import re
 import typing
 from json.decoder import JSONDecodeError, JSONDecoder, scanstring  # type: ignore
 
-from typesystem.base import Message, Position
+from typesystem.base import Message, ParseError, Position, ValidationError
 from typesystem.fields import Field
 from typesystem.schemas import Schema
+from typesystem.tokenize.positional_validation import validate_with_positions
 from typesystem.tokenize.tokens import DictToken, ListToken, ScalarToken, Token
 
 FLAGS = re.VERBOSE | re.MULTILINE | re.DOTALL
@@ -161,15 +162,28 @@ class _TokenizingDecoder(JSONDecoder):
         self.scan_once = _make_scanner(self, content)
 
 
-def tokenize_json(content: str) -> Token:
+def tokenize_json(content: typing.Union[str, bytes]) -> Token:
+    if isinstance(content, bytes):
+        content = content.decode("utf-8", "ignore")
+
+    if not content.strip():
+        # Handle the empty string case explicitly for clear error messaging.
+        position = Position(column_no=1, line_no=1, char_index=0)
+        raise ParseError(text="No content.", code="no_content", position=position)
+
     decoder = _TokenizingDecoder(content=content)
-    return decoder.decode(content)
+    try:
+        return decoder.decode(content)
+    except JSONDecodeError as exc:
+        # Handle cases that result in a JSON parse error.
+        position = Position(column_no=exc.colno, line_no=exc.lineno, char_index=exc.pos)
+        raise ParseError(text=exc.msg + ".", code="parse_error", position=position)
 
 
 def validate_json(
     content: typing.Union[str, bytes],
-    validator: typing.Union[Field, typing.Type[Schema]] = None,
-) -> typing.Tuple[typing.Any, typing.List[Message]]:
+    validator: typing.Union[Field, typing.Type[Schema]],
+) -> typing.Any:
     """
     Parse and validate a JSON string, returning positionally marked error
     messages on parse or validation failures.
@@ -179,51 +193,5 @@ def validate_json(
 
     Returns a two-tuple of (value, error_messages)
     """
-    if isinstance(content, bytes):
-        content = content.decode("utf-8", "ignore")
-
-    if not content.strip():
-        # Handle the empty string case explicitly for clear error messaging.
-        position = Position(column_no=1, line_no=1, char_index=0)
-        message = Message(
-            text="No content.", code="no_content", index=None, position=position
-        )
-        return (None, [message])
-
-    try:
-        root_token = tokenize_json(content)
-    except JSONDecodeError as exc:
-        # Handle cases that result in a JSON parse error.
-        position = Position(column_no=exc.colno, line_no=exc.lineno, char_index=exc.pos)
-        message = Message(
-            text=exc.msg + ".", code="parse_error", index=None, position=position
-        )
-        return (None, [message])
-
-    if validator is None:
-        return (root_token.value, [])
-
-    value, error = validator.validate_or_error(root_token.value)
-    if error:
-        messages = []
-        for message in error.messages():
-            if message.code == "required":
-                token = root_token.lookup(message.index[:-1])
-                text = "The field '%s' is required." % message.index[-1]
-            else:
-                token = root_token.lookup(message.index)
-                text = message.text
-
-            positional_message = Message(
-                text=text,
-                code=message.code,
-                index=message.index,
-                start_position=token.start,
-                end_position=token.end,
-            )
-            messages.append(positional_message)
-        messages = sorted(
-            messages, key=lambda m: m.start_position.char_index  # type: ignore
-        )
-        return (None, messages)
-    return (value, [])
+    token = tokenize_json(content)
+    return validate_with_positions(token=token, validator=validator)
