@@ -1,4 +1,4 @@
-from typesystem.base import ParseError, ValidationError
+from typesystem.base import ParseError, ValidationError, Message, Position
 from typesystem.fields import (
     Any,
     Array,
@@ -50,6 +50,8 @@ __all__ = [
     # Exceptions
     "ParseError",
     "ValidationError",
+    "Message",
+    "Position",
     # JSON Schema
     "from_json_schema",
     "to_json_schema",
