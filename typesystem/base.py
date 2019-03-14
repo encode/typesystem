@@ -90,9 +90,9 @@ class Message:
         return f"{class_name}(text={self.text!r}, code={self.code!r}{index_str}{position_str})"
 
 
-class ValidationError(Mapping, Exception):
+class BaseError(Mapping, Exception):
     """
-    A validation error, containing one or more error messages.
+    A validation or parse error, containing one or more error messages.
     Error information is accessible either by accessing as a dict-like object,
     eg. `dict(error)` or by returning the list of messages with `error.messages()`.
 
@@ -111,6 +111,7 @@ class ValidationError(Mapping, Exception):
         text: str = None,
         code: str = None,
         key: typing.Union[int, str] = None,
+        position: Position = None,
         messages: typing.List[Message] = None,
     ):
         """
@@ -127,12 +128,13 @@ class ValidationError(Mapping, Exception):
         if messages is None:
             # Instantiated as a ValidationError with a single error message.
             assert text is not None
-            messages = [Message(text=text, code=code, key=key)]
+            messages = [Message(text=text, code=code, key=key, position=position)]
         else:
             # Instantiated as a ValidationError with multiple error messages.
             assert text is None
             assert code is None
             assert key is None
+            assert position is None
             assert len(messages)
 
         self._messages = messages
@@ -192,6 +194,18 @@ class ValidationError(Mapping, Exception):
         if len(self._messages) == 1 and not self._messages[0].index:
             return self._messages[0].text
         return str(dict(self))
+
+
+class ParseError(BaseError):
+    """
+    Raised by `typesystem.tokenize_json()` and `typesystem.tokenize_yaml()`.
+    """
+
+
+class ValidationError(BaseError):
+    """
+    Raised by `.validate()` or returned by `.validate_or_error()`.
+    """
 
 
 class ValidationResult:

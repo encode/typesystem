@@ -1,7 +1,7 @@
-from typesystem.base import ValidationError
+from typesystem.base import ParseError, ValidationError
 from typesystem.fields import (
-    Array,
     Any,
+    Array,
     Boolean,
     Choice,
     Date,
@@ -20,8 +20,9 @@ from typesystem.fields import (
 from typesystem.forms import Jinja2Forms
 from typesystem.json_schema import from_json_schema, to_json_schema
 from typesystem.schemas import Reference, Schema, SchemaDefinitions
-from typesystem.tokenize.tokenize_json import validate_json
-from typesystem.tokenize.tokenize_yaml import validate_yaml
+from typesystem.tokenize.positional_validation import validate_with_positions
+from typesystem.tokenize.tokenize_json import tokenize_json, validate_json
+from typesystem.tokenize.tokenize_yaml import tokenize_yaml, validate_yaml
 
 __version__ = "0.1.12"
 __all__ = [
@@ -39,15 +40,23 @@ __all__ = [
     "Number",
     "Object",
     "Reference",
-    "Schema",
     "String",
     "Text",
     "Time",
     "Union",
-    "ValidationError",
+    # Schemas
+    "Schema",
     "SchemaDefinitions",
+    # Exceptions
+    "ParseError",
+    "ValidationError",
+    # JSON Schema
     "from_json_schema",
     "to_json_schema",
+    # Positional error marking
+    "tokenize_json",
+    "tokenize_yaml",
     "validate_json",
     "validate_yaml",
+    "validate_with_positions",
 ]

@@ -1,4 +1,6 @@
-from typesystem.tokenize.tokenize_yaml import tokenize_yaml
+import pytest
+
+from typesystem import ParseError, tokenize_yaml
 from typesystem.tokenize.tokens import DictToken, ListToken, ScalarToken
 
 YAML_OBJECT = """
@@ -56,3 +58,19 @@ def test_tokenize_floats():
     token = tokenize_yaml(YAML_FLOATS)
     expected = ListToken([ScalarToken(100.0, 3, 7), ScalarToken(100.0, 11, 16)], 1, 17)
     assert token == expected
+
+
+def test_tokenize_parse_errors():
+    with pytest.raises(ParseError) as exc_info:
+        tokenize_yaml(b"")
+    exc = exc_info.value
+    message = exc.messages()[0]
+    assert message.text == "No content."
+    assert message.start_position.char_index == 0
+
+    with pytest.raises(ParseError) as exc_info:
+        tokenize_yaml('{"a" 1}')
+    exc = exc_info.value
+    message = exc.messages()[0]
+    assert message.text == "expected ',' or '}', but got '<scalar>'."
+    assert message.start_position.char_index == 5
