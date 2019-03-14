@@ -17,7 +17,7 @@ def validate_with_positions(
             if message.code == "required":
                 field = message.index[-1]
                 token = token.lookup(message.index[:-1])
-                text = f"The {field!r} field is required."
+                text = f"The field {field!r} is required."
             else:
                 token = token.lookup(message.index)
                 text = message.text
