@@ -1,5 +1,6 @@
 import datetime
 import decimal
+import re
 
 from typesystem.base import Message, ValidationError
 from typesystem.fields import (
@@ -87,6 +88,10 @@ def test_string():
     assert error == ValidationError(
         text="Must match the pattern /^[abc]*$/.", code="pattern"
     )
+
+    validator = String(pattern=re.compile("ABC", re.IGNORECASE))
+    value, error = validator.validate_or_error("abc")
+    assert value == "abc"
 
     validator = String()
     value, error = validator.validate_or_error(" ")
@@ -341,6 +346,10 @@ def test_boolean():
     value, error = validator.validate_or_error(2)
     assert error == ValidationError(text="Must be a boolean.", code="type")
 
+    validator = Boolean()
+    value, error = validator.validate_or_error([])
+    assert error == ValidationError(text="Must be a boolean.", code="type")
+
     validator = Boolean(allow_null=True)
     value, error = validator.validate_or_error(None)
     assert value is None
@@ -400,6 +409,10 @@ def test_choice():
     )
     value, error = validator.validate_or_error(None)
     assert value is None
+
+    validator = Choice(choices=["red", "green", "blue"])
+    value, error = validator.validate_or_error("red")
+    assert value is "red"
 
 
 def test_object():
@@ -737,6 +750,14 @@ def test_union():
     assert error == ValidationError(
         text="Must be less than or equal to 1000.", code="maximum"
     )
+
+    validator = Integer() | String() | Boolean()
+    value, error = validator.validate_or_error(123)
+    assert value == 123
+
+    validator = Integer() | (String() | Boolean())
+    value, error = validator.validate_or_error(123)
+    assert value == 123
 
 
 def test_const():

@@ -4,7 +4,7 @@ Fields are usually declared as attributes on schema classes:
 class Organisation(typesystem.Schema):
     name = typesystem.String(title="Name", max_length=100)
     date_created = typesystem.Date(title="Date created", default=datetime.date.today)
-    owner = typesystem.Nested(title="Owner", schema=User, allow_null=True)
+    owner = typesystem.Reference(to=User, allow_null=True)
 ```
 
 Fields are always *required* in inputs, unless a *default* value is set.
@@ -58,7 +58,7 @@ For example: `username = typesystem.String(max_length=100)`
 * `trim_whitespace` - A boolean indicating if leading/trailing whitespace should be removed on validation. **Default: `True`**
 * `max_length` - A maximum number of characters that valid input stings may contain. **Default: `None`**
 * `min_length` - A minimum number of characters that valid input stings may contain. **Default: `None`**
-* `pattern` - A string to be used as a regex that must match. Eg. `patern="^[A-Za-z]+$"` **Default: `None`**
+* `pattern` - A regular expression that must match. This can be either a string or a compiled regular expression. E.g. `pattern="^[A-Za-z]+$"` **Default: `None`**
 * `format` - A string used to indicate a semantic type, such as `"email"`, `"url"`, or `"color"`. **Default: `None`**
 
 ### Text
@@ -97,8 +97,8 @@ provide more precise behaviour.
 * `maximum` - A number representing the maximum allowed value. Inputs must be less than or equal to this to validate. **Default: `None`**
 * `exclusive_minimum` - A number representing an exclusive minimum. Inputs must be greater than this to validate. **Default: `None`**
 * `exclusive_maximum` - A number representing an exclusive maximum. Inputs must be less than this to validate. **Default: `None`**
-* `precision` - A string representing the decimal precision to truncate input with. Eg. `precision="0.001"`. **Default: `None`**
-* `multiple_of` - A number giving a value that inputs must be a strict multiple of in order to validate. Eg. `multiple_of=2` will only validate even integers. **Default: `None`**
+* `precision` - A string representing the decimal precision to truncate input with. E.g. `precision="0.001"`. **Default: `None`**
+* `multiple_of` - A number giving a value that inputs must be a strict multiple of in order to validate. E.g. `multiple_of=2` will only validate even integers. **Default: `None`**
 
 ### Integer
 
@@ -176,7 +176,7 @@ extra_metadata = typesystem.Object(properties=typesystem.String(max_length=100))
 Schema classes implement their validation behaviour by generating an `Object`
 field, and automatically determining the `properties` and `required` attributes.
 
-You'll typically want to use `typesystem.Nested(schema=SomeSchema)` rather than
+You'll typically want to use `typesystem.Reference(to=SomeSchema)` rather than
 using the `Object` field directly, but it can be useful if you have a more
 complex data structure that you need to validate.
 
@@ -189,16 +189,16 @@ complex data structure that you need to validate.
 * `max_properties` - An integer representing the maximum number of properties that may be included.
 * `required` - A list of strings indicating any fields that are strictly required in the input.
 
-### Nested
+### Reference
 
-Used to validate a nested schema.
+Used to reference a nested schema.
 
 For example:
 
 ```python
-owner = typesystem.Nested(schema=User, allow_null=True)
+owner = typesystem.Reference(to=User, allow_null=True)
 ```
 
 **Arguments**:
 
-* `schema` - A schema class. **Required**
+* `to` - A schema class or field instance. **Required**

@@ -1,10 +1,13 @@
 TypeSystem can convert Schema classes or Field instances to/from JSON Schema.
 
-!!! warning
-    TypeSystem does not yet have support for marshaling `Nested` fields
-    to/from `$ref` pointers.
+!!! note
+    TypeSystem only supports `$ref` pointers that use the standard "definitions"
+    namespace to store referenced schemas.
 
-    Support for this feature is planned soon.
+    All references should be of the style `{"$ref": "#/definitions/..."}`.
+
+    Using hyperlinked references, relative references, or references to parts
+    of the document other than "definitions" is not supported.
 
 Let's define a schema, and dump it out into a JSON schema document:
 

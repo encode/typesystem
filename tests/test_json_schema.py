@@ -1,10 +1,11 @@
 import json
 import os
+import re
 
 import pytest
 
 import typesystem
-from typesystem.json_schema import from_json_schema, to_json_schema
+from typesystem.json_schema import JSONSchema, from_json_schema, to_json_schema
 
 filenames = [
     "additionalItems.json",
@@ -16,6 +17,7 @@ filenames = [
     # "contains.json",
     "default.json",
     # "definitions.json",
+    "definitionsRef.json",
     # "dependencies.json",
     "enum.json",
     "exclusiveMaximum.json",
@@ -84,6 +86,14 @@ def test_json_schema(schema, data, is_valid, description):
 
 
 @pytest.mark.parametrize("schema,data,is_valid,description", test_cases)
+def test_json_schema_validator(schema, data, is_valid, description):
+    """
+    Use the `JSONSchema` field to validate all the test case schemas.
+    """
+    JSONSchema.validate(schema)
+
+
+@pytest.mark.parametrize("schema,data,is_valid,description", test_cases)
 def test_to_from_json_schema(schema, data, is_valid, description):
     """
     Test that marshalling to and from JSON schema doens't affect the
@@ -137,10 +147,26 @@ def test_schema_to_json_schema():
     }
 
 
-def test_to_json_schema_invalid_field():
-    class CustomField(typesystem.Field):
-        pass
+class CustomField(typesystem.Field):
+    pass
 
+
+def test_to_json_schema_invalid_field():
     field = CustomField()
-    with pytest.raises(TypeError):
+    with pytest.raises(ValueError) as exc_info:
         to_json_schema(field)
+
+    expected = "Cannot convert field type 'CustomField' to JSON Schema"
+    assert str(exc_info.value) == expected
+
+
+def test_to_json_schema_complex_regular_expression():
+    field = typesystem.String(pattern=re.compile("foo", re.IGNORECASE | re.VERBOSE))
+    with pytest.raises(ValueError) as exc_info:
+        to_json_schema(field)
+
+    expected = (
+        "Cannot convert regular expression with non-standard flags "
+        "to JSON schema: RegexFlag."
+    )
+    assert str(exc_info.value).startswith(expected)

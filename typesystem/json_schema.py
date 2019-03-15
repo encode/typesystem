@@ -1,3 +1,7 @@
+"""
+Provides 'typesystem.from_json_schema()' and 'typesystem.to_json_schema()'.
+"""
+import re
 import typing
 
 from typesystem.composites import AllOf, IfThenElse, NeverMatch, Not, OneOf
@@ -12,11 +16,12 @@ from typesystem.fields import (
     Field,
     Float,
     Integer,
+    Number,
     Object,
     String,
     Union,
 )
-from typesystem.schemas import Schema
+from typesystem.schemas import Reference, Schema, SchemaDefinitions
 
 TYPE_CONSTRAINTS = {
     "additionalItems",
@@ -46,27 +51,94 @@ TYPE_CONSTRAINTS = {
 }
 
 
-def from_json_schema(data: typing.Union[bool, dict]) -> Field:
+definitions = SchemaDefinitions()
+
+JSONSchema = (
+    Object(
+        properties={
+            "$ref": String(),
+            "type": String() | Array(items=String()),
+            "enum": Array(unique_items=True, min_items=1),
+            "definitions": Object(
+                additional_properties=Reference("JSONSchema", definitions=definitions)
+            ),
+            # String
+            "minLength": Integer(minimum=0),
+            "maxLength": Integer(minimum=0),
+            "pattern": String(format="regex"),
+            "format": String(),
+            # Numeric
+            "minimum": Number(),
+            "maximum": Number(),
+            "exclusiveMinimum": Number(),
+            "exclusiveMaximum": Number(),
+            "multipleOf": Number(exclusive_minimum=0),
+            # Object
+            "properties": Object(
+                additional_properties=Reference("JSONSchema", definitions=definitions)
+            ),
+            "minProperties": Integer(minimum=0),
+            "maxProperties": Integer(minimum=0),
+            "patternProperties": Object(
+                additional_properties=Reference("JSONSchema", definitions=definitions)
+            ),
+            "additionalProperties": (
+                Reference("JSONSchema", definitions=definitions) | Boolean()
+            ),
+            "required": Array(items=String(), unique_items=True),
+            # Array
+            "items": (
+                Reference("JSONSchema", definitions=definitions)
+                | Array(
+                    items=Reference("JSONSchema", definitions=definitions), min_items=1
+                )
+            ),
+            "additionalItems": (
+                Reference("JSONSchema", definitions=definitions) | Boolean()
+            ),
+            "minItems": Integer(minimum=0),
+            "maxItems": Integer(minimum=0),
+            "uniqueItems": Boolean(),
+        }
+    )
+    | Boolean()
+)
+
+definitions["JSONSchema"] = JSONSchema
+
+
+def from_json_schema(
+    data: typing.Union[bool, dict], definitions: SchemaDefinitions = None
+) -> Field:
     if isinstance(data, bool):
         return {True: Any(), False: NeverMatch()}[data]
 
+    if definitions is None:
+        definitions = SchemaDefinitions()
+        for key, value in data.get("definitions", {}).items():
+            ref = f"#/definitions/{key}"
+            definitions[ref] = from_json_schema(value, definitions=definitions)
+
+    if "$ref" in data:
+        return ref_from_json_schema(data, definitions=definitions)
+
     constraints = []  # typing.List[Field]
     if any([property_name in data for property_name in TYPE_CONSTRAINTS]):
-        constraints.append(type_from_json_schema(data))
+        constraints.append(type_from_json_schema(data, definitions=definitions))
     if "enum" in data:
-        constraints.append(enum_from_json_schema(data))
+        constraints.append(enum_from_json_schema(data, definitions=definitions))
     if "const" in data:
-        constraints.append(const_from_json_schema(data))
+        constraints.append(const_from_json_schema(data, definitions=definitions))
     if "allOf" in data:
-        constraints.append(all_of_from_json_schema(data))
+        constraints.append(all_of_from_json_schema(data, definitions=definitions))
     if "anyOf" in data:
-        constraints.append(any_of_from_json_schema(data))
+        constraints.append(any_of_from_json_schema(data, definitions=definitions))
     if "oneOf" in data:
-        constraints.append(one_of_from_json_schema(data))
+        constraints.append(one_of_from_json_schema(data, definitions=definitions))
     if "not" in data:
-        constraints.append(not_from_json_schema(data))
+        constraints.append(not_from_json_schema(data, definitions=definitions))
     if "if" in data:
-        constraints.append(if_then_else_from_json_schema(data))
+        constraints.append(if_then_else_from_json_schema(data, definitions=definitions))
 
     if len(constraints) == 1:
         return constraints[0]
@@ -75,7 +147,7 @@ def from_json_schema(data: typing.Union[bool, dict]) -> Field:
     return Any()
 
 
-def type_from_json_schema(data: dict) -> Field:
+def type_from_json_schema(data: dict, definitions: SchemaDefinitions) -> Field:
     """
     Build a typed field or union of typed fields from a JSON schema object.
     """
@@ -83,7 +155,9 @@ def type_from_json_schema(data: dict) -> Field:
 
     if len(type_strings) > 1:
         items = [
-            from_json_schema_type(data, type_string=type_string, allow_null=False)
+            from_json_schema_type(
+                data, type_string=type_string, allow_null=False, definitions=definitions
+            )
             for type_string in type_strings
         ]
         return Union(any_of=items, allow_null=allow_null)
@@ -92,7 +166,9 @@ def type_from_json_schema(data: dict) -> Field:
         return {True: Const(None), False: NeverMatch()}[allow_null]
 
     type_string = type_strings.pop()
-    return from_json_schema_type(data, type_string=type_string, allow_null=allow_null)
+    return from_json_schema_type(
+        data, type_string=type_string, allow_null=allow_null, definitions=definitions
+    )
 
 
 def get_valid_types(data: dict) -> typing.Tuple[typing.Set[str], bool]:
@@ -120,7 +196,9 @@ def get_valid_types(data: dict) -> typing.Tuple[typing.Set[str], bool]:
     return (type_strings, allow_null)
 
 
-def from_json_schema_type(data: dict, type_string: str, allow_null: bool) -> Field:
+def from_json_schema_type(
+    data: dict, type_string: str, allow_null: bool, definitions: SchemaDefinitions
+) -> Field:
     """
     Build a typed field from a JSON schema object.
     """
@@ -171,9 +249,11 @@ def from_json_schema_type(data: dict, type_string: str, allow_null: bool) -> Fie
         if items is None:
             items_argument = None  # type: typing.Union[None, Field, typing.List[Field]]
         elif isinstance(items, list):
-            items_argument = [from_json_schema(item) for item in items]
+            items_argument = [
+                from_json_schema(item, definitions=definitions) for item in items
+            ]
         else:
-            items_argument = from_json_schema(items)
+            items_argument = from_json_schema(items, definitions=definitions)
 
         additional_items = data.get("additionalItems", None)
         if additional_items is None:
@@ -181,7 +261,9 @@ def from_json_schema_type(data: dict, type_string: str, allow_null: bool) -> Fie
         elif isinstance(additional_items, bool):
             additional_items_argument = additional_items
         else:
-            additional_items_argument = from_json_schema(additional_items)
+            additional_items_argument = from_json_schema(
+                additional_items, definitions=definitions
+            )
 
         kwargs = {
             "allow_null": allow_null,
@@ -200,7 +282,8 @@ def from_json_schema_type(data: dict, type_string: str, allow_null: bool) -> Fie
             properties_argument = None  # type: typing.Optional[typing.Dict[str, Field]]
         else:
             properties_argument = {
-                key: from_json_schema(value) for key, value in properties.items()
+                key: from_json_schema(value, definitions=definitions)
+                for key, value in properties.items()
             }
 
         pattern_properties = data.get("patternProperties", None)
@@ -210,7 +293,7 @@ def from_json_schema_type(data: dict, type_string: str, allow_null: bool) -> Fie
             )  # type: typing.Optional[typing.Dict[str, Field]]
         else:
             pattern_properties_argument = {
-                key: from_json_schema(value)
+                key: from_json_schema(value, definitions=definitions)
                 for key, value in pattern_properties.items()
             }
 
@@ -222,13 +305,17 @@ def from_json_schema_type(data: dict, type_string: str, allow_null: bool) -> Fie
         elif isinstance(additional_properties, bool):
             additional_properties_argument = additional_properties
         else:
-            additional_properties_argument = from_json_schema(additional_properties)
+            additional_properties_argument = from_json_schema(
+                additional_properties, definitions=definitions
+            )
 
         property_names = data.get("propertyNames", None)
         if property_names is None:
             property_names_argument = None  # type: typing.Optional[Field]
         else:
-            property_names_argument = from_json_schema(property_names)
+            property_names_argument = from_json_schema(
+                property_names, definitions=definitions
+            )
 
         kwargs = {
             "allow_null": allow_null,
@@ -246,46 +333,60 @@ def from_json_schema_type(data: dict, type_string: str, allow_null: bool) -> Fie
     assert False, f"Invalid argument type_string={type_string!r}"  # pragma: no cover
 
 
-def enum_from_json_schema(data: dict) -> Field:
+def ref_from_json_schema(data: dict, definitions: SchemaDefinitions) -> Field:
+    reference_string = data["$ref"]
+    assert reference_string.startswith("#/"), "Unsupported $ref style in document."
+    return Reference(to=reference_string, definitions=definitions)
+
+
+def enum_from_json_schema(data: dict, definitions: SchemaDefinitions) -> Field:
     choices = [(item, item) for item in data["enum"]]
     kwargs = {"choices": choices, "default": data.get("default", NO_DEFAULT)}
     return Choice(**kwargs)
 
 
-def const_from_json_schema(data: dict) -> Field:
+def const_from_json_schema(data: dict, definitions: SchemaDefinitions) -> Field:
     const = data["const"]
     kwargs = {"const": const, "default": data.get("default", NO_DEFAULT)}
     return Const(**kwargs)
 
 
-def all_of_from_json_schema(data: dict) -> Field:
-    all_of = [from_json_schema(item) for item in data["allOf"]]
+def all_of_from_json_schema(data: dict, definitions: SchemaDefinitions) -> Field:
+    all_of = [from_json_schema(item, definitions=definitions) for item in data["allOf"]]
     kwargs = {"all_of": all_of, "default": data.get("default", NO_DEFAULT)}
     return AllOf(**kwargs)
 
 
-def any_of_from_json_schema(data: dict) -> Field:
-    any_of = [from_json_schema(item) for item in data["anyOf"]]
+def any_of_from_json_schema(data: dict, definitions: SchemaDefinitions) -> Field:
+    any_of = [from_json_schema(item, definitions=definitions) for item in data["anyOf"]]
     kwargs = {"any_of": any_of, "default": data.get("default", NO_DEFAULT)}
     return Union(**kwargs)
 
 
-def one_of_from_json_schema(data: dict) -> Field:
-    one_of = [from_json_schema(item) for item in data["oneOf"]]
+def one_of_from_json_schema(data: dict, definitions: SchemaDefinitions) -> Field:
+    one_of = [from_json_schema(item, definitions=definitions) for item in data["oneOf"]]
     kwargs = {"one_of": one_of, "default": data.get("default", NO_DEFAULT)}
     return OneOf(**kwargs)
 
 
-def not_from_json_schema(data: dict) -> Field:
-    negated = from_json_schema(data["not"])
+def not_from_json_schema(data: dict, definitions: SchemaDefinitions) -> Field:
+    negated = from_json_schema(data["not"], definitions=definitions)
     kwargs = {"negated": negated, "default": data.get("default", NO_DEFAULT)}
     return Not(**kwargs)
 
 
-def if_then_else_from_json_schema(data: dict) -> Field:
-    if_clause = from_json_schema(data["if"])
-    then_clause = from_json_schema(data["then"]) if "then" in data else None
-    else_clause = from_json_schema(data["else"]) if "else" in data else None
+def if_then_else_from_json_schema(data: dict, definitions: SchemaDefinitions) -> Field:
+    if_clause = from_json_schema(data["if"], definitions=definitions)
+    then_clause = (
+        from_json_schema(data["then"], definitions=definitions)
+        if "then" in data
+        else None
+    )
+    else_clause = (
+        from_json_schema(data["else"], definitions=definitions)
+        if "else" in data
+        else None
+    )
     kwargs = {
         "if_clause": if_clause,
         "then_clause": then_clause,
@@ -296,33 +397,50 @@ def if_then_else_from_json_schema(data: dict) -> Field:
 
 
 def to_json_schema(
-    validator: typing.Union[Field, typing.Type[Schema]]
+    arg: typing.Union[Field, typing.Type[Schema]], _definitions: dict = None
 ) -> typing.Union[bool, dict]:
 
-    if isinstance(validator, Field):
-        field = validator
-    else:
-        field = validator.make_validator()
-
-    if isinstance(field, Any):
+    if isinstance(arg, Any):
         return True
-    elif isinstance(field, NeverMatch):
+    elif isinstance(arg, NeverMatch):
         return False
 
     data = {}  # type: dict
+    is_root = _definitions is None
+    definitions = {} if _definitions is None else _definitions
 
-    if isinstance(field, String):
+    if isinstance(arg, Field):
+        field = arg
+    elif isinstance(arg, SchemaDefinitions):
+        field = None
+        for key, value in arg.items():
+            definitions[key] = to_json_schema(value, _definitions=definitions)
+    else:
+        field = arg.make_validator()
+
+    if isinstance(field, Reference):
+        data["$ref"] = f"#/definitions/{field.target_string}"
+        definitions[field.target_string] = to_json_schema(
+            field.target, _definitions=definitions
+        )
+
+    elif isinstance(field, String):
         data["type"] = ["string", "null"] if field.allow_null else "string"
         data.update(get_standard_properties(field))
         if field.min_length is not None or not field.allow_blank:
             data["minLength"] = field.min_length or 1
         if field.max_length is not None:
             data["maxLength"] = field.max_length
-        if field.pattern is not None:
-            data["pattern"] = field.pattern
+        if field.pattern_regex is not None:
+            if field.pattern_regex.flags != re.RegexFlag.UNICODE:
+                flags = re.RegexFlag(field.pattern_regex.flags)
+                raise ValueError(
+                    f"Cannot convert regular expression with non-standard flags "
+                    f"to JSON schema: {flags!s}"
+                )
+            data["pattern"] = field.pattern_regex.pattern
         if field.format is not None:
             data["format"] = field.format
-        return data
 
     elif isinstance(field, (Integer, Float, Decimal)):
         base_type = "integer" if isinstance(field, Integer) else "number"
@@ -338,12 +456,10 @@ def to_json_schema(
             data["exclusiveMaximum"] = field.exclusive_maximum
         if field.multiple_of is not None:
             data["multipleOf"] = field.multiple_of
-        return data
 
     elif isinstance(field, Boolean):
         data["type"] = ["boolean", "null"] if field.allow_null else "boolean"
         data.update(get_standard_properties(field))
-        return data
 
     elif isinstance(field, Array):
         data["type"] = ["array", "null"] if field.allow_null else "array"
@@ -354,28 +470,33 @@ def to_json_schema(
             data["maxItems"] = field.max_items
         if field.items is not None:
             if isinstance(field.items, (list, tuple)):
-                data["items"] = [to_json_schema(item) for item in field.items]
+                data["items"] = [
+                    to_json_schema(item, _definitions=definitions)
+                    for item in field.items
+                ]
             else:
-                data["items"] = to_json_schema(field.items)
+                data["items"] = to_json_schema(field.items, _definitions=definitions)
         if field.additional_items is not None:
             if isinstance(field.additional_items, bool):
                 data["additionalItems"] = field.additional_items
             else:
-                data["additionalItems"] = to_json_schema(field.additional_items)
+                data["additionalItems"] = to_json_schema(
+                    field.additional_items, _definitions=definitions
+                )
         if field.unique_items is not False:
             data["uniqueItems"] = True
-        return data
 
     elif isinstance(field, Object):
         data["type"] = ["object", "null"] if field.allow_null else "object"
         data.update(get_standard_properties(field))
         if field.properties:
             data["properties"] = {
-                key: to_json_schema(value) for key, value in field.properties.items()
+                key: to_json_schema(value, _definitions=definitions)
+                for key, value in field.properties.items()
             }
         if field.pattern_properties:
             data["patternProperties"] = {
-                key: to_json_schema(value)
+                key: to_json_schema(value, _definitions=definitions)
                 for key, value in field.pattern_properties.items()
             }
         if field.additional_properties is not None:
@@ -383,59 +504,64 @@ def to_json_schema(
                 data["additionalProperties"] = field.additional_properties
             else:
                 data["additionalProperties"] = to_json_schema(
-                    field.additional_properties
+                    field.additional_properties, _definitions=definitions
                 )
         if field.property_names is not None:
-            data["propertyNames"] = to_json_schema(field.property_names)
+            data["propertyNames"] = to_json_schema(
+                field.property_names, _definitions=definitions
+            )
         if field.max_properties is not None:
             data["maxProperties"] = field.max_properties
         if field.min_properties is not None:
             data["minProperties"] = field.min_properties
         if field.required:
             data["required"] = field.required
-        return data
 
     elif isinstance(field, Choice):
         data["enum"] = [key for key, value in field.choices]
         data.update(get_standard_properties(field))
-        return data
 
     elif isinstance(field, Const):
         data["const"] = field.const
         data.update(get_standard_properties(field))
-        return data
 
     elif isinstance(field, Union):
-        data["anyOf"] = [to_json_schema(item) for item in field.any_of]
+        data["anyOf"] = [
+            to_json_schema(item, _definitions=definitions) for item in field.any_of
+        ]
         data.update(get_standard_properties(field))
-        return data
 
     elif isinstance(field, OneOf):
-        data["oneOf"] = [to_json_schema(item) for item in field.one_of]
+        data["oneOf"] = [
+            to_json_schema(item, _definitions=definitions) for item in field.one_of
+        ]
         data.update(get_standard_properties(field))
-        return data
 
     elif isinstance(field, AllOf):
-        data["allOf"] = [to_json_schema(item) for item in field.all_of]
+        data["allOf"] = [
+            to_json_schema(item, _definitions=definitions) for item in field.all_of
+        ]
         data.update(get_standard_properties(field))
-        return data
 
     elif isinstance(field, IfThenElse):
-        data["if"] = to_json_schema(field.if_clause)
+        data["if"] = to_json_schema(field.if_clause, _definitions=definitions)
         if field.then_clause is not None:
-            data["then"] = to_json_schema(field.then_clause)
+            data["then"] = to_json_schema(field.then_clause, _definitions=definitions)
         if field.else_clause is not None:
-            data["else"] = to_json_schema(field.else_clause)
+            data["else"] = to_json_schema(field.else_clause, _definitions=definitions)
         data.update(get_standard_properties(field))
-        return data
 
     elif isinstance(field, Not):
-        data["not"] = to_json_schema(field.negated)
+        data["not"] = to_json_schema(field.negated, _definitions=definitions)
         data.update(get_standard_properties(field))
-        return data
 
-    field_type = type(field)
-    raise TypeError("Unsupported field type {field_type} passed to 'to_json_schema'")
+    elif field is not None:
+        name = type(field).__qualname__
+        raise ValueError(f"Cannot convert field type {name!r} to JSON Schema")
+
+    if is_root and definitions:
+        data["definitions"] = definitions
+    return data
 
 
 def get_standard_properties(field: Field) -> dict:
