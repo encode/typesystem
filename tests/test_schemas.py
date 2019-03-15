@@ -76,6 +76,13 @@ def test_schema_validation():
     assert dict(error) == {"age": "This field is required."}
 
 
+def test_schema_update_validation():
+    instance = Person(name="Tom", age=123)
+    value, error = Person.validate_or_error({"age": "456"}, instance=instance)
+    assert not error
+    assert value == Person(name="Tom", age=456)
+
+
 def test_schema_eq():
     tom = Person(name="Tom", age=123)
     lucy = Person(name="Lucy", age=123)

@@ -100,18 +100,41 @@ class Schema(Mapping, metaclass=SchemaMetaclass):
 
     @classmethod
     def validate(
-        cls: typing.Type["Schema"], value: typing.Any, *, strict: bool = False
+        cls: typing.Type["Schema"],
+        value: typing.Any,
+        *,
+        strict: bool = False,
+        instance: typing.Any = None,
     ) -> "Schema":
-        validator = cls.make_validator(strict=strict)
+        if instance is None:
+            validator = cls.make_validator(strict=strict)
+        else:
+            value_dict = value if isinstance(value, dict) else {}
+            validator = Object(
+                properties={
+                    key: field for key, field in cls.fields.items() if key in value_dict
+                }
+            )
+
         value = validator.validate(value, strict=strict)
-        return cls(value)
+
+        if instance is None:
+            return cls(value)
+        else:
+            for attr_key, attr_value in value.items():
+                setattr(instance, attr_key, attr_value)
+            return instance
 
     @classmethod
     def validate_or_error(
-        cls: typing.Type["Schema"], value: typing.Any, *, strict: bool = False
+        cls: typing.Type["Schema"],
+        value: typing.Any,
+        *,
+        strict: bool = False,
+        instance: typing.Any = None,
     ) -> ValidationResult:
         try:
-            value = cls.validate(value, strict=strict)
+            value = cls.validate(value, strict=strict, instance=instance)
         except ValidationError as error:
             return ValidationResult(value=None, error=error)
         return ValidationResult(value=value, error=None)
