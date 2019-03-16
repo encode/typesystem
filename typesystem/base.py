@@ -138,9 +138,9 @@ class BaseError(Mapping, Exception):
             assert len(messages)
 
         self._messages = messages
-        self._message_dict = (
-            {}
-        )  # type: typing.Dict[typing.Any, typing.Union[str, dict]]
+        self._message_dict: typing.Dict[
+            typing.Union[int, str], typing.Union[str, dict]
+        ] = {}
 
         # Populate 'self._message_dict'
         for message in messages:

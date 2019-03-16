@@ -17,7 +17,7 @@ FORMATS = {
 
 
 class Field:
-    errors = {}  # type: typing.Dict[str, str]
+    errors: typing.Dict[str, str] = {}
     _creation_counter = 0
 
     def __init__(
@@ -189,7 +189,7 @@ class String(Field):
 
 
 class Number(Field):
-    numeric_type = None  # type: type
+    numeric_type: typing.Optional[type] = None
     errors = {
         "type": "Must be a number.",
         "null": "May not be null.",
@@ -621,7 +621,7 @@ class Array(Field):
 
         # Ensure all items are of the right type.
         validated = []
-        error_messages = []  # type: typing.List[Message]
+        error_messages: typing.List[Message] = []
         if self.unique_items:
             seen_items = Uniqueness()
 

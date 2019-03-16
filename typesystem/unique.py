@@ -13,7 +13,7 @@ class Uniqueness:
     FALSE = object()
 
     def __init__(self, items: list = None) -> None:
-        self._set = set()  # type: set
+        self._set: set = set()
         for item in items or []:
             self.add(item)
 

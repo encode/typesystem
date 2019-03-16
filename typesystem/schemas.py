@@ -56,7 +56,7 @@ class SchemaMetaclass(ABCMeta):
         attrs: dict,
         definitions: SchemaDefinitions = None,
     ) -> type:
-        fields = {}  # type: typing.Dict[str, Field]
+        fields: typing.Dict[str, Field] = {}
 
         for key, value in list(attrs.items()):
             if isinstance(value, Field):
@@ -90,7 +90,7 @@ class SchemaMetaclass(ABCMeta):
 
 
 class Schema(Mapping, metaclass=SchemaMetaclass):
-    fields = {}  # type: typing.Dict[str, Field]
+    fields: typing.Dict[str, Field] = {}
 
     def __init__(self, *args: typing.Any, **kwargs: typing.Any) -> None:
         if args:
