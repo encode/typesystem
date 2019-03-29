@@ -1,6 +1,7 @@
 import datetime
 import re
 import typing
+import uuid
 
 from typesystem.base import ValidationError
 
@@ -16,6 +17,10 @@ DATETIME_REGEX = re.compile(
     r"[T ](?P<hour>\d{1,2}):(?P<minute>\d{1,2})"
     r"(?::(?P<second>\d{1,2})(?:\.(?P<microsecond>\d{1,6})\d{0,6})?)?"
     r"(?P<tzinfo>Z|[+-]\d{2}(?::?\d{2})?)?$"
+)
+
+UUID_REGEX = re.compile(
+    r"[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
 )
 
 
@@ -130,3 +135,22 @@ class DateTimeFormat(BaseFormat):
     #     if value.endswith('+00:00'):
     #         value = value[:-6] + 'Z'
     #     return value
+
+
+class UUIDFormat(BaseFormat):
+    errors = {
+        "format": "Must be valid UUID format."
+    }
+
+    def is_native_type(self, value: typing.Any) -> bool:
+        return isinstance(value, uuid.UUID)
+
+    def validate(self, value: typing.Any) -> uuid.UUID:
+        match = UUID_REGEX.match(value)
+        if not match:
+            raise self.validation_error("format")
+
+        return uuid.UUID(value)
+
+    def serialize(self, obj: typing.Any) -> str:
+        return str(obj)
