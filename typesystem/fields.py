@@ -13,7 +13,7 @@ FORMATS = {
     "date": formats.DateFormat(),
     "time": formats.TimeFormat(),
     "datetime": formats.DateTimeFormat(),
-    "uuid": formats.UUIDFormat()
+    "uuid": formats.UUIDFormat(),
 }
 
 

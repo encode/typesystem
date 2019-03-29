@@ -721,9 +721,7 @@ def test_uuid():
 
     validator = String(format="uuid")
     value, error = validator.validate_or_error("1245a678-1234-1234-1234-123412341234")
-    assert error == ValidationError(
-        text="Must be valid UUID format.", code="format"
-    )
+    assert error == ValidationError(text="Must be valid UUID format.", code="format")
 
 
 def test_union():

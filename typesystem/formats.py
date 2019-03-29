@@ -138,9 +138,7 @@ class DateTimeFormat(BaseFormat):
 
 
 class UUIDFormat(BaseFormat):
-    errors = {
-        "format": "Must be valid UUID format."
-    }
+    errors = {"format": "Must be valid UUID format."}
 
     def is_native_type(self, value: typing.Any) -> bool:
         return isinstance(value, uuid.UUID)
