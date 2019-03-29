@@ -1,5 +1,6 @@
 import datetime
 import decimal
+import uuid
 
 import pytest
 
@@ -169,6 +170,17 @@ def test_schema_decimal_serialization():
 
     assert item.price == decimal.Decimal("123.45")
     assert item["price"] == 123.45
+
+
+def test_schema_uuid_serialization():
+    class User(typesystem.Schema):
+        id = typesystem.String(format="uuid")
+        username = typesystem.String()
+
+    item = User(id="b769df4a-18ec-480f-89ef-8ea961a82269", username="tom")
+
+    assert item.id == uuid.UUID("b769df4a-18ec-480f-89ef-8ea961a82269")
+    assert item["id"] == "b769df4a-18ec-480f-89ef-8ea961a82269"
 
 
 def test_schema_with_callable_default():
