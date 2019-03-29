@@ -1,6 +1,7 @@
 import datetime
 import decimal
 import re
+import uuid
 
 from typesystem.base import Message, ValidationError
 from typesystem.fields import (
@@ -711,6 +712,16 @@ def test_datetime():
     validator = DateTime()
     value, error = validator.validate_or_error("2049-01-01 12:00:60")
     assert error == ValidationError(text="Must be a real datetime.", code="invalid")
+
+
+def test_uuid():
+    validator = String(format="uuid")
+    value, error = validator.validate_or_error("93e19019-c7a6-45fe-8936-f6f4d550f35f")
+    assert value == uuid.UUID("93e19019-c7a6-45fe-8936-f6f4d550f35f")
+
+    validator = String(format="uuid")
+    value, error = validator.validate_or_error("1245a678-1234-1234-1234-123412341234")
+    assert error == ValidationError(text="Must be valid UUID format.", code="format")
 
 
 def test_union():

@@ -1,4 +1,4 @@
-from typesystem.base import ParseError, ValidationError, Message, Position
+from typesystem.base import Message, ParseError, Position, ValidationError
 from typesystem.fields import (
     Any,
     Array,
