@@ -2,7 +2,6 @@ import datetime
 import decimal
 import re
 import uuid
-import traceback
 
 from typesystem.base import Message, ValidationError
 from typesystem.fields import (
@@ -828,9 +827,7 @@ def test_error_messages_interface():
     assert error.messages() == [Message(text="Must be a number.", code="type")]
 
 
-def test_print_validation_error_traceback():
+def test_validation_error_is_hashable():
     validator = Integer()
-    try:
-        validator.validate("abc")
-    except ValidationError:
-        traceback.print_exc()
+    _, error = validator.validate_or_error("abc")
+    hash(error)
