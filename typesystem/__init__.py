@@ -24,7 +24,7 @@ from typesystem.tokenize.positional_validation import validate_with_positions
 from typesystem.tokenize.tokenize_json import tokenize_json, validate_json
 from typesystem.tokenize.tokenize_yaml import tokenize_yaml, validate_yaml
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 __all__ = [
     "Array",
     "Any",
