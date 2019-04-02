@@ -78,6 +78,10 @@ class Message:
             and self.end_position == other.end_position
         )
 
+    def __hash__(self) -> int:
+        ident = (self.code, tuple(self.index))
+        return hash(ident)
+
     def __repr__(self) -> str:
         class_name = self.__class__.__name__
         index_str = f", index={self.index!r}" if self.index else ""
@@ -182,6 +186,10 @@ class BaseError(Mapping, Exception):
 
     def __eq__(self, other: typing.Any) -> bool:
         return isinstance(other, ValidationError) and self._messages == other._messages
+
+    def __hash__(self) -> int:
+        ident = tuple(hash(m) for m in self._messages)
+        return hash(ident)
 
     def __repr__(self) -> str:
         class_name = self.__class__.__name__

@@ -825,3 +825,9 @@ def test_error_messages_interface():
     validator = Integer()
     value, error = validator.validate_or_error("abc")
     assert error.messages() == [Message(text="Must be a number.", code="type")]
+
+
+def test_validation_error_is_hashable():
+    validator = Integer()
+    _, error = validator.validate_or_error("abc")
+    hash(error)
