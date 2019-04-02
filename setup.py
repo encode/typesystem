@@ -40,6 +40,7 @@ setup(
     author_email='tom@tomchristie.com',
     packages=get_packages('typesystem'),
     install_requires=[],
+    python_requires='>=3.6',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
