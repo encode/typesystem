@@ -3,6 +3,7 @@ import decimal
 import uuid
 
 import pytest
+
 import typesystem
 import typesystem.formats
 
@@ -178,21 +179,12 @@ def test_schema_datetime_serialization():
         visited_on = typesystem.DateTime()
 
     visitor = "Bob"
-    visited_on = datetime.datetime(
-        year=1984,
-        month=9,
-        day=26,
-        hour=19,
-        minute=20,
-        second=21,
-        microsecond=123456,
-        tzinfo=datetime.timezone.utc,
-    )
+    visited_on = datetime.datetime.now(tz=datetime.timezone.utc)
 
     visited_on_str = visited_on.isoformat()
     visit = Visit(visitor=visitor, visited_on=visited_on_str)
 
-    assert typesystem.formats.DATETIME_REGEX.match(visited_on_str)
+    assert typesystem.formats.DATETIME_REGEX.match(visit["visited_on"])
     assert visit["visitor"] == visitor
     assert visit["visited_on"] == visited_on_str
 
