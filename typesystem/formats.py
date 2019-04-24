@@ -89,8 +89,8 @@ class TimeFormat(BaseFormat):
         except ValueError:
             raise self.validation_error("invalid")
 
-    # def serialize(self, obj: typing.Any) -> str:
-    #     return obj.isoformat()
+    def serialize(self, obj: typing.Any) -> str:
+        return obj.isoformat()
 
 
 class DateTimeFormat(BaseFormat):
@@ -130,11 +130,8 @@ class DateTimeFormat(BaseFormat):
         except ValueError:
             raise self.validation_error("invalid")
 
-    # def serialize(self, obj: typing.Any) -> str:
-    #     value = value.isoformat()
-    #     if value.endswith('+00:00'):
-    #         value = value[:-6] + 'Z'
-    #     return value
+    def serialize(self, obj: typing.Any) -> str:
+        return obj.isoformat()
 
 
 class UUIDFormat(BaseFormat):
