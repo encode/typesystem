@@ -166,11 +166,11 @@ def test_schema_time_serialization():
     class Clock(typesystem.Schema):
         time = typesystem.Time()
 
-    time = datetime.datetime.now().time().isoformat()
+    time = datetime.datetime.now().time()
     clock = Clock(time=time)
 
     assert typesystem.formats.TIME_REGEX.match(clock["time"])
-    assert clock["time"] == time
+    assert clock["time"] == time.isoformat()
 
 
 def test_schema_datetime_serialization():
@@ -180,13 +180,11 @@ def test_schema_datetime_serialization():
 
     visitor = "Bob"
     visited_on = datetime.datetime.now(tz=datetime.timezone.utc)
-
-    visited_on_str = visited_on.isoformat()
-    visit = Visit(visitor=visitor, visited_on=visited_on_str)
+    visit = Visit(visitor=visitor, visited_on=visited_on)
 
     assert typesystem.formats.DATETIME_REGEX.match(visit["visited_on"])
     assert visit["visitor"] == visitor
-    assert visit["visited_on"] == visited_on_str
+    assert visit["visited_on"] == visited_on.isoformat()[:-6] + "Z"
 
 
 def test_schema_decimal_serialization():
