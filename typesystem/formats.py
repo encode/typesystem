@@ -61,7 +61,10 @@ class DateFormat(BaseFormat):
         except ValueError:
             raise self.validation_error("invalid")
 
-    def serialize(self, obj: typing.Any) -> str:
+    def serialize(self, obj: typing.Any) -> typing.Union[str, None]:
+        if not isinstance(obj, datetime.date):
+            return None
+
         return obj.isoformat()
 
 
@@ -89,7 +92,10 @@ class TimeFormat(BaseFormat):
         except ValueError:
             raise self.validation_error("invalid")
 
-    def serialize(self, obj: typing.Any) -> str:
+    def serialize(self, obj: typing.Any) -> typing.Union[str, None]:
+        if not isinstance(obj, datetime.time):
+            return None
+
         return obj.isoformat()
 
 
@@ -130,8 +136,12 @@ class DateTimeFormat(BaseFormat):
         except ValueError:
             raise self.validation_error("invalid")
 
-    def serialize(self, obj: typing.Any) -> str:
+    def serialize(self, obj: typing.Any) -> typing.Union[str, None]:
+        if not isinstance(obj, datetime.datetime):
+            return None
+
         value = obj.isoformat()
+
         if value.endswith("+00:00"):
             value = value[:-6] + "Z"
 
