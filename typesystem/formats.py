@@ -37,7 +37,7 @@ class BaseFormat:
     def validate(self, value: typing.Any) -> typing.Union[typing.Any, ValidationError]:
         raise NotImplementedError()  # pragma: no cover
 
-    def serialize(self, obj: typing.Any) -> str:
+    def serialize(self, obj: typing.Any) -> typing.Union[str, None]:
         raise NotImplementedError()  # pragma: no cover
 
 
