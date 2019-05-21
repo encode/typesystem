@@ -202,12 +202,17 @@ def test_schema_datetime_serialization():
 def test_schema_decimal_serialization():
     class InventoryItem(typesystem.Schema):
         name = typesystem.String()
-        price = typesystem.Decimal(precision="0.01")
+        price = typesystem.Decimal(precision="0.01", allow_null=True)
 
     item = InventoryItem(name="Example", price=123.45)
 
     assert item.price == decimal.Decimal("123.45")
     assert item["price"] == 123.45
+
+    item = InventoryItem(name="test")
+    assert dict(item) == {"name": "test", "price": None}
+    item = InventoryItem(name="test", price=0)
+    assert dict(item) == {"name": "test", "price": 0}
 
 
 def test_schema_uuid_serialization():
