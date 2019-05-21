@@ -658,6 +658,11 @@ class Array(Field):
 
         return validated
 
+    def serialize(self, obj: typing.Any) -> typing.Any:
+        if obj is None:
+            return None
+        return [self.items.serialize(item) for item in obj]
+
 
 class Text(String):
     def __init__(self, **kwargs: typing.Any) -> None:
