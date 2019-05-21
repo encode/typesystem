@@ -130,7 +130,6 @@ def test_schema_serialization():
 
 
 def test_schema_string_array_serialization():
-
     class Product(typesystem.Schema):
         names = typesystem.Array(typesystem.String())
 
@@ -142,7 +141,6 @@ def test_schema_string_array_serialization():
 
 
 def test_schema_dates_array_serialization():
-
     class BlogPost(typesystem.Schema):
         text = typesystem.String()
         modified = typesystem.Array(typesystem.Date())
@@ -153,6 +151,17 @@ def test_schema_dates_array_serialization():
 
     assert data["text"] == "Hi"
     assert data["modified"] == [datetime.date.today().isoformat()]
+
+
+def test_schema_positional_array_serialization():
+    class NumberName(typesystem.Schema):
+        pair = typesystem.Array([typesystem.Integer(), typesystem.String()])
+
+    name = NumberName(pair=[1, "one"])
+
+    data = dict(name)
+
+    assert data == {"pair": [1, "one"]}
 
 
 def test_schema_len():
@@ -316,7 +325,11 @@ def test_nested_schema_array():
         artists = typesystem.Array(items=typesystem.Reference(Artist))
 
     value = Album.validate(
-        {"title": "Double Negative", "release_year": "2018", "artists": [{"name": "Low"}]}
+        {
+            "title": "Double Negative",
+            "release_year": "2018",
+            "artists": [{"name": "Low"}],
+        }
     )
     assert dict(value) == {
         "title": "Double Negative",

@@ -661,7 +661,15 @@ class Array(Field):
     def serialize(self, obj: typing.Any) -> typing.Any:
         if obj is None:
             return None
-        return [self.items.serialize(item) for item in obj]
+
+        if isinstance(self.items, list):
+            return [
+                serializer.serialize(value)
+                for serializer, value in zip(self.items, obj)
+            ]
+
+        assert self.items is not None
+        return [self.items.serialize(value) for value in obj]
 
 
 class Text(String):
