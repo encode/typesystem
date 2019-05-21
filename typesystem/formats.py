@@ -37,7 +37,7 @@ class BaseFormat:
     def validate(self, value: typing.Any) -> typing.Union[typing.Any, ValidationError]:
         raise NotImplementedError()  # pragma: no cover
 
-    def serialize(self, obj: typing.Any) -> str:
+    def serialize(self, obj: typing.Any) -> typing.Union[str, None]:
         raise NotImplementedError()  # pragma: no cover
 
 
@@ -61,7 +61,12 @@ class DateFormat(BaseFormat):
         except ValueError:
             raise self.validation_error("invalid")
 
-    def serialize(self, obj: typing.Any) -> str:
+    def serialize(self, obj: typing.Any) -> typing.Union[str, None]:
+        if obj is None:
+            return None
+
+        assert isinstance(obj, datetime.date)
+
         return obj.isoformat()
 
 
@@ -89,8 +94,13 @@ class TimeFormat(BaseFormat):
         except ValueError:
             raise self.validation_error("invalid")
 
-    # def serialize(self, obj: typing.Any) -> str:
-    #     return obj.isoformat()
+    def serialize(self, obj: typing.Any) -> typing.Union[str, None]:
+        if obj is None:
+            return None
+
+        assert isinstance(obj, datetime.time)
+
+        return obj.isoformat()
 
 
 class DateTimeFormat(BaseFormat):
@@ -130,11 +140,18 @@ class DateTimeFormat(BaseFormat):
         except ValueError:
             raise self.validation_error("invalid")
 
-    # def serialize(self, obj: typing.Any) -> str:
-    #     value = value.isoformat()
-    #     if value.endswith('+00:00'):
-    #         value = value[:-6] + 'Z'
-    #     return value
+    def serialize(self, obj: typing.Any) -> typing.Union[str, None]:
+        if obj is None:
+            return None
+
+        assert isinstance(obj, datetime.datetime)
+
+        value = obj.isoformat()
+
+        if value.endswith("+00:00"):
+            value = value[:-6] + "Z"
+
+        return value
 
 
 class UUIDFormat(BaseFormat):

@@ -5,6 +5,7 @@ import uuid
 import pytest
 
 import typesystem
+import typesystem.formats
 
 
 class Person(typesystem.Schema):
@@ -148,10 +149,11 @@ def test_schema_missing_getattr():
         assert tshirt["missing"]
 
 
-def test_schema_format_serialization():
+def test_schema_date_serialization():
     class BlogPost(typesystem.Schema):
         text = typesystem.String()
         created = typesystem.Date()
+        modified = typesystem.Date(allow_null=True)
 
     post = BlogPost(text="Hi", created=datetime.date.today())
 
@@ -159,6 +161,42 @@ def test_schema_format_serialization():
 
     assert data["text"] == "Hi"
     assert data["created"] == datetime.date.today().isoformat()
+    assert data["modified"] is None
+
+
+def test_schema_time_serialization():
+    class MealSchedule(typesystem.Schema):
+        guest_id = typesystem.Integer()
+        breakfast_at = typesystem.Time()
+        dinner_at = typesystem.Time(allow_null=True)
+
+    guest_id = 123
+    breakfast_at = datetime.time(hour=10, minute=30)
+    schedule = MealSchedule(guest_id=guest_id, breakfast_at=breakfast_at)
+
+    assert typesystem.formats.TIME_REGEX.match(schedule["breakfast_at"])
+    assert schedule["guest_id"] == guest_id
+    assert schedule["breakfast_at"] == breakfast_at.isoformat()
+    assert schedule["dinner_at"] is None
+
+
+def test_schema_datetime_serialization():
+    class Guest(typesystem.Schema):
+        id = typesystem.Integer()
+        name = typesystem.String()
+        check_in = typesystem.DateTime()
+        check_out = typesystem.DateTime(allow_null=True)
+
+    guest_id = 123
+    guest_name = "Bob"
+    check_in = datetime.datetime.now(tz=datetime.timezone.utc)
+    guest = Guest(id=guest_id, name=guest_name, check_in=check_in)
+
+    assert typesystem.formats.DATETIME_REGEX.match(guest["check_in"])
+    assert guest["id"] == guest_id
+    assert guest["name"] == guest_name
+    assert guest["check_in"] == check_in.isoformat()[:-6] + "Z"
+    assert guest["check_out"] is None
 
 
 def test_schema_decimal_serialization():
