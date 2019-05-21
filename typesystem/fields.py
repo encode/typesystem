@@ -668,7 +668,9 @@ class Array(Field):
                 for serializer, value in zip(self.items, obj)
             ]
 
-        assert self.items is not None
+        if self.items is None:
+            return obj
+
         return [self.items.serialize(value) for value in obj]
 
 

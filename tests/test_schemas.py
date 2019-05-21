@@ -129,6 +129,17 @@ def test_schema_serialization():
     assert data == {"name": "T-Shirt", "rating": None}
 
 
+def test_schema_null_items_array_serialization():
+    class Product(typesystem.Schema):
+        names = typesystem.Array()
+
+    tshirt = Product(names=[1, "2", {"nested": 3}])
+
+    data = dict(tshirt)
+
+    assert data == {"names": [1, "2", {"nested": 3}]}
+
+
 def test_schema_string_array_serialization():
     class Product(typesystem.Schema):
         names = typesystem.Array(typesystem.String())
