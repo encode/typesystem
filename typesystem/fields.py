@@ -310,7 +310,7 @@ class Decimal(Number):
     numeric_type = decimal.Decimal
 
     def serialize(self, obj: typing.Any) -> typing.Any:
-        return float(obj) if obj else None
+        return None if obj is None else float(obj)
 
 
 class Boolean(Field):

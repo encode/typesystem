@@ -173,6 +173,8 @@ def test_schema_decimal_serialization():
 
     item = InventoryItem(name="test")
     assert dict(item) == {"name": "test", "price": None}
+    item = InventoryItem(name="test", price=0)
+    assert dict(item) == {"name": "test", "price": 0}
 
 
 def test_schema_uuid_serialization():
