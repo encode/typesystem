@@ -173,11 +173,13 @@ class Schema(Mapping, metaclass=SchemaMetaclass):
         return True
 
     def __getitem__(self, key: typing.Any) -> typing.Any:
-        if key not in self.fields or not hasattr(self, key):
-            raise KeyError(key)
-        field = self.fields[key]
-        value = getattr(self, key)
-        return field.serialize(value)
+        try:
+            field = self.fields[key]
+            value = getattr(self, key)
+        except (KeyError, AttributeError):
+            raise KeyError(key) from None
+        else:
+            return field.serialize(value)
 
     def __iter__(self) -> typing.Iterator[str]:
         for key in self.fields:
