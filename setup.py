@@ -39,6 +39,7 @@ setup(
     author='Tom Christie',
     author_email='tom@tomchristie.com',
     packages=get_packages('typesystem'),
+    package_data={'typesystem': ['py.typed']},
     install_requires=[],
     python_requires='>=3.6',
     classifiers=[
@@ -50,5 +51,6 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
-    ]
+    ],
+    zip_safe=False
 )
