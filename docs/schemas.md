@@ -147,3 +147,34 @@ Note that data validation is not applied when instantiating a schema instance
 directly from an instance or dictionary. This should be used when creating
 instances against a data source that is already known to be validated, such as
 when loading existing instances from a database.
+
+## Using strict validation
+
+By default, additional properties in the incoming user data is ignored.
+
+```python
+data = {
+    'title': 'Double Negative',
+    'release_date': '2018-09-14',
+    'artist': {'name': 'Low'},
+    'num_tracks': 11
+}
+```
+
+After validating against the schema, the `num_tracks` property is not present
+on the `album` instance.
+
+```python
+album = Album.validate(data)
+album.num_tracks
+# AttributeError: 'Album' object has no attribute 'num_tracks'
+```
+
+If you use strict validation, additional properties becomes an error instead.
+
+```python
+album, error = Album.validate_or_error(data, strict=True)
+
+print(dict(error))
+# {'num_tracks': 'Invalid property name.'}
+```
