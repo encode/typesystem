@@ -129,6 +129,52 @@ def test_schema_serialization():
     assert data == {"name": "T-Shirt", "rating": None}
 
 
+def test_schema_null_items_array_serialization():
+    class Product(typesystem.Schema):
+        names = typesystem.Array()
+
+    tshirt = Product(names=[1, "2", {"nested": 3}])
+
+    data = dict(tshirt)
+
+    assert data == {"names": [1, "2", {"nested": 3}]}
+
+
+def test_schema_string_array_serialization():
+    class Product(typesystem.Schema):
+        names = typesystem.Array(typesystem.String())
+
+    tshirt = Product(names=["T-Shirt"])
+
+    data = dict(tshirt)
+
+    assert data == {"names": ["T-Shirt"]}
+
+
+def test_schema_dates_array_serialization():
+    class BlogPost(typesystem.Schema):
+        text = typesystem.String()
+        modified = typesystem.Array(typesystem.Date())
+
+    post = BlogPost(text="Hi", modified=[datetime.date.today()])
+
+    data = dict(post)
+
+    assert data["text"] == "Hi"
+    assert data["modified"] == [datetime.date.today().isoformat()]
+
+
+def test_schema_positional_array_serialization():
+    class NumberName(typesystem.Schema):
+        pair = typesystem.Array([typesystem.Integer(), typesystem.String()])
+
+    name = NumberName(pair=[1, "one"])
+
+    data = dict(name)
+
+    assert data == {"pair": [1, "one"]}
+
+
 def test_schema_len():
     tshirt = Product(name="T-Shirt")
 
@@ -277,6 +323,56 @@ def test_nested_schema():
         "title": "Double Negative",
         "release_year": 2018,
         "artist": None,
+    }
+
+
+def test_nested_schema_array():
+    class Artist(typesystem.Schema):
+        name = typesystem.String(max_length=100)
+
+    class Album(typesystem.Schema):
+        title = typesystem.String(max_length=100)
+        release_year = typesystem.Integer()
+        artists = typesystem.Array(items=typesystem.Reference(Artist))
+
+    value = Album.validate(
+        {
+            "title": "Double Negative",
+            "release_year": "2018",
+            "artists": [{"name": "Low"}],
+        }
+    )
+    assert dict(value) == {
+        "title": "Double Negative",
+        "release_year": 2018,
+        "artists": [{"name": "Low"}],
+    }
+    assert value == Album(
+        title="Double Negative", release_year=2018, artists=[Artist(name="Low")]
+    )
+
+    value, error = Album.validate_or_error(
+        {"title": "Double Negative", "release_year": "2018", "artists": None}
+    )
+    assert dict(error) == {"artists": "May not be null."}
+
+    value, error = Album.validate_or_error(
+        {"title": "Double Negative", "release_year": "2018", "artists": "Low"}
+    )
+    assert dict(error) == {"artists": "Must be an array."}
+
+    class Album(typesystem.Schema):
+        title = typesystem.String(max_length=100)
+        release_year = typesystem.Integer()
+        artists = typesystem.Array(items=typesystem.Reference(Artist), allow_null=True)
+
+    value = Album.validate(
+        {"title": "Double Negative", "release_year": "2018", "artists": None}
+    )
+    assert dict(value) == {
+        "title": "Double Negative",
+        "release_year": 2018,
+        "artists": None,
     }
 
 

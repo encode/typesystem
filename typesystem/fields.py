@@ -658,6 +658,21 @@ class Array(Field):
 
         return validated
 
+    def serialize(self, obj: typing.Any) -> typing.Any:
+        if obj is None:
+            return None
+
+        if isinstance(self.items, list):
+            return [
+                serializer.serialize(value)
+                for serializer, value in zip(self.items, obj)
+            ]
+
+        if self.items is None:
+            return obj
+
+        return [self.items.serialize(value) for value in obj]
+
 
 class Text(String):
     def __init__(self, **kwargs: typing.Any) -> None:
