@@ -152,7 +152,7 @@ Used to validate a list of data. For example:
 
 ```python
 # Validates data like `[8, 7, 0, 8, 4, 5]`
-ratings = typesystem.Array(items=typesystem.Integer(min_value=0, max_value=10))
+ratings = typesystem.Array(items=typesystem.Integer(minimum=0, maximum=10))
 ```
 
 **Arguments**:
