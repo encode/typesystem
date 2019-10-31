@@ -62,7 +62,7 @@ Using typesystem for a simple Web submission page.
 
 ```
 aiofiles          # Static files support
-boostrap4         # Form templates & static files
+bootstrap4         # Form templates & static files
 jinja2            # Form rendering
 python-multipart  # Form parsing
 starlette
