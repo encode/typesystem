@@ -14,7 +14,7 @@ class Form:
     # Does not include "checkbox", "radio", "file", "image", "reset", "submit", "button"
     FORMAT_TO_INPUTTYPE = {
         "color": "color",
-        "datetime": "datetime-local",
+        "date-time": "datetime-local",
         "date": "date",
         "email": "email",
         "hidden": "hidden",

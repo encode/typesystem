@@ -12,7 +12,7 @@ NO_DEFAULT = object()
 FORMATS = {
     "date": formats.DateFormat(),
     "time": formats.TimeFormat(),
-    "datetime": formats.DateTimeFormat(),
+    "date-time": formats.DateTimeFormat(),
     "uuid": formats.UUIDFormat(),
 }
 
@@ -691,7 +691,7 @@ class Time(String):
 
 class DateTime(String):
     def __init__(self, **kwargs: typing.Any) -> None:
-        super().__init__(format="datetime", **kwargs)
+        super().__init__(format="date-time", **kwargs)
 
 
 class Union(Field):
