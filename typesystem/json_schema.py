@@ -212,6 +212,7 @@ def from_json_schema_type(
             "exclusive_maximum": data.get("exclusiveMaximum", None),
             "multiple_of": data.get("multipleOf", None),
             "default": data.get("default", NO_DEFAULT),
+            "coerce_types": False,
         }
         return Float(**kwargs)
 
@@ -224,6 +225,7 @@ def from_json_schema_type(
             "exclusive_maximum": data.get("exclusiveMaximum", None),
             "multiple_of": data.get("multipleOf", None),
             "default": data.get("default", NO_DEFAULT),
+            "coerce_types": False,
         }
         return Integer(**kwargs)
 
@@ -237,11 +239,16 @@ def from_json_schema_type(
             "format": data.get("format"),
             "pattern": data.get("pattern", None),
             "default": data.get("default", NO_DEFAULT),
+            "coerce_types": False,
         }
         return String(**kwargs)
 
     elif type_string == "boolean":
-        kwargs = {"allow_null": allow_null, "default": data.get("default", NO_DEFAULT)}
+        kwargs = {
+            "allow_null": allow_null,
+            "default": data.get("default", NO_DEFAULT),
+            "coerce_types": False,
+        }
         return Boolean(**kwargs)
 
     elif type_string == "array":

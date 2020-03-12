@@ -78,7 +78,7 @@ test_cases = load_test_cases()
 @pytest.mark.parametrize("schema,data,is_valid,description", test_cases)
 def test_json_schema(schema, data, is_valid, description):
     validator = from_json_schema(schema)
-    value, error = validator.validate_or_error(data, strict=True)
+    value, error = validator.validate_or_error(data)
     if is_valid:
         assert error is None, description
     else:
@@ -104,16 +104,12 @@ def test_to_from_json_schema(schema, data, is_valid, description):
     """
     validator = from_json_schema(schema)
 
-    value_before_convert, error_before_convert = validator.validate_or_error(
-        data, strict=True
-    )
+    value_before_convert, error_before_convert = validator.validate_or_error(data)
 
     schema_after = to_json_schema(validator)
     validator = from_json_schema(schema_after)
 
-    value_after_convert, error_after_convert = validator.validate_or_error(
-        data, strict=True
-    )
+    value_after_convert, error_after_convert = validator.validate_or_error(data)
 
     assert error_before_convert == error_after_convert
     assert value_before_convert == value_after_convert

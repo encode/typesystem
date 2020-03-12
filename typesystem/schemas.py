@@ -131,28 +131,24 @@ class Schema(Mapping, metaclass=SchemaMetaclass):
             raise TypeError(message)
 
     @classmethod
-    def make_validator(cls: typing.Type["Schema"], *, strict: bool = False) -> Field:
+    def make_validator(cls: typing.Type["Schema"]) -> Field:
         required = [key for key, value in cls.fields.items() if not value.has_default()]
         return Object(
-            properties=cls.fields,
-            required=required,
-            additional_properties=False if strict else None,
+            properties=cls.fields, required=required, additional_properties=None
         )
 
     @classmethod
-    def validate(
-        cls: typing.Type["Schema"], value: typing.Any, *, strict: bool = False
-    ) -> "Schema":
-        validator = cls.make_validator(strict=strict)
-        value = validator.validate(value, strict=strict)
+    def validate(cls: typing.Type["Schema"], value: typing.Any) -> "Schema":
+        validator = cls.make_validator()
+        value = validator.validate(value)
         return cls(value)
 
     @classmethod
     def validate_or_error(
-        cls: typing.Type["Schema"], value: typing.Any, *, strict: bool = False
+        cls: typing.Type["Schema"], value: typing.Any
     ) -> ValidationResult:
         try:
-            value = cls.validate(value, strict=strict)
+            value = cls.validate(value)
         except ValidationError as error:
             return ValidationResult(value=None, error=error)
         return ValidationResult(value=value, error=None)
@@ -234,12 +230,12 @@ class Reference(Field):
             self._target = self.definitions[self.to]
         return self._target
 
-    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
+    def validate(self, value: typing.Any) -> typing.Any:
         if value is None and self.allow_null:
             return None
         elif value is None:
             raise self.validation_error("null")
-        return self.target.validate(value, strict=strict)
+        return self.target.validate(value)
 
     def serialize(self, obj: typing.Any) -> typing.Any:
         if obj is None:
