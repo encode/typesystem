@@ -35,19 +35,40 @@ class Form:
         *,
         env: "jinja2.Environment",
         schema: typing.Type[Schema],
-        values: dict = None,
-        errors: ValidationError = None,
+        instance: typing.Any = None
     ) -> None:
         self.env = env
         self.schema = schema
-        self.values = values
-        self.errors = errors
+        self.instance = instance
+        self.values = None if instance is None else self.schema.serialize(instance)
+        self.errors = None
+        self._validate_called = False
+
+    def validate(self, data: dict = None):
+        assert not self._validate_called, 'validate() has already been called.'
+        self.data = data
+        self.values, self.errors = self.schema.validate_or_error(data)
+        self._validate_called = True
+
+    @property
+    def is_valid(self):
+        assert self._validate_called, 'validate() has not been called.'
+        return self.errors is None
+
+    @property
+    def validated_data(self):
+        return self.values
 
     def render_fields(self) -> str:
+        values = self.data if self.errors else self.values
+        errors = self.errors
+
         html = ""
         for field_name, field in self.schema.fields.items():
-            value = None if self.values is None else self.values.get(field_name)
-            error = None if self.errors is None else self.errors.get(field_name)
+            if field.read_only:
+                continue
+            value = None if values is None else values.get(field_name)
+            error = None if errors is None else errors.get(field_name)
             html += self.render_field(
                 field_name=field_name, field=field, value=value, error=error
             )
@@ -61,8 +82,8 @@ class Form:
         value: typing.Any = None,
         error: str = None,
     ) -> str:
-        field_id_prefix = "form-" + self.schema.__name__.lower() + "-"
-        field_id = field_id_prefix + field_name.replace("_", "-")
+        # field_id_prefix = "form-" + self.schema.__name__.lower() + "-"
+        # field_id = field_id_prefix + field_name.replace("_", "-")
         label = field.title or field_name
         allow_empty = field.allow_null or getattr(field, "allow_blank", False)
         required = not field.has_default() and not allow_empty
@@ -72,7 +93,7 @@ class Form:
         value = "" if input_type == "password" else value
         return template.render(
             {
-                "field_id": field_id,
+                # "field_id": field_id,
                 "field_name": field_name,
                 "field": field,
                 "label": label,
@@ -135,11 +156,9 @@ class Jinja2Forms:
             )
         return jinja2.Environment(loader=loader, autoescape=True)
 
-    def Form(
+    def create_form(
         self,
         schema: typing.Type[Schema],
-        *,
-        values: dict = None,
-        errors: ValidationError = None,
+        instance: typing.Any = None
     ) -> Form:  # type: ignore
-        return Form(env=self.env, schema=schema, values=values, errors=errors)
+        return Form(env=self.env, schema=schema, instance=instance)

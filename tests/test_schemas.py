@@ -6,6 +6,54 @@ import pytest
 
 import typesystem
 import typesystem.formats
+from typesystem import Integer, Scheme
+
+
+def test_scheme():
+    validator = Scheme(fields={})
+    value, error = validator.validate_or_error({})
+    assert value == {}
+
+    validator = Scheme(fields={})
+    value, error = validator.validate_or_error(None)
+    assert dict(error) == {"": "May not be null."}
+
+    validator = Scheme(fields={})
+    value, error = validator.validate_or_error(123)
+    assert dict(error) == {"": "Must be an object."}
+
+    validator = Scheme(fields={})
+    value, error = validator.validate_or_error({1: 123})
+    assert dict(error) == {1: "All object keys must be strings."}
+
+    validator = Scheme(fields={}, allow_null=True)
+    value, error = validator.validate_or_error(None)
+    assert value is None
+    assert error is None
+
+    validator = Scheme(fields={"example": Integer()})
+    value, error = validator.validate_or_error({"example": "123"})
+    assert value == {"example": 123}
+
+    validator = Scheme(fields={"example": Integer()})
+    value, error = validator.validate_or_error({"example": "abc"})
+    assert dict(error) == {"example": "Must be a number."}
+
+    validator = Scheme(fields={"example": Integer(default=0)})
+    value, error = validator.validate_or_error({"example": "123"})
+    assert value == {"example": 123}
+
+    validator = Scheme(fields={"example": Integer(default=0)})
+    value, error = validator.validate_or_error({})
+    assert value == {"example": 0}
+
+    validator = Scheme(fields={"example": Integer()})
+    value, error = validator.validate_or_error({"example": "abc"})
+    assert dict(error) == {"example": "Must be a number."}
+
+    validator = Scheme(fields={"example": Integer(read_only=True)})
+    value, error = validator.validate_or_error({"example": "123"})
+    assert value == {}
 
 
 class Person(typesystem.Schema):

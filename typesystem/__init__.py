@@ -13,6 +13,7 @@ from typesystem.fields import (
     Number,
     Object,
     String,
+    Scheme,
     Text,
     Time,
     Union,

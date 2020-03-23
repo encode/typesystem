@@ -14,7 +14,7 @@ forms = typesystem.Jinja2Forms(package="typesystem")
 
 
 def test_form_rendering():
-    form = forms.Form(Contact)
+    form = forms.create_form(Contact)
 
     html = str(form)
 
@@ -28,13 +28,14 @@ def test_password_rendering():
     class PasswordForm(typesystem.Schema):
         password = typesystem.String(format="password")
 
-    form = forms.Form(PasswordForm, values={"password": "secret"})
+    form = forms.create_form(PasswordForm)
+    form.validate(data={"password": "secret"})
     html = str(form)
     assert "secret" not in html
 
 
 def test_form_html():
-    form = forms.Form(Contact)
+    form = forms.create_form(Contact)
 
     markup = form.__html__()
 
