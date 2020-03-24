@@ -32,13 +32,14 @@ def test_validate_json():
         == "Message(text='Must be a number.', code='type', index=['b'], start_position=Position(line_no=3, column_no=10, char_index=27), end_position=Position(line_no=3, column_no=14, char_index=31))"
     )
 
-    class Validator(Schema):
-        a = Integer()
-        b = Integer()
+    validator = Schema(fields={
+        "a": Integer(),
+        "b": Integer(),
+    })
 
     text = '{\n    "a": "123",\n    "b": "abc"}'
     with pytest.raises(ValidationError) as exc_info:
-        validate_json(text, validator=Validator)
+        validate_json(text, validator=validator)
     exc = exc_info.value
     assert exc.messages() == [
         Message(
@@ -52,7 +53,7 @@ def test_validate_json():
 
     text = '{"a": "123"}'
     with pytest.raises(ValidationError) as exc_info:
-        validate_json(text, validator=Validator)
+        validate_json(text, validator=validator)
     exc = exc_info.value
     assert exc.messages() == [
         Message(

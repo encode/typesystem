@@ -116,20 +116,21 @@ def test_to_from_json_schema(schema, data, is_valid, description):
 
 
 def test_schema_to_json_schema():
-    class BookingSchema(typesystem.Schema):
-        start_date = typesystem.Date(title="Start date")
-        end_date = typesystem.Date(title="End date")
-        room = typesystem.Choice(
+    booking_schema = typesystem.Schema({
+        "start_date": typesystem.Date(title="Start date"),
+        "end_date": typesystem.Date(title="End date"),
+        "room": typesystem.Choice(
             title="Room type",
             choices=[
                 ("double", "Double room"),
                 ("twin", "Twin room"),
                 ("single", "Single room"),
             ],
-        )
-        include_breakfast = typesystem.Boolean(title="Include breakfast", default=False)
+        ),
+        "include_breakfast": typesystem.Boolean(title="Include breakfast", default=False)
+    })
 
-    schema = to_json_schema(BookingSchema)
+    schema = to_json_schema(booking_schema)
 
     assert schema == {
         "type": "object",

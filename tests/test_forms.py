@@ -3,18 +3,19 @@ import jinja2
 import typesystem
 
 
-class Contact(typesystem.Schema):
-    a = typesystem.Boolean()
-    b = typesystem.String(max_length=10)
-    c = typesystem.Text()
-    d = typesystem.Choice(choices=[("abc", "Abc"), ("def", "Def"), ("ghi", "Ghi")])
+contact = typesystem.Schema(fields={
+    "a": typesystem.Boolean(),
+    "b": typesystem.String(max_length=10),
+    "c": typesystem.Text(),
+    "d": typesystem.Choice(choices=[("abc", "Abc"), ("def", "Def"), ("ghi", "Ghi")]),
+})
 
 
 forms = typesystem.Jinja2Forms(package="typesystem")
 
 
 def test_form_rendering():
-    form = forms.create_form(Contact)
+    form = forms.create_form(contact)
 
     html = str(form)
 
@@ -25,17 +26,18 @@ def test_form_rendering():
 
 
 def test_password_rendering():
-    class PasswordForm(typesystem.Schema):
-        password = typesystem.String(format="password")
+    password_schema = typesystem.Schema({
+        "password": typesystem.String(format="password")
+    })
 
-    form = forms.create_form(PasswordForm)
+    form = forms.create_form(password_schema)
     form.validate(data={"password": "secret"})
     html = str(form)
     assert "secret" not in html
 
 
 def test_form_html():
-    form = forms.create_form(Contact)
+    form = forms.create_form(contact)
 
     markup = form.__html__()
 

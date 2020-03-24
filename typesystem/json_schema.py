@@ -21,7 +21,7 @@ from typesystem.fields import (
     String,
     Union,
 )
-from typesystem.schemas import Reference, Schema, SchemaDefinitions
+from typesystem.schemas import Reference, Schema, Definitions
 
 TYPE_CONSTRAINTS = {
     "additionalItems",
@@ -51,7 +51,7 @@ TYPE_CONSTRAINTS = {
 }
 
 
-definitions = SchemaDefinitions()
+definitions = Definitions()
 
 JSONSchema = (
     Object(
@@ -108,13 +108,13 @@ definitions["JSONSchema"] = JSONSchema
 
 
 def from_json_schema(
-    data: typing.Union[bool, dict], definitions: SchemaDefinitions = None
+    data: typing.Union[bool, dict], definitions: Definitions = None
 ) -> Field:
     if isinstance(data, bool):
         return {True: Any(), False: NeverMatch()}[data]
 
     if definitions is None:
-        definitions = SchemaDefinitions()
+        definitions = Definitions()
         for key, value in data.get("definitions", {}).items():
             ref = f"#/definitions/{key}"
             definitions[ref] = from_json_schema(value, definitions=definitions)
@@ -147,7 +147,7 @@ def from_json_schema(
     return Any()
 
 
-def type_from_json_schema(data: dict, definitions: SchemaDefinitions) -> Field:
+def type_from_json_schema(data: dict, definitions: Definitions) -> Field:
     """
     Build a typed field or union of typed fields from a JSON schema object.
     """
@@ -197,7 +197,7 @@ def get_valid_types(data: dict) -> typing.Tuple[typing.Set[str], bool]:
 
 
 def from_json_schema_type(
-    data: dict, type_string: str, allow_null: bool, definitions: SchemaDefinitions
+    data: dict, type_string: str, allow_null: bool, definitions: Definitions
 ) -> Field:
     """
     Build a typed field from a JSON schema object.
@@ -338,49 +338,49 @@ def from_json_schema_type(
     assert False, f"Invalid argument type_string={type_string!r}"  # pragma: no cover
 
 
-def ref_from_json_schema(data: dict, definitions: SchemaDefinitions) -> Field:
+def ref_from_json_schema(data: dict, definitions: Definitions) -> Field:
     reference_string = data["$ref"]
     assert reference_string.startswith("#/"), "Unsupported $ref style in document."
     return Reference(to=reference_string, definitions=definitions)
 
 
-def enum_from_json_schema(data: dict, definitions: SchemaDefinitions) -> Field:
+def enum_from_json_schema(data: dict, definitions: Definitions) -> Field:
     choices = [(item, item) for item in data["enum"]]
     kwargs = {"choices": choices, "default": data.get("default", NO_DEFAULT)}
     return Choice(**kwargs)
 
 
-def const_from_json_schema(data: dict, definitions: SchemaDefinitions) -> Field:
+def const_from_json_schema(data: dict, definitions: Definitions) -> Field:
     const = data["const"]
     kwargs = {"const": const, "default": data.get("default", NO_DEFAULT)}
     return Const(**kwargs)
 
 
-def all_of_from_json_schema(data: dict, definitions: SchemaDefinitions) -> Field:
+def all_of_from_json_schema(data: dict, definitions: Definitions) -> Field:
     all_of = [from_json_schema(item, definitions=definitions) for item in data["allOf"]]
     kwargs = {"all_of": all_of, "default": data.get("default", NO_DEFAULT)}
     return AllOf(**kwargs)
 
 
-def any_of_from_json_schema(data: dict, definitions: SchemaDefinitions) -> Field:
+def any_of_from_json_schema(data: dict, definitions: Definitions) -> Field:
     any_of = [from_json_schema(item, definitions=definitions) for item in data["anyOf"]]
     kwargs = {"any_of": any_of, "default": data.get("default", NO_DEFAULT)}
     return Union(**kwargs)
 
 
-def one_of_from_json_schema(data: dict, definitions: SchemaDefinitions) -> Field:
+def one_of_from_json_schema(data: dict, definitions: Definitions) -> Field:
     one_of = [from_json_schema(item, definitions=definitions) for item in data["oneOf"]]
     kwargs = {"one_of": one_of, "default": data.get("default", NO_DEFAULT)}
     return OneOf(**kwargs)
 
 
-def not_from_json_schema(data: dict, definitions: SchemaDefinitions) -> Field:
+def not_from_json_schema(data: dict, definitions: Definitions) -> Field:
     negated = from_json_schema(data["not"], definitions=definitions)
     kwargs = {"negated": negated, "default": data.get("default", NO_DEFAULT)}
     return Not(**kwargs)
 
 
-def if_then_else_from_json_schema(data: dict, definitions: SchemaDefinitions) -> Field:
+def if_then_else_from_json_schema(data: dict, definitions: Definitions) -> Field:
     if_clause = from_json_schema(data["if"], definitions=definitions)
     then_clause = (
         from_json_schema(data["then"], definitions=definitions)
@@ -402,7 +402,7 @@ def if_then_else_from_json_schema(data: dict, definitions: SchemaDefinitions) ->
 
 
 def to_json_schema(
-    arg: typing.Union[Field, typing.Type[Schema]], _definitions: dict = None
+    arg: typing.Union[Field, Definitions], _definitions: dict = None
 ) -> typing.Union[bool, dict]:
 
     if isinstance(arg, Any):
@@ -416,16 +416,14 @@ def to_json_schema(
 
     if isinstance(arg, Field):
         field = arg
-    elif isinstance(arg, SchemaDefinitions):
+    elif isinstance(arg, Definitions):
         field = None
         for key, value in arg.items():
             definitions[key] = to_json_schema(value, _definitions=definitions)
-    else:
-        field = arg.make_validator()
 
     if isinstance(field, Reference):
-        data["$ref"] = f"#/definitions/{field.target_string}"
-        definitions[field.target_string] = to_json_schema(
+        data["$ref"] = f"#/definitions/{field.to}"
+        definitions[field.to] = to_json_schema(
             field.target, _definitions=definitions
         )
 
@@ -519,6 +517,17 @@ def to_json_schema(
             data["maxProperties"] = field.max_properties
         if field.min_properties is not None:
             data["minProperties"] = field.min_properties
+        if field.required:
+            data["required"] = field.required
+
+    elif isinstance(field, Schema):
+        data["type"] = ["object", "null"] if field.allow_null else "object"
+        data.update(get_standard_properties(field))
+        if field.fields:
+            data["properties"] = {
+                key: to_json_schema(value, _definitions=definitions)
+                for key, value in field.fields.items()
+            }
         if field.required:
             data["required"] = field.required
 
