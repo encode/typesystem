@@ -19,7 +19,6 @@ FORMATS = {
 
 class Field:
     errors: typing.Dict[str, str] = {}
-    _creation_counter = 0
 
     def __init__(
         self,
@@ -28,7 +27,7 @@ class Field:
         description: str = "",
         default: typing.Any = NO_DEFAULT,
         allow_null: bool = False,
-        read_only: bool = False
+        read_only: bool = False,
     ):
         assert isinstance(title, str)
         assert isinstance(description, str)
@@ -43,11 +42,6 @@ class Field:
         self.description = description
         self.allow_null = allow_null
         self.read_only = read_only
-
-        # We need this global counter to determine what order fields have
-        # been declared in when used with `Schema`.
-        self._creation_counter = Field._creation_counter
-        Field._creation_counter += 1
 
     def validate(self, value: typing.Any) -> typing.Any:
         raise NotImplementedError()  # pragma: no cover
