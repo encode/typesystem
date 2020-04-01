@@ -39,7 +39,7 @@ setup(
     author='Tom Christie',
     author_email='tom@tomchristie.com',
     packages=get_packages('typesystem'),
-    package_data={'typesystem': ['py.typed']},
+    package_data={'typesystem': ['py.typed', 'templates/forms/*.html']},
     install_requires=[],
     python_requires='>=3.6',
     classifiers=[
