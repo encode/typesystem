@@ -88,7 +88,7 @@ print(dict(album))
 There are plenty of other great validation libraries for Python out there,
 including [Marshmallow](https://github.com/marshmallow-code/marshmallow),
 [Schematics](https://github.com/schematics/schematics),
-[Voluptuous](https://github.com/alecthomas/voluptuous), and many others.
+[Voluptuous](https://github.com/alecthomas/voluptuous), [Pydantic](https://github.com/samuelcolvin/pydantic/) and many others.
 
 TypeSystem exists because I want a data validation library that offers
 first-class support for:
