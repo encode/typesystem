@@ -45,7 +45,8 @@ class Uniqueness:
             # Represent lists using a two-tuple of ('list', (item, item, ...))
             return ("list", tuple([self.make_hashable(item) for item in element]))
         elif isinstance(element, dict):
-            # Represent dicts using a two-tuple of('dict', ((key, val), (key, val), ...))
+            # Represent dicts
+            # using a two-tuple of('dict', ((key, val), (key, val), ...))
             return (
                 "dict",
                 tuple(

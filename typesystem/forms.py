@@ -1,5 +1,6 @@
 try:
     import jinja2
+    import markupsafe
 except ImportError:  # pragma: no cover
     jinja2 = None  # type: ignore
 
@@ -105,8 +106,8 @@ class Form:
     def __str__(self) -> str:
         return self.render_fields()
 
-    def __html__(self) -> "jinja2.Markup":
-        return jinja2.Markup(self.render_fields())
+    def __html__(self) -> "markupsafe.Markup":
+        return markupsafe.Markup(self.render_fields())
 
 
 class Jinja2Forms:

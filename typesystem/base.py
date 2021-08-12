@@ -44,11 +44,13 @@ class Message:
         text - The error message. 'May not have more than 100 characters'
         code - An optional error code, eg. 'max_length'
         key - An optional key of the message within a single parent. eg. 'username'
-        index - The index of the message within a nested object. eg. ['users', 3, 'username']
+        index - The index of the message
+            within a nested object. eg. ['users', 3, 'username']
 
         Optionally either:
 
-        position - The start and end position of the error message within the raw content.
+        position - The start and end position of the error message
+            within the raw content.
 
         Or:
 

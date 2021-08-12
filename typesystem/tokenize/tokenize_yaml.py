@@ -7,7 +7,7 @@ except ImportError:  # pragma: no cover
 
 import typing
 
-from typesystem.base import Message, ParseError, Position, ValidationError
+from typesystem.base import ParseError, Position
 from typesystem.fields import Field
 from typesystem.schemas import Schema
 from typesystem.tokenize.positional_validation import validate_with_positions

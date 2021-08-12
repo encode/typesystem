@@ -99,7 +99,7 @@ def test_schema_repr():
 def test_schema_instantiation():
     tshirt = Product(name="T-Shirt")
     assert tshirt.name == "T-Shirt"
-    assert tshirt.rating == None
+    assert tshirt.rating is None
 
     empty = Product()
     assert not hasattr(empty, "name")

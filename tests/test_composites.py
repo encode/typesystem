@@ -1,4 +1,4 @@
-from typesystem.base import Message, ValidationError
+from typesystem.base import ValidationError
 from typesystem.composites import AllOf, NeverMatch, Not, OneOf
 from typesystem.fields import Integer, String
 
@@ -13,7 +13,7 @@ def test_never_match():
 def test_one_of():
     validator = OneOf([String(), Integer()])
     value, error = validator.validate_or_error(123)
-    assert value is 123
+    assert value == 123
     assert error is None
 
     validator = OneOf([String(allow_null=True), Integer()])
