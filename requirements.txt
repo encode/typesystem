@@ -15,6 +15,7 @@ isort
 mypy
 pytest
 pytest-cov
+types-PyYAML
 
 # Documentation
 mkdocs
