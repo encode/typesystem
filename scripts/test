@@ -1,13 +1,18 @@
-#!/bin/sh -e
+#!/bin/sh
 
 export PREFIX=""
 if [ -d 'venv' ] ; then
     export PREFIX="venv/bin/"
 fi
 
-set -x
+set -ex
 
-PYTHONPATH=. ${PREFIX}pytest --ignore venv --cov=typesystem --cov=tests --cov-fail-under=100 --cov-report=term-missing ${@}
-${PREFIX}mypy typesystem --ignore-missing-imports --disallow-untyped-defs
-${PREFIX}autoflake --recursive typesystem tests
-${PREFIX}black typesystem tests --check
+if [ -z $GITHUB_ACTIONS ]; then
+    scripts/check
+fi
+
+${PREFIX}coverage run -m pytest $@
+
+if [ -z $GITHUB_ACTIONS ]; then
+    scripts/coverage
+fi

@@ -18,7 +18,10 @@ class Position:
 
     def __repr__(self) -> str:
         class_name = self.__class__.__name__
-        return f"{class_name}(line_no={self.line_no}, column_no={self.column_no}, char_index={self.char_index})"
+        return (
+            f"{class_name}(line_no={self.line_no}, column_no={self.column_no},"
+            f" char_index={self.char_index})"
+        )
 
 
 class Message:
@@ -90,8 +93,14 @@ class Message:
         elif self.start_position == self.end_position:
             position_str = f", position={self.start_position!r}"
         else:
-            position_str = f", start_position={self.start_position!r}, end_position={self.end_position!r}"
-        return f"{class_name}(text={self.text!r}, code={self.code!r}{index_str}{position_str})"
+            position_str = (
+                f", start_position={self.start_position!r},"
+                f" end_position={self.end_position!r}"
+            )
+        return (
+            f"{class_name}(text={self.text!r},"
+            f" code={self.code!r}{index_str}{position_str})"
+        )
 
 
 class BaseError(Mapping, Exception):
