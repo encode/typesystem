@@ -75,7 +75,7 @@ class SchemaMetaclass(ABCMeta):
             for field in fields.values():
                 set_definitions(field, definitions)
 
-        #  Sort fields by their actual position in the source code,
+        # Sort fields by their actual position in the source code,
         # using `Field._creation_counter`
         attrs["fields"] = dict(
             sorted(fields.items(), key=lambda item: item[1]._creation_counter)
