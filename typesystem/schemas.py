@@ -55,7 +55,7 @@ class SchemaMetaclass(ABCMeta):
         bases: typing.Sequence[type],
         attrs: dict,
         definitions: SchemaDefinitions = None,
-    ) -> type:
+    ) -> "SchemaMetaclass":
         fields: typing.Dict[str, Field] = {}
 
         for key, value in list(attrs.items()):

@@ -29,7 +29,9 @@ def test_validate_json():
     ]
     assert (
         repr(exc.messages()[0])
-        == "Message(text='Must be a number.', code='type', index=['b'], start_position=Position(line_no=3, column_no=10, char_index=27), end_position=Position(line_no=3, column_no=14, char_index=31))"
+        == "Message(text='Must be a number.', code='type', index=['b'], "
+        "start_position=Position(line_no=3, column_no=10, char_index=27), "
+        "end_position=Position(line_no=3, column_no=14, char_index=31))"
     )
 
     class Validator(Schema):

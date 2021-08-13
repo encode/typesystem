@@ -1,4 +1,5 @@
 import jinja2
+import markupsafe
 
 import typesystem
 
@@ -38,7 +39,7 @@ def test_form_html():
 
     markup = form.__html__()
 
-    assert isinstance(markup, jinja2.Markup)
+    assert isinstance(markup, markupsafe.Markup)
     assert str(markup) == str(form)
 
 

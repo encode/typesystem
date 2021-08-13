@@ -413,7 +413,7 @@ def test_choice():
 
     validator = Choice(choices=["red", "green", "blue"])
     value, error = validator.validate_or_error("red")
-    assert value is "red"
+    assert value == "red"
 
 
 def test_object():
