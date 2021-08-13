@@ -166,7 +166,6 @@ def test_to_json_schema_complex_regular_expression():
         to_json_schema(field)
 
     expected = (
-        "Cannot convert regular expression with non-standard flags "
-        "to JSON schema: re.IGNORECASE|re.UNICODE|re.VERBOSE"
+        "Cannot convert regular expression with non-standard flags " "to JSON schema: "
     )
     assert str(exc_info.value).startswith(expected)
