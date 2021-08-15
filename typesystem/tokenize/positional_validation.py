@@ -7,7 +7,7 @@ from typesystem.tokenize.tokens import Token
 
 
 def validate_with_positions(
-    *, token: Token, validator: typing.Union[Field, typing.Type[Schema]]
+    *, token: Token, validator: typing.Union[Field, Schema]
 ) -> typing.Any:
     try:
         return validator.validate(token.value)

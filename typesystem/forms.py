@@ -34,29 +34,29 @@ class Form:
         self,
         *,
         env: "jinja2.Environment",
-        schema: typing.Type[Schema],
+        schema: Schema,
         instance: typing.Any = None,
     ) -> None:
         self.env = env
         self.schema = schema
         self.instance = instance
         self.values = None if instance is None else self.schema.serialize(instance)
-        self.errors = None
+        self.errors: typing.Optional[typing.Dict[str, typing.Any]] = None
         self._validate_called = False
 
-    def validate(self, data: dict = None):
+    def validate(self, data: dict = None) -> None:
         assert not self._validate_called, "validate() has already been called."
         self.data = data
         self.values, self.errors = self.schema.validate_or_error(data)
         self._validate_called = True
 
     @property
-    def is_valid(self):
+    def is_valid(self) -> bool:
         assert self._validate_called, "validate() has not been called."
         return self.errors is None
 
     @property
-    def validated_data(self):
+    def validated_data(self) -> typing.Any:
         return self.values
 
     def render_fields(self) -> str:
@@ -156,7 +156,5 @@ class Jinja2Forms:
             )
         return jinja2.Environment(loader=loader, autoescape=True)
 
-    def create_form(
-        self, schema: typing.Type[Schema], instance: typing.Any = None
-    ) -> Form:  # type: ignore
+    def create_form(self, schema: Schema, instance: typing.Any = None) -> Form:
         return Form(env=self.env, schema=schema, instance=instance)

@@ -182,7 +182,7 @@ def tokenize_json(content: typing.Union[str, bytes]) -> Token:
 
 def validate_json(
     content: typing.Union[str, bytes],
-    validator: typing.Union[Field, typing.Type[Schema]],
+    validator: typing.Union[Field, Schema],
 ) -> typing.Any:
     """
     Parse and validate a JSON string, returning positionally marked error

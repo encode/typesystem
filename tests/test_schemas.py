@@ -186,44 +186,51 @@ def test_schema_datetime_serialization():
     assert data["check_out"] is None
 
 
-#
-#
-# def test_schema_decimal_serialization():
-#     inventory_item = typesystem.Schema(fields={
-#         "name": typesystem.String(),
-#         "price": typesystem.Decimal(precision="0.01", allow_null=True),
-#     })
-#
-#     item = {"name": "Example", "price": 123.45}
-#
-#     assert item.price ==
-#     assert item["price"] == 123.45
-#
-#     item = InventoryItem(name="test")
-#     assert dict(item) == {"name": "test", "price": None}
-#     item = InventoryItem(name="test", price=0)
-#     assert dict(item) == {"name": "test", "price": 0}
-#
-#
-# def test_schema_uuid_serialization():
-#     class User(typesystem.Schema):
-#         id = typesystem.String(format="uuid")
-#         username = typesystem.String()
-#
-#     item = User(id="b769df4a-18ec-480f-89ef-8ea961a82269", username="tom")
-#
-#     assert item.id == uuid.UUID("b769df4a-18ec-480f-89ef-8ea961a82269")
-#     assert item["id"] == "b769df4a-18ec-480f-89ef-8ea961a82269"
-#
-#
-# def test_schema_with_callable_default():
-#     class Example(typesystem.Schema):
-#         created = typesystem.Date(default=datetime.date.today)
-#
-#     value, error = Example.validate_or_error({})
-#     assert value.created == datetime.date.today()
-#
-#
+def test_schema_decimal_serialization():
+    inventory = typesystem.Schema(
+        fields={
+            "name": typesystem.String(),
+            "price": typesystem.Decimal(precision="0.01", allow_null=True),
+        }
+    )
+
+    item = {"name": "example", "price": 123.45}
+    data = inventory.serialize(item)
+
+    assert data["name"] == "example"
+    assert data["price"] == 123.45
+
+    item = {"name": "example", "price": None}
+    assert inventory.serialize(item) == {"name": "example", "price": None}
+
+    item = {"name": "example", "price": 0}
+    assert inventory.serialize(item) == {"name": "example", "price": 0}
+
+
+def test_schema_uuid_serialization():
+    user = typesystem.Schema(
+        fields={
+            "id": typesystem.String(format="uuid"),
+            "username": typesystem.String(),
+        }
+    )
+
+    item = {"id": "b769df4a-18ec-480f-89ef-8ea961a82269", "username": "tom"}
+    data = user.serialize(item)
+
+    assert data["id"] == "b769df4a-18ec-480f-89ef-8ea961a82269"
+    assert data["username"] == "tom"
+
+
+def test_schema_with_callable_default():
+    schema = typesystem.Schema(
+        fields={"created": typesystem.Date(default=datetime.date.today)}
+    )
+
+    value, _ = schema.validate_or_error({})
+    assert value["created"] == datetime.date.today()
+
+
 # def test_nested_schema():
 #     class Artist(typesystem.Schema):
 #         name = typesystem.String(max_length=100)

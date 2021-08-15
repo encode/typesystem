@@ -408,6 +408,7 @@ def to_json_schema(
     elif isinstance(arg, NeverMatch):
         return False
 
+    field: typing.Optional[Field]
     data: dict = {}
     is_root = _definitions is None
     definitions = {} if _definitions is None else _definitions
