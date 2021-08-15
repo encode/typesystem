@@ -1,10 +1,11 @@
 import typesystem
 
-
-example = typesystem.Schema(fields={
-    "a": typesystem.String(max_length=10),
-    "b": typesystem.Integer(maximum=5),
-})
+example = typesystem.Schema(
+    fields={
+        "a": typesystem.String(max_length=10),
+        "b": typesystem.Integer(maximum=5),
+    }
+)
 
 
 def test_validation_result_repr():
@@ -13,22 +14,22 @@ def test_validation_result_repr():
 
     result = example.validate_or_error({"a": "a"})
     assert (
-        repr(result)
-        == "ValidationResult(error=ValidationError([Message(text='This field is required.', code='required', index=['b'])]))"
+        repr(result) == "ValidationResult(error=ValidationError("
+        "[Message(text='This field is required.', code='required', index=['b'])]))"
     )
 
 
 def test_validation_error_repr():
     result = example.validate_or_error({"a": "a"})
     assert (
-        repr(result.error)
-        == "ValidationError([Message(text='This field is required.', code='required', index=['b'])])"
+        repr(result.error) == "ValidationError([Message"
+        "(text='This field is required.', code='required', index=['b'])])"
     )
 
     result = typesystem.String(max_length=10).validate_or_error("a" * 100)
     assert (
-        repr(result.error)
-        == "ValidationError(text='Must have no more than 10 characters.', code='max_length')"
+        repr(result.error) == "ValidationError"
+        "(text='Must have no more than 10 characters.', code='max_length')"
     )
 
 

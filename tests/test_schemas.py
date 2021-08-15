@@ -1,8 +1,4 @@
 import datetime
-import decimal
-import uuid
-
-import pytest
 
 import typesystem
 import typesystem.formats
@@ -56,64 +52,58 @@ def test_schema():
     assert value == {}
 
 
-person = typesystem.Schema(fields={
-    "name": typesystem.String(max_length=100, allow_blank=False),
-    "age": typesystem.Integer(),
-})
+person = typesystem.Schema(
+    fields={
+        "name": typesystem.String(max_length=100, allow_blank=False),
+        "age": typesystem.Integer(),
+    }
+)
 
 
-product = typesystem.Schema(fields={
-    "name": typesystem.String(max_length=100, allow_blank=False),
-    "rating": typesystem.Integer(default=None),
-})
+product = typesystem.Schema(
+    fields={
+        "name": typesystem.String(max_length=100, allow_blank=False),
+        "rating": typesystem.Integer(default=None),
+    }
+)
 
 
 def test_required():
-    example = typesystem.Schema(fields={
-        "field": typesystem.Integer()
-    })
+    example = typesystem.Schema(fields={"field": typesystem.Integer()})
 
     value, error = example.validate_or_error({})
     assert dict(error) == {"field": "This field is required."}
 
-    example = typesystem.Schema(fields={
-        "field": typesystem.Integer(allow_null=True)
-    })
+    example = typesystem.Schema(fields={"field": typesystem.Integer(allow_null=True)})
 
     value, error = example.validate_or_error({})
     assert dict(value) == {"field": None}
 
-    example = typesystem.Schema(fields={
-        "field": typesystem.Integer(default=0)
-    })
+    example = typesystem.Schema(fields={"field": typesystem.Integer(default=0)})
 
     value, error = example.validate_or_error({})
     assert dict(value) == {"field": 0}
 
-    example = typesystem.Schema(fields={
-        "field": typesystem.Integer(allow_null=True, default=0)
-    })
+    example = typesystem.Schema(
+        fields={"field": typesystem.Integer(allow_null=True, default=0)}
+    )
 
     value, error = example.validate_or_error({})
     assert dict(value) == {"field": 0}
 
-    example = typesystem.Schema(fields={
-        "field": typesystem.String()
-    })
+    example = typesystem.Schema(fields={"field": typesystem.String()})
 
     value, error = example.validate_or_error({})
     assert dict(error) == {"field": "This field is required."}
 
-    example = typesystem.Schema(fields={
-        "field": typesystem.String(allow_blank=True)
-    })
+    example = typesystem.Schema(fields={"field": typesystem.String(allow_blank=True)})
 
     value, error = example.validate_or_error({})
     assert dict(value) == {"field": ""}
 
-    example = typesystem.Schema(fields={
-        "field": typesystem.String(allow_null=True, allow_blank=True)
-    })
+    example = typesystem.Schema(
+        fields={"field": typesystem.String(allow_null=True, allow_blank=True)}
+    )
 
     value, error = example.validate_or_error({})
     assert dict(value) == {"field": None}
@@ -135,13 +125,14 @@ def test_schema_validation():
     assert dict(error) == {"age": "This field is required."}
 
 
-
 def test_schema_date_serialization():
-    blog_post = typesystem.Schema(fields={
-        "text": typesystem.String(),
-        "created": typesystem.Date(),
-        "modified": typesystem.Date(allow_null=True),
-    })
+    blog_post = typesystem.Schema(
+        fields={
+            "text": typesystem.String(),
+            "created": typesystem.Date(),
+            "modified": typesystem.Date(allow_null=True),
+        }
+    )
 
     today = datetime.date.today()
     item = {"text": "Hi", "created": today, "modified": None}
@@ -153,11 +144,13 @@ def test_schema_date_serialization():
 
 
 def test_schema_time_serialization():
-    meal_schedule = typesystem.Schema(fields={
-        "guest_id": typesystem.Integer(),
-        "breakfast_at": typesystem.Time(),
-        "dinner_at": typesystem.Time(allow_null=True),
-    })
+    meal_schedule = typesystem.Schema(
+        fields={
+            "guest_id": typesystem.Integer(),
+            "breakfast_at": typesystem.Time(),
+            "dinner_at": typesystem.Time(allow_null=True),
+        }
+    )
 
     guest_id = 123
     breakfast_at = datetime.time(hour=10, minute=30)
@@ -171,12 +164,14 @@ def test_schema_time_serialization():
 
 
 def test_schema_datetime_serialization():
-    guest = typesystem.Schema(fields={
-        "id": typesystem.Integer(),
-        "name": typesystem.String(),
-        "check_in": typesystem.DateTime(),
-        "check_out": typesystem.DateTime(allow_null=True),
-    })
+    guest = typesystem.Schema(
+        fields={
+            "id": typesystem.Integer(),
+            "name": typesystem.String(),
+            "check_in": typesystem.DateTime(),
+            "check_out": typesystem.DateTime(allow_null=True),
+        }
+    )
 
     guest_id = 123
     guest_name = "Bob"
@@ -189,6 +184,8 @@ def test_schema_datetime_serialization():
     assert data["name"] == guest_name
     assert data["check_in"] == check_in.isoformat()[:-6] + "Z"
     assert data["check_out"] is None
+
+
 #
 #
 # def test_schema_decimal_serialization():
@@ -237,7 +234,9 @@ def test_schema_datetime_serialization():
 #         artist = typesystem.Reference(Artist)
 #
 #     value = Album.validate(
-#         {"title": "Double Negative", "release_year": "2018", "artist": {"name": "Low"}}
+#         {"title": "Double Negative",
+#         "release_year": "2018",
+#         "artist": {"name": "Low"}}
 #     )
 #     assert dict(value) == {
 #         "title": "Double Negative",
@@ -311,7 +310,8 @@ def test_schema_datetime_serialization():
 #     class Album(typesystem.Schema):
 #         title = typesystem.String(max_length=100)
 #         release_year = typesystem.Integer()
-#         artists = typesystem.Array(items=typesystem.Reference(Artist), allow_null=True)
+#         artists = typesystem.Array(
+#             items=typesystem.Reference(Artist), allow_null=True)
 #
 #     value = Album.validate(
 #         {"title": "Double Negative", "release_year": "2018", "artists": None}

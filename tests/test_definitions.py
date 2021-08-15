@@ -6,17 +6,17 @@ import typesystem
 def test_reference():
     definitions = typesystem.Definitions()
 
-    album = typesystem.Schema(fields={
-        "title": typesystem.String(max_length=100),
-        "release_date": typesystem.Date(),
-        "artist": typesystem.Reference("Artist", definitions=definitions),
-    })
+    album = typesystem.Schema(
+        fields={
+            "title": typesystem.String(max_length=100),
+            "release_date": typesystem.Date(),
+            "artist": typesystem.Reference("Artist", definitions=definitions),
+        }
+    )
 
-    artist = typesystem.Schema(fields={
-        "name": typesystem.String(max_length=100)
-    })
+    artist = typesystem.Schema(fields={"name": typesystem.String(max_length=100)})
 
-    definitions['Artist'] = artist
+    definitions["Artist"] = artist
 
     value = album.validate(
         {
@@ -28,9 +28,7 @@ def test_reference():
     assert value == {
         "title": "Double Negative",
         "release_date": datetime.date(2018, 9, 14),
-        "artist": {
-            "name": "Low"
-        },
+        "artist": {"name": "Low"},
     }
 
 
@@ -65,7 +63,8 @@ def test_reference():
 #     class ExampleB(typesystem.Schema, definitions=definitions):
 #         field_on_b = typesystem.Integer()
 #
-#     value = ExampleA.validate({"field_on_a": "123", "example_b": {"field_on_b": "456"}})
+#     value = ExampleA.validate(
+#         {"field_on_a": "123", "example_b": {"field_on_b": "456"}})
 #     assert value == ExampleA(field_on_a=123, example_b=ExampleB(field_on_b=456))
 #
 #     class ExampleC(typesystem.Schema, definitions=definitions):
@@ -102,6 +101,8 @@ def test_reference():
 #         field_on_h = typesystem.Integer()
 #
 #     value = ExampleG.validate(
-#         {"field_on_g": "123", "example_h": {"h": {"field_on_h": "456"}}}
+#         {"field_on_g": "123",
+#          "example_h": {"h": {"field_on_h": "456"}}}
 #     )
-#     assert value == ExampleG(field_on_g=123, example_h={"h": ExampleH(field_on_h=456)})
+#     assert value == ExampleG(
+#         field_on_g=123, example_h={"h": ExampleH(field_on_h=456)})

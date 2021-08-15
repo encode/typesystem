@@ -1,8 +1,8 @@
 # TypeSystem
 
 <p>
-<a href="https://travis-ci.org/encode/typesystem">
-    <img src="https://travis-ci.org/encode/typesystem.svg?branch=master" alt="Build Status">
+<a href="https://github.com/encode/typesystem/actions">
+    <img src="https://github.com/encode/typesystem/workflows/Test%20Suite/badge.svg" alt="Build Status">
 </a>
 <a href="https://codecov.io/gh/encode/typesystem">
     <img src="https://codecov.io/gh/encode/typesystem/branch/master/graph/badge.svg" alt="Coverage">
@@ -88,7 +88,7 @@ print(dict(album))
 There are plenty of other great validation libraries for Python out there,
 including [Marshmallow](https://github.com/marshmallow-code/marshmallow),
 [Schematics](https://github.com/schematics/schematics),
-[Voluptuous](https://github.com/alecthomas/voluptuous), and many others.
+[Voluptuous](https://github.com/alecthomas/voluptuous), [Pydantic](https://github.com/samuelcolvin/pydantic/) and many others.
 
 TypeSystem exists because I want a data validation library that offers
 first-class support for:

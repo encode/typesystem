@@ -1,14 +1,18 @@
 import jinja2
+import markupsafe
 
 import typesystem
 
-
-contact = typesystem.Schema(fields={
-    "a": typesystem.Boolean(),
-    "b": typesystem.String(max_length=10),
-    "c": typesystem.Text(),
-    "d": typesystem.Choice(choices=[("abc", "Abc"), ("def", "Def"), ("ghi", "Ghi")]),
-})
+contact = typesystem.Schema(
+    fields={
+        "a": typesystem.Boolean(),
+        "b": typesystem.String(max_length=10),
+        "c": typesystem.Text(),
+        "d": typesystem.Choice(
+            choices=[("abc", "Abc"), ("def", "Def"), ("ghi", "Ghi")]
+        ),
+    }
+)
 
 
 forms = typesystem.Jinja2Forms(package="typesystem")
@@ -26,9 +30,9 @@ def test_form_rendering():
 
 
 def test_password_rendering():
-    password_schema = typesystem.Schema({
-        "password": typesystem.String(format="password")
-    })
+    password_schema = typesystem.Schema(
+        {"password": typesystem.String(format="password")}
+    )
 
     form = forms.create_form(password_schema)
     form.validate(data={"password": "secret"})
@@ -41,7 +45,7 @@ def test_form_html():
 
     markup = form.__html__()
 
-    assert isinstance(markup, jinja2.Markup)
+    assert isinstance(markup, markupsafe.Markup)
     assert str(markup) == str(form)
 
 

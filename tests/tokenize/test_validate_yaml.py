@@ -27,10 +27,12 @@ def test_validate_yaml():
         )
     ]
 
-    validator = Schema(fields={
-        "a": Integer(),
-        "b": Integer(),
-    })
+    validator = Schema(
+        fields={
+            "a": Integer(),
+            "b": Integer(),
+        }
+    )
 
     text = "a: 123\nb: abc\n"
 

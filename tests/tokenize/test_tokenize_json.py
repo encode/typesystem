@@ -94,8 +94,8 @@ def test_tokenize_parse_errors():
     assert message.text == "No content."
     assert message.start_position.char_index == 0
     assert (
-        repr(message)
-        == "Message(text='No content.', code='no_content', position=Position(line_no=1, column_no=1, char_index=0))"
+        repr(message) == "Message(text='No content.', code='no_content', "
+        "position=Position(line_no=1, column_no=1, char_index=0))"
     )
 
     with pytest.raises(ParseError) as exc_info:

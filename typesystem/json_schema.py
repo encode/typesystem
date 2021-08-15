@@ -21,7 +21,7 @@ from typesystem.fields import (
     String,
     Union,
 )
-from typesystem.schemas import Reference, Schema, Definitions
+from typesystem.schemas import Definitions, Reference, Schema
 
 TYPE_CONSTRAINTS = {
     "additionalItems",
@@ -295,9 +295,7 @@ def from_json_schema_type(
 
         pattern_properties = data.get("patternProperties", None)
         if pattern_properties is None:
-            pattern_properties_argument: typing.Optional[typing.Dict[str, Field]] = (
-                None
-            )
+            pattern_properties_argument: typing.Optional[typing.Dict[str, Field]] = None
         else:
             pattern_properties_argument = {
                 key: from_json_schema(value, definitions=definitions)
@@ -306,7 +304,7 @@ def from_json_schema_type(
 
         additional_properties = data.get("additionalProperties", None)
         if additional_properties is None:
-            additional_properties_argument: typing.Union[None, bool, Field] = (None)
+            additional_properties_argument: typing.Union[None, bool, Field] = None
         elif isinstance(additional_properties, bool):
             additional_properties_argument = additional_properties
         else:
@@ -423,9 +421,7 @@ def to_json_schema(
 
     if isinstance(field, Reference):
         data["$ref"] = f"#/definitions/{field.to}"
-        definitions[field.to] = to_json_schema(
-            field.target, _definitions=definitions
-        )
+        definitions[field.to] = to_json_schema(field.target, _definitions=definitions)
 
     elif isinstance(field, String):
         data["type"] = ["string", "null"] if field.allow_null else "string"
@@ -438,7 +434,7 @@ def to_json_schema(
             if field.pattern_regex.flags != re.RegexFlag.UNICODE:
                 flags = re.RegexFlag(field.pattern_regex.flags)
                 raise ValueError(
-                    f"Cannot convert regular expression with non-standard flags "
+                    "Cannot convert regular expression with non-standard flags "
                     f"to JSON schema: {flags!s}"
                 )
             data["pattern"] = field.pattern_regex.pattern

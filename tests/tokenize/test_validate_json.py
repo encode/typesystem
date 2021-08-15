@@ -29,13 +29,17 @@ def test_validate_json():
     ]
     assert (
         repr(exc.messages()[0])
-        == "Message(text='Must be a number.', code='type', index=['b'], start_position=Position(line_no=3, column_no=10, char_index=27), end_position=Position(line_no=3, column_no=14, char_index=31))"
+        == "Message(text='Must be a number.', code='type', index=['b'], "
+        "start_position=Position(line_no=3, column_no=10, char_index=27), "
+        "end_position=Position(line_no=3, column_no=14, char_index=31))"
     )
 
-    validator = Schema(fields={
-        "a": Integer(),
-        "b": Integer(),
-    })
+    validator = Schema(
+        fields={
+            "a": Integer(),
+            "b": Integer(),
+        }
+    )
 
     text = '{\n    "a": "123",\n    "b": "abc"}'
     with pytest.raises(ValidationError) as exc_info:

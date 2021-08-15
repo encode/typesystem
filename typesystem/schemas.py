@@ -1,6 +1,5 @@
 import typing
-from abc import ABCMeta
-from collections.abc import Mapping, MutableMapping
+from collections.abc import MutableMapping
 
 from typesystem.base import ValidationError
 from typesystem.fields import Field, Message
@@ -21,7 +20,11 @@ class Schema(Field):
     ) -> None:
         super().__init__(**kwargs)
         self.fields = fields
-        self.required = [key for key, field in fields.items() if not (field.read_only or field.has_default())]
+        self.required = [
+            key
+            for key, field in fields.items()
+            if not (field.read_only or field.has_default())
+        ]
 
     def validate(self, value: typing.Any) -> typing.Any:
         if value is None and self.allow_null:
@@ -122,7 +125,7 @@ class Reference(Field):
         self.definitions = definitions
 
     @property
-    def target(self):
+    def target(self) -> typing.Any:
         return self.definitions[self.to]
 
     def validate(self, value: typing.Any) -> typing.Any:

@@ -1,11 +1,11 @@
 try:
     import jinja2
+    import markupsafe
 except ImportError:  # pragma: no cover
     jinja2 = None  # type: ignore
 
 import typing
 
-from typesystem.base import ValidationError
 from typesystem.fields import Boolean, Choice, Field, Object, String
 from typesystem.schemas import Schema
 
@@ -35,7 +35,7 @@ class Form:
         *,
         env: "jinja2.Environment",
         schema: typing.Type[Schema],
-        instance: typing.Any = None
+        instance: typing.Any = None,
     ) -> None:
         self.env = env
         self.schema = schema
@@ -45,14 +45,14 @@ class Form:
         self._validate_called = False
 
     def validate(self, data: dict = None):
-        assert not self._validate_called, 'validate() has already been called.'
+        assert not self._validate_called, "validate() has already been called."
         self.data = data
         self.values, self.errors = self.schema.validate_or_error(data)
         self._validate_called = True
 
     @property
     def is_valid(self):
-        assert self._validate_called, 'validate() has not been called.'
+        assert self._validate_called, "validate() has not been called."
         return self.errors is None
 
     @property
@@ -126,8 +126,8 @@ class Form:
     def __str__(self) -> str:
         return self.render_fields()
 
-    def __html__(self) -> "jinja2.Markup":
-        return jinja2.Markup(self.render_fields())
+    def __html__(self) -> "markupsafe.Markup":
+        return markupsafe.Markup(self.render_fields())
 
 
 class Jinja2Forms:
@@ -157,8 +157,6 @@ class Jinja2Forms:
         return jinja2.Environment(loader=loader, autoescape=True)
 
     def create_form(
-        self,
-        schema: typing.Type[Schema],
-        instance: typing.Any = None
+        self, schema: typing.Type[Schema], instance: typing.Any = None
     ) -> Form:  # type: ignore
         return Form(env=self.env, schema=schema, instance=instance)

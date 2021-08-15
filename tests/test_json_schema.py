@@ -116,19 +116,23 @@ def test_to_from_json_schema(schema, data, is_valid, description):
 
 
 def test_schema_to_json_schema():
-    booking_schema = typesystem.Schema({
-        "start_date": typesystem.Date(title="Start date"),
-        "end_date": typesystem.Date(title="End date"),
-        "room": typesystem.Choice(
-            title="Room type",
-            choices=[
-                ("double", "Double room"),
-                ("twin", "Twin room"),
-                ("single", "Single room"),
-            ],
-        ),
-        "include_breakfast": typesystem.Boolean(title="Include breakfast", default=False)
-    })
+    booking_schema = typesystem.Schema(
+        {
+            "start_date": typesystem.Date(title="Start date"),
+            "end_date": typesystem.Date(title="End date"),
+            "room": typesystem.Choice(
+                title="Room type",
+                choices=[
+                    ("double", "Double room"),
+                    ("twin", "Twin room"),
+                    ("single", "Single room"),
+                ],
+            ),
+            "include_breakfast": typesystem.Boolean(
+                title="Include breakfast", default=False
+            ),
+        }
+    )
 
     schema = to_json_schema(booking_schema)
 
@@ -164,6 +168,6 @@ def test_to_json_schema_complex_regular_expression():
 
     expected = (
         "Cannot convert regular expression with non-standard flags "
-        "to JSON schema: RegexFlag."
+        "to JSON schema: re.IGNORECASE|re.UNICODE|re.VERBOSE"
     )
     assert str(exc_info.value).startswith(expected)
