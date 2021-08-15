@@ -1,5 +1,6 @@
 import jinja2
 import markupsafe
+import pytest
 
 import typesystem
 
@@ -31,13 +32,32 @@ def test_form_rendering():
 
 def test_password_rendering():
     password_schema = typesystem.Schema(
-        {"password": typesystem.String(format="password")}
+        fields={
+            "password": typesystem.String(format="password"),
+            "active": typesystem.Boolean(read_only=True, default=True),
+        }
     )
 
     form = forms.create_form(password_schema)
     form.validate(data={"password": "secret"})
     html = str(form)
     assert "secret" not in html
+
+
+def test_form_validation():
+    password_schema = typesystem.Schema(
+        {"password": typesystem.String(format="password")}
+    )
+
+    form = forms.create_form(password_schema)
+
+    with pytest.raises(AssertionError):
+        form.is_valid
+
+    form.validate(data={"password": "secret"})
+
+    assert form.is_valid is True
+    assert form.validated_data == {"password": "secret"}
 
 
 def test_form_html():
