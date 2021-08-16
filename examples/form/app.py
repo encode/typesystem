@@ -1,11 +1,10 @@
+import typesystem
 import uvicorn
 from starlette.applications import Starlette
 from starlette.responses import RedirectResponse
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 from starlette.templating import Jinja2Templates
-
-import typesystem
 
 forms = typesystem.Jinja2Forms(package="bootstrap4")
 templates = Jinja2Templates(directory="templates")

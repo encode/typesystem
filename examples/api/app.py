@@ -1,9 +1,8 @@
+import typesystem
 import uvicorn
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
-
-import typesystem
 
 users = []
 
@@ -26,7 +25,7 @@ async def add_user(request):
     if errors:
         return JSONResponse(dict(errors), status_code=400)
     users.append(user)
-    return JSONResponse(dict(user))
+    return JSONResponse(user)
 
 
 app = Starlette(

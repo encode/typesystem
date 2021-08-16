@@ -76,8 +76,8 @@ def test_string_references():
         }
     )
 
-    value = example_a.validate({"field_on_a": "123", "example_b": {"field_on_b": 456}})
-    assert value == {"field_on_a": 123, "example_b": {"field_on_b": 456}}
+    value = example_a.validate({"field_on_a": "123", "example_b": {"field_on_b": "456"}})
+    assert value == {"field_on_a": 123, "example_b": {"field_on_b": "456"}}
 
     example_d = typesystem.Schema(fields={"field_on_d": typesystem.Integer()})
 
@@ -93,7 +93,7 @@ def test_string_references():
     )
 
     value = example_c.validate(
-        {"field_on_c": "123", "example_d": [{"field_on_d": 456}]}
+        {"field_on_c": "123", "example_d": [{"field_on_d": "456"}]}
     )
     assert value == {"field_on_c": 123, "example_d": [{"field_on_d": 456}]}
 
@@ -111,7 +111,7 @@ def test_string_references():
     )
 
     value = example_e.validate(
-        {"field_on_e": "123", "example_f": [{"field_on_f": 456}]}
+        {"field_on_e": "123", "example_f": [{"field_on_f": "456"}]}
     )
     assert value == {"field_on_e": 123, "example_f": [{"field_on_f": 456}]}
 
@@ -131,6 +131,6 @@ def test_string_references():
     )
 
     value = example_g.validate(
-        {"field_on_g": 123, "example_h": {"h": {"field_on_h": 456}}}
+        {"field_on_g": "123", "example_h": {"h": {"field_on_h": "456"}}}
     )
     assert value == {"field_on_g": 123, "example_h": {"h": {"field_on_h": 456}}}
