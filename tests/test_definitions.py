@@ -76,8 +76,10 @@ def test_string_references():
         }
     )
 
-    value = example_a.validate({"field_on_a": "123", "example_b": {"field_on_b": "456"}})
-    assert value == {"field_on_a": 123, "example_b": {"field_on_b": "456"}}
+    value = example_a.validate(
+        {"field_on_a": "123", "example_b": {"field_on_b": "456"}}
+    )
+    assert value == {"field_on_a": 123, "example_b": {"field_on_b": 456}}
 
     example_d = typesystem.Schema(fields={"field_on_d": typesystem.Integer()})
 
