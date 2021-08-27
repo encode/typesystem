@@ -20,5 +20,8 @@ nav:
 
 markdown_extensions:
   - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - codehilite
   - markdown.extensions.codehilite:
       guess_lang: false

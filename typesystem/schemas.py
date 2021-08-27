@@ -72,7 +72,9 @@ class Schema(Field):
 
         return validated
 
-    def serialize(self, obj: typing.Any) -> typing.Any:
+    def serialize(
+        self, obj: typing.Any
+    ) -> typing.Optional[typing.Dict[str, typing.Any]]:
         if obj is None:
             return None
 

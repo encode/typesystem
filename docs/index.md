@@ -1,8 +1,8 @@
 # TypeSystem
 
 <p>
-<a href="https://travis-ci.org/encode/typesystem">
-    <img src="https://travis-ci.org/encode/typesystem.svg?branch=master" alt="Build Status">
+<a href="https://github.com/encode/typesystem/actions">
+    <img src="https://github.com/encode/typesystem/workflows/Test%20Suite/badge.svg" alt="Build Status">
 </a>
 <a href="https://codecov.io/gh/encode/typesystem">
     <img src="https://codecov.io/gh/encode/typesystem/branch/master/graph/badge.svg" alt="Coverage">
@@ -44,30 +44,30 @@ $ pip3 install jinja2
 ```python
 import typesystem
 
-class Artist(typesystem.Schema):
-    name = typesystem.String(max_length=100)
+artist_schema = typesystem.Schema(
+    fields={
+        "name": typesystem.String(max_length=100)
+    }
+)
 
-class Album(typesystem.Schema):
-    title = typesystem.String(max_length=100)
-    release_date = typesystem.Date()
-    artist = typesystem.Reference(Artist)
+definitions = typesystem.Definitions()
+definitions["Artist"] = artist_schema
 
-album = Album.validate({
+album_schema = typesystem.Schema(
+    fields={
+        "title": typesystem.String(max_length=100),
+        "release_date": typesystem.Date(),
+        "artist": typesystem.Reference("Artist", definitions=definitions)
+    }
+)
+
+album = album_schema.validate({
     "title": "Double Negative",
     "release_date": "2018-09-14",
     "artist": {"name": "Low"}
 })
 
 print(album)
-# Album(title='Double Negative', release_date=datetime.date(2018, 9, 14), artist=Artist(name='Low'))
-
-print(album.release_date)
-# datetime.date(2018, 9, 14)
-
-print(album['release_date'])
-# '2018-09-14'
-
-print(dict(album))
 # {'title': 'Double Negative', 'release_date': '2018-09-14', 'artist': {'name': 'Low'}}
 ```
 
@@ -76,7 +76,7 @@ print(dict(album))
 There are plenty of other great validation libraries for Python out there,
 including [Marshmallow](https://github.com/marshmallow-code/marshmallow),
 [Schematics](https://github.com/schematics/schematics),
-[Voluptuous](https://github.com/alecthomas/voluptuous), and many others.
+[Voluptuous](https://github.com/alecthomas/voluptuous), [Pydantic](https://github.com/samuelcolvin/pydantic/) and many others.
 
 TypeSystem exists because I want a data validation library that offers
 first-class support for:
