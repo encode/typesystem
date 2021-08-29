@@ -35,12 +35,11 @@ class Form:
         *,
         env: "jinja2.Environment",
         schema: Schema,
-        instance: typing.Any = None,
+        values: typing.Dict[str, typing.Any] = None,
     ) -> None:
         self.env = env
         self.schema = schema
-        self.instance = instance
-        self.values = None if instance is None else self.schema.serialize(instance)
+        self.values = self.schema.serialize(values)
         self.errors: typing.Optional[typing.Dict[str, typing.Any]] = None
         self._validate_called = False
 
@@ -156,5 +155,7 @@ class Jinja2Forms:
             )
         return jinja2.Environment(loader=loader, autoescape=True)
 
-    def create_form(self, schema: Schema, instance: typing.Any = None) -> Form:
-        return Form(env=self.env, schema=schema, instance=instance)
+    def create_form(
+        self, schema: Schema, values: typing.Dict[str, typing.Any] = None
+    ) -> Form:
+        return Form(env=self.env, schema=schema, values=values)

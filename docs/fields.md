@@ -214,3 +214,4 @@ owner = typesystem.Reference(to="User", allow_null=True, definitions=definitions
 **Arguments**:
 
 * `to` - Name of schema defined in definitions. **Required**
+* `definitions` - `Definitions` instance. **Required**
