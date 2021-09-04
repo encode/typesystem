@@ -1,5 +1,6 @@
 from typesystem.base import Message, ParseError, Position, ValidationError
 from typesystem.fields import (
+    UUID,
     Any,
     Array,
     Boolean,
@@ -44,6 +45,7 @@ __all__ = [
     "Text",
     "Time",
     "Union",
+    "UUID",
     # Schemas
     "Schema",
     "SchemaDefinitions",
