@@ -202,3 +202,12 @@ owner = typesystem.Reference(to=User, allow_null=True)
 **Arguments**:
 
 * `to` - A schema class or field instance. **Required**
+
+## Custom data types
+
+### UUID
+
+Validates UUID in the format of 32 hexadecimal characters.
+For example `"cd11b0d7-d8b3-4b5c-8159-70f5c9ea96ab"`.
+
+Returns `uuid.UUID` instances.
