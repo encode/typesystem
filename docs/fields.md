@@ -203,7 +203,7 @@ owner = typesystem.Reference(to=User, allow_null=True)
 
 * `to` - A schema class or field instance. **Required**
 
-## Custom data types
+## Other data types
 
 ### UUID
 
