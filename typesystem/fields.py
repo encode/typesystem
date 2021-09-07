@@ -765,3 +765,8 @@ class Const(Field):
 class UUID(String):
     def __init__(self, **kwargs: typing.Any) -> None:
         super().__init__(format="uuid", **kwargs)
+
+
+class Password(String):
+    def __init__(self, **kwargs: typing.Any) -> None:
+        super().__init__(format="password", **kwargs)

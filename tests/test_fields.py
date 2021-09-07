@@ -17,6 +17,7 @@ from typesystem.fields import (
     Integer,
     Number,
     Object,
+    Password,
     String,
     Time,
     Union,
@@ -832,3 +833,9 @@ def test_validation_error_is_hashable():
     validator = Integer()
     _, error = validator.validate_or_error("abc")
     hash(error)
+
+
+def test_password():
+    validator = Password()
+    value, _ = validator.validate_or_error("secret")
+    assert value == "secret"
