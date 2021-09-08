@@ -13,6 +13,7 @@ from typesystem.fields import (
     Date,
     DateTime,
     Decimal,
+    Email,
     Float,
     Integer,
     Number,
@@ -832,3 +833,13 @@ def test_validation_error_is_hashable():
     validator = Integer()
     _, error = validator.validate_or_error("abc")
     hash(error)
+
+
+def test_email():
+    validator = Email()
+    value, error = validator.validate_or_error("info@example.com")
+    assert value == "info@example.com"
+
+    validator = Email()
+    value, error = validator.validate_or_error("example.com")
+    assert error == ValidationError(text="Must be a valid email format.", code="format")

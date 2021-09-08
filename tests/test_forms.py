@@ -9,6 +9,7 @@ class Contact(typesystem.Schema):
     b = typesystem.String(max_length=10)
     c = typesystem.Text()
     d = typesystem.Choice(choices=[("abc", "Abc"), ("def", "Def"), ("ghi", "Ghi")])
+    email = typesystem.Email()
 
 
 forms = typesystem.Jinja2Forms(package="typesystem")
@@ -23,6 +24,7 @@ def test_form_rendering():
     assert html.count('<input type="text" ') == 1
     assert html.count("<textarea ") == 1
     assert html.count("<select ") == 1
+    assert html.count('<input type="email" ') == 1
 
 
 def test_password_rendering():

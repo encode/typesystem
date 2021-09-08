@@ -14,6 +14,7 @@ FORMATS = {
     "time": formats.TimeFormat(),
     "datetime": formats.DateTimeFormat(),
     "uuid": formats.UUIDFormat(),
+    "email": formats.EmailFormat(),
 }
 
 
@@ -765,3 +766,8 @@ class Const(Field):
 class UUID(String):
     def __init__(self, **kwargs: typing.Any) -> None:
         super().__init__(format="uuid", **kwargs)
+
+
+class Email(String):
+    def __init__(self, **kwargs: typing.Any) -> None:
+        super().__init__(format="email", **kwargs)
