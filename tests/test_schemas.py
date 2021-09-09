@@ -263,7 +263,7 @@ def test_schema_decimal_serialization():
 
 def test_schema_uuid_serialization():
     class User(typesystem.Schema):
-        id = typesystem.String(format="uuid")
+        id = typesystem.UUID()
         username = typesystem.String()
 
     item = User(id="b769df4a-18ec-480f-89ef-8ea961a82269", username="tom")
@@ -444,3 +444,13 @@ def test_definitions_to_json_schema():
             },
         }
     }
+
+
+def test_schema_email_serialization():
+    class User(typesystem.Schema):
+        email = typesystem.Email()
+
+    user = User(email="team@enocde.io")
+
+    assert user.email == "team@enocde.io"
+    assert user["email"] == "team@enocde.io"
