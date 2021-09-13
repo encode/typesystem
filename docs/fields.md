@@ -66,6 +66,11 @@ For example: `username = typesystem.String(max_length=100)`
 Validates multi-line strings. Takes the same arguments as `String`.
 Represented in HTML forms as a `<textarea>`.
 
+### Password
+
+Similar to `String` and takes the same arguments.
+Represented in HTML forms as a `<input type="password">`.
+
 ## Boolean data types
 
 ### Boolean
