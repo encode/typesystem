@@ -41,6 +41,10 @@ setup(
     packages=get_packages('typesystem'),
     package_data={'typesystem': ['py.typed', 'templates/forms/*.html']},
     install_requires=[],
+    extras_require={
+        "jinja2": ["jinja2"],
+        "pyyaml": ["pyyaml"],
+    },
     python_requires='>=3.6',
     classifiers=[
         'Development Status :: 3 - Alpha',

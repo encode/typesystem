@@ -12,6 +12,7 @@ contact = typesystem.Schema(
         "d": typesystem.Choice(
             choices=[("abc", "Abc"), ("def", "Def"), ("ghi", "Ghi")]
         ),
+        "password": typesystem.Password(),
     }
 )
 
@@ -28,18 +29,11 @@ def test_form_rendering():
     assert html.count('<input type="text" ') == 1
     assert html.count("<textarea ") == 1
     assert html.count("<select ") == 1
+    assert html.count('<input type="password" ') == 1
 
 
 def test_password_rendering():
-    password_schema = typesystem.Schema(
-        fields={
-            "password": typesystem.String(format="password"),
-            "active": typesystem.Boolean(read_only=True, default=True),
-        }
-    )
-
-    form = forms.create_form(password_schema)
-    form.validate(data={"password": "secret"})
+    form = forms.create_form(contact, values={"password": "secret"})
     html = str(form)
     assert "secret" not in html
 

@@ -5,6 +5,7 @@ import uuid
 
 from typesystem.base import Message, ValidationError
 from typesystem.fields import (
+    UUID,
     Array,
     Boolean,
     Choice,
@@ -16,6 +17,7 @@ from typesystem.fields import (
     Integer,
     Number,
     Object,
+    Password,
     String,
     Time,
     Union,
@@ -715,13 +717,13 @@ def test_datetime():
 
 
 def test_uuid():
-    validator = String(format="uuid")
+    validator = UUID()
     value, error = validator.validate_or_error("93e19019-c7a6-45fe-8936-f6f4d550f35f")
     assert value == uuid.UUID("93e19019-c7a6-45fe-8936-f6f4d550f35f")
 
-    validator = String(format="uuid")
+    validator = UUID()
     value, error = validator.validate_or_error("1245a678-1234-1234-1234-123412341234")
-    assert error == ValidationError(text="Must be valid UUID format.", code="format")
+    assert error == ValidationError(text="Must be a valid UUID format.", code="format")
 
 
 def test_union():
@@ -831,3 +833,9 @@ def test_validation_error_is_hashable():
     validator = Integer()
     _, error = validator.validate_or_error("abc")
     hash(error)
+
+
+def test_password():
+    validator = Password()
+    value, _ = validator.validate_or_error("secret")
+    assert value == "secret"

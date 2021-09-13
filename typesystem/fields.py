@@ -762,3 +762,13 @@ class Const(Field):
                 raise self.validation_error("only_null")
             raise self.validation_error("const")
         return value
+
+
+class UUID(String):
+    def __init__(self, **kwargs: typing.Any) -> None:
+        super().__init__(format="uuid", **kwargs)
+
+
+class Password(String):
+    def __init__(self, **kwargs: typing.Any) -> None:
+        super().__init__(format="password", **kwargs)

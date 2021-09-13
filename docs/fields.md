@@ -78,6 +78,11 @@ For example: `username = typesystem.String(max_length=100)`
 Validates multi-line strings. Takes the same arguments as `String`.
 Represented in HTML forms as a `<textarea>`.
 
+### Password
+
+Similar to `String` and takes the same arguments.
+Represented in HTML forms as a `<input type="password">`.
+
 ## Boolean data types
 
 ### Boolean
@@ -164,7 +169,7 @@ Used to validate a list of data. For example:
 
 ```python
 # Validates data like `[8, 7, 0, 8, 4, 5]`
-ratings = typesystem.Array(items=typesystem.Integer(min_value=0, max_value=10))
+ratings = typesystem.Array(items=typesystem.Integer(minimum=0, maximum=10))
 ```
 
 **Arguments**:
@@ -215,3 +220,12 @@ owner = typesystem.Reference(to="User", allow_null=True, definitions=definitions
 
 * `to` - Name of schema defined in definitions. **Required**
 * `definitions` - `Definitions` instance. **Required**
+
+## Other data types
+
+### UUID
+
+Validates UUID in the format of 32 hexadecimal characters, separated by hyphens.
+For example `"cd11b0d7-d8b3-4b5c-8159-70f5c9ea96ab"`.
+
+Returns `uuid.UUID` instances.

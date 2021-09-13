@@ -1,5 +1,6 @@
 from typesystem.base import Message, ParseError, Position, ValidationError
 from typesystem.fields import (
+    UUID,
     Any,
     Array,
     Boolean,
@@ -12,6 +13,7 @@ from typesystem.fields import (
     Integer,
     Number,
     Object,
+    Password,
     String,
     Text,
     Time,
@@ -24,7 +26,7 @@ from typesystem.tokenize.positional_validation import validate_with_positions
 from typesystem.tokenize.tokenize_json import tokenize_json, validate_json
 from typesystem.tokenize.tokenize_yaml import tokenize_yaml, validate_yaml
 
-__version__ = "0.3.0.dev1"
+__version__ = "0.3.0.dev2"
 __all__ = [
     "Array",
     "Any",
@@ -39,11 +41,13 @@ __all__ = [
     "Float",
     "Number",
     "Object",
+    "Password",
     "Reference",
     "String",
     "Text",
     "Time",
     "Union",
+    "UUID",
     # Schemas
     "Schema",
     "Definitions",
