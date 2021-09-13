@@ -12,6 +12,7 @@ contact = typesystem.Schema(
         "d": typesystem.Choice(
             choices=[("abc", "Abc"), ("def", "Def"), ("ghi", "Ghi")]
         ),
+        "extra": typesystem.Boolean(default=True, read_only=True),
         "password": typesystem.Password(),
     }
 )
