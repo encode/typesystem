@@ -81,8 +81,7 @@ class Form:
         value: typing.Any = None,
         error: str = None,
     ) -> str:
-        # field_id_prefix = "form-" + self.schema.__name__.lower() + "-"
-        # field_id = field_id_prefix + field_name.replace("_", "-")
+        field_id = field_name.replace("_", "-")
         label = field.title or field_name
         allow_empty = field.allow_null or getattr(field, "allow_blank", False)
         required = not field.has_default() and not allow_empty
@@ -92,7 +91,7 @@ class Form:
         value = "" if input_type == "password" else value
         return template.render(
             {
-                # "field_id": field_id,
+                "field_id": field_id,
                 "field_name": field_name,
                 "field": field,
                 "label": label,

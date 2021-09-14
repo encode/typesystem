@@ -38,39 +38,39 @@ Notice that only the fields in the form are rendered. The surrounding `<form>`, 
 ```html
 <tr>
     <td>
-        <label for="">Start date</label>
+        <label for="start-date">Start date</label>
     </td>
     <td>
-        <input type="date" id="" name="start_date" required >
-    </td>
-</tr>
-<tr>
-    <td>
-        <label for="">End date</label>
-    </td>
-    <td>
-        <input type="date" id="" name="end_date" required >
+        <input type="date" id="start-date" name="start_date" required >
     </td>
 </tr>
 <tr>
     <td>
-        <label for="">Room type</label>
+        <label for="end-date">End date</label>
     </td>
     <td>
-        <select id="" name="room">
+        <input type="date" id="end-date" name="end_date" required >
+    </td>
+</tr>
+<tr>
+    <td>
+        <label for="room">Room type</label>
+    </td>
+    <td>
+        <select id="room" name="room">
             <option></option>
-                <option value="double" >Double room</option>
-                <option value="twin" >Twin room</option>
-                <option value="single" >Single room</option>
+            <option value="double" >Double room</option>
+            <option value="twin" >Twin room</option>
+            <option value="single" >Single room</option>
         </select>
     </td>
 </tr>
 <tr>
     <td>
-        <label for="">Include breakfast</label>
+        <label for="include-breakfast">Include breakfast</label>
     </td>
     <td>
-        <input type="checkbox" id="" name="include_breakfast" value="true" >
+        <input type="checkbox" id="include-breakfast" name="include_breakfast" value="true" >
     </td>
 </tr>
 ```
