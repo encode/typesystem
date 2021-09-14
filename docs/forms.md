@@ -59,9 +59,9 @@ Notice that only the fields in the form are rendered. The surrounding `<form>`, 
     <td>
         <select id="room" name="room">
             <option></option>
-            <option value="double" >Double room</option>
-            <option value="twin" >Twin room</option>
-            <option value="single" >Single room</option>
+            <option value="double">Double room</option>
+            <option value="twin">Twin room</option>
+            <option value="single">Single room</option>
         </select>
     </td>
 </tr>
