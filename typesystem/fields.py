@@ -19,7 +19,6 @@ FORMATS = {
 
 class Field:
     errors: typing.Dict[str, str] = {}
-    _creation_counter = 0
 
     def __init__(
         self,
@@ -28,6 +27,7 @@ class Field:
         description: str = "",
         default: typing.Any = NO_DEFAULT,
         allow_null: bool = False,
+        read_only: bool = False,
     ):
         assert isinstance(title, str)
         assert isinstance(description, str)
@@ -41,20 +41,14 @@ class Field:
         self.title = title
         self.description = description
         self.allow_null = allow_null
+        self.read_only = read_only
 
-        # We need this global counter to determine what order fields have
-        # been declared in when used with `Schema`.
-        self._creation_counter = Field._creation_counter
-        Field._creation_counter += 1
-
-    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
+    def validate(self, value: typing.Any) -> typing.Any:
         raise NotImplementedError()  # pragma: no cover
 
-    def validate_or_error(
-        self, value: typing.Any, *, strict: bool = False
-    ) -> ValidationResult:
+    def validate_or_error(self, value: typing.Any) -> ValidationResult:
         try:
-            value = self.validate(value, strict=strict)
+            value = self.validate(value)
         except ValidationError as error:
             return ValidationResult(value=None, error=error)
         return ValidationResult(value=value, error=None)
@@ -112,6 +106,7 @@ class String(Field):
         min_length: int = None,
         pattern: typing.Union[str, typing.Pattern] = None,
         format: str = None,
+        coerce_types: bool = True,
         **kwargs: typing.Any,
     ) -> None:
         super().__init__(**kwargs)
@@ -129,6 +124,7 @@ class String(Field):
         self.max_length = max_length
         self.min_length = min_length
         self.format = format
+        self.coerce_types = coerce_types
 
         if pattern is None:
             self.pattern = None
@@ -140,10 +136,10 @@ class String(Field):
             self.pattern = pattern.pattern
             self.pattern_regex = pattern
 
-    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
+    def validate(self, value: typing.Any) -> typing.Any:
         if value is None and self.allow_null:
             return None
-        elif value is None and self.allow_blank and not strict:
+        elif value is None and self.allow_blank and self.coerce_types:
             # Leniently cast nulls to empty strings if allow_blank.
             return ""
         elif value is None:
@@ -161,7 +157,7 @@ class String(Field):
             value = value.strip()
 
         if not self.allow_blank and not value:
-            if self.allow_null and not strict:
+            if self.allow_null and self.coerce_types:
                 # Leniently cast empty strings (after trimming) to null if allow_null.
                 return None
             raise self.validation_error("blank")
@@ -212,6 +208,7 @@ class Number(Field):
         exclusive_maximum: typing.Union[int, float, decimal.Decimal] = None,
         precision: str = None,
         multiple_of: typing.Union[int, float, decimal.Decimal] = None,
+        coerce_types: bool = True,
         **kwargs: typing.Any,
     ):
         super().__init__(**kwargs)
@@ -234,11 +231,12 @@ class Number(Field):
         self.exclusive_maximum = exclusive_maximum
         self.multiple_of = multiple_of
         self.precision = precision
+        self.coerce_types = coerce_types
 
-    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
+    def validate(self, value: typing.Any) -> typing.Any:
         if value is None and self.allow_null:
             return None
-        elif value == "" and self.allow_null and not strict:
+        elif value == "" and self.allow_null and self.coerce_types:
             return None
         elif value is None:
             raise self.validation_error("null")
@@ -250,7 +248,7 @@ class Number(Field):
             and not value.is_integer()
         ):
             raise self.validation_error("integer")
-        elif not isinstance(value, (int, float)) and strict:
+        elif not isinstance(value, (int, float)) and not self.coerce_types:
             raise self.validation_error("type")
 
         try:
@@ -328,7 +326,11 @@ class Boolean(Field):
     }
     coerce_null_values = {"", "null", "none"}
 
-    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
+    def __init__(self, *, coerce_types: bool = True, **kwargs: typing.Any) -> None:
+        super().__init__(**kwargs)
+        self.coerce_types = coerce_types
+
+    def validate(self, value: typing.Any) -> typing.Any:
         if value is None and self.allow_null:
             return None
 
@@ -336,7 +338,7 @@ class Boolean(Field):
             raise self.validation_error("null")
 
         elif not isinstance(value, bool):
-            if strict:
+            if not self.coerce_types:
                 raise self.validation_error("type")
 
             if isinstance(value, str):
@@ -364,6 +366,7 @@ class Choice(Field):
         self,
         *,
         choices: typing.Sequence[typing.Union[str, typing.Tuple[str, str]]] = None,
+        coerce_types: bool = True,
         **kwargs: typing.Any,
     ) -> None:
         super().__init__(**kwargs)
@@ -371,16 +374,17 @@ class Choice(Field):
             (choice if isinstance(choice, (tuple, list)) else (choice, choice))
             for choice in choices or []
         ]
+        self.coerce_types = coerce_types
         assert all(len(choice) == 2 for choice in self.choices)
 
-    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
+    def validate(self, value: typing.Any) -> typing.Any:
         if value is None and self.allow_null:
             return None
         elif value is None:
             raise self.validation_error("null")
         elif value not in Uniqueness([key for key, value in self.choices]):
             if value == "":
-                if self.allow_null and not strict:
+                if self.allow_null and self.coerce_types:
                     return None
                 raise self.validation_error("required")
             raise self.validation_error("choice")
@@ -443,7 +447,7 @@ class Object(Field):
         self.max_properties = max_properties
         self.required = required
 
-    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
+    def validate(self, value: typing.Any) -> typing.Any:
         if value is None and self.allow_null:
             return None
         elif value is None:
@@ -492,7 +496,7 @@ class Object(Field):
                     validated[key] = child_schema.get_default_value()
                 continue
             item = value[key]
-            child_value, error = child_schema.validate_or_error(item, strict=strict)
+            child_value, error = child_schema.validate_or_error(item)
             if not error:
                 validated[key] = child_value
             else:
@@ -504,9 +508,7 @@ class Object(Field):
                 for pattern, child_schema in self.pattern_properties.items():
                     if isinstance(key, str) and re.search(pattern, key):
                         item = value[key]
-                        child_value, error = child_schema.validate_or_error(
-                            item, strict=strict
-                        )
+                        child_value, error = child_schema.validate_or_error(item)
                         if not error:
                             validated[key] = child_value
                         else:
@@ -535,7 +537,7 @@ class Object(Field):
             child_schema = self.additional_properties
             for key in remaining:
                 item = value[key]
-                child_value, error = child_schema.validate_or_error(item, strict=strict)
+                child_value, error = child_schema.validate_or_error(item)
                 if not error:
                     validated[key] = child_value
                 else:
@@ -599,7 +601,7 @@ class Array(Field):
         self.max_items = max_items
         self.unique_items = unique_items
 
-    def validate(self, value: typing.Any, *, strict: bool = False) -> typing.Any:
+    def validate(self, value: typing.Any) -> typing.Any:
         if value is None and self.allow_null:
             return None
         elif value is None:
@@ -639,7 +641,7 @@ class Array(Field):
             if validator is None:
                 validated.append(item)
             else:
-                item, error = validator.validate_or_error(item, strict=strict)
+                item, error = validator.validate_or_error(item)
                 if error:
                     error_messages += error.messages(add_prefix=pos)
                 else:
@@ -704,7 +706,7 @@ class Union(Field):
         if any([child.allow_null for child in any_of]):
             self.allow_null = True
 
-    def validate(self, value: typing.Any, strict: bool = False) -> typing.Any:
+    def validate(self, value: typing.Any) -> typing.Any:
         if value is None and self.allow_null:
             return None
         elif value is None:
@@ -712,7 +714,7 @@ class Union(Field):
 
         candidate_errors = []
         for child in self.any_of:
-            validated, error = child.validate_or_error(value, strict=strict)
+            validated, error = child.validate_or_error(value)
             if error is None:
                 return validated
             else:
@@ -738,7 +740,7 @@ class Any(Field):
     Always matches.
     """
 
-    def validate(self, value: typing.Any, strict: bool = False) -> typing.Any:
+    def validate(self, value: typing.Any) -> typing.Any:
         return value
 
 
@@ -754,7 +756,7 @@ class Const(Field):
         super().__init__(**kwargs)
         self.const = const
 
-    def validate(self, value: typing.Any, strict: bool = False) -> typing.Any:
+    def validate(self, value: typing.Any) -> typing.Any:
         if value != self.const:
             if self.const is None:
                 raise self.validation_error("only_null")

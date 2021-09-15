@@ -4,9 +4,13 @@ indicators showing exactly where the error occurred in the raw textual content.
 ```python
 import typesystem
 
-class Config(typesystem.Schema):
-    num_worker_processes = typesystem.Integer()
-    enable_auto_reload = typesystem.Boolean()
+
+config_schema = typesystem.Schema(
+    fields={
+        "num_worker_processes": typesystem.Integer(),
+        "enable_auto_reload": typesystem.Boolean(),
+    }
+)
 
 text = '''{
     "num_worker_processes": "x",
@@ -14,7 +18,7 @@ text = '''{
 }'''
 
 try:
-    typesystem.validate_json(text, validator=Config)
+    typesystem.validate_json(text, validator=config_schema)
 except (typesystem.ValidationError, typesystem.ParseError) as exc:
     for message in exc.messages():
         line_no = message.start_position.line_no
@@ -28,4 +32,4 @@ The two functions for parsing content and providing positional error messages ar
 * `validate_json(text_or_bytes, validator)`
 * `validate_yaml(text_or_bytes, validator)`
 
-In both cases `validator` may either be a `Schema` class, or a `Field` instance.
+In both cases `validator` may either be a `Schema` or a `Field` instance.

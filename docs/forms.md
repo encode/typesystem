@@ -8,17 +8,21 @@ import typesystem
 
 forms = typesystem.Jinja2Forms(package="typesystem")  # Use the default templates.
 
-class BookingSchema(typesystem.Schema):
-    start_date = typesystem.Date(title="Start date")
-    end_date = typesystem.Date(title="End date")
-    room = typesystem.Choice(title="Room type", choices=[
-        ('double', 'Double room'),
-        ('twin', 'Twin room'),
-        ('single', 'Single room')
-    ])
-    include_breakfast = typesystem.Boolean(title="Include breakfast", default=False)
+booking_schema = typesystem.Schema(
+    fields={
+        "start_date": typesystem.Date(title="Start date"),
+        "end_date": typesystem.Date(title="End date"),
+        "room": typesystem.Choice(title="Room type", choices=[
+            ('double', 'Double room'),
+            ('twin', 'Twin room'),
+            ('single', 'Single room')
+        ]),
+        "include_breakfast": typesystem.Boolean(title="Include breakfast", default=False),
 
-form = forms.Form(BookingSchema)
+    }
+)
+
+form = forms.create_form(booking_schema)
 print(form)
 ```
 
@@ -34,26 +38,26 @@ Notice that only the fields in the form are rendered. The surrounding `<form>`, 
 ```html
 <tr>
     <td>
-        <label for="form-bookingschema-start-date">Start date</label>
+        <label for="start-date">Start date</label>
     </td>
     <td>
-        <input type="date" id="form-bookingschema-start-date" name="start_date" required>
-    </td>
-</tr>
-<tr>
-    <td>
-        <label for="form-bookingschema-end-date">End date</label>
-    </td>
-    <td>
-        <input type="date" id="form-bookingschema-end-date" name="end_date" required>
+        <input type="date" id="start-date" name="start_date" required >
     </td>
 </tr>
 <tr>
     <td>
-        <label for="form-bookingschema-room">Room type</label>
+        <label for="end-date">End date</label>
     </td>
     <td>
-        <select id="form-bookingschema-room" name="room">
+        <input type="date" id="end-date" name="end_date" required >
+    </td>
+</tr>
+<tr>
+    <td>
+        <label for="room">Room type</label>
+    </td>
+    <td>
+        <select id="room" name="room">
             <option></option>
             <option value="double">Double room</option>
             <option value="twin">Twin room</option>
@@ -63,10 +67,10 @@ Notice that only the fields in the form are rendered. The surrounding `<form>`, 
 </tr>
 <tr>
     <td>
-        <label for="form-bookingschema-include-breakfast">Include breakfast</label>
+        <label for="include-breakfast">Include breakfast</label>
     </td>
     <td>
-        <input type="checkbox" id="form-bookingschema-include-breakfast" name="include_breakfast" value="true">
+        <input type="checkbox" id="include-breakfast" name="include_breakfast" value="true" >
     </td>
 </tr>
 ```
@@ -92,15 +96,7 @@ We can include values in a form like so:
 
 ```python
 initial_values = {'room': 'double', 'include_breakfast': True}
-form = forms.Form(BookingSchema, values=initial_values)
-```
-
-We can also include validation errors:
-
-```python
-booking, errors = BookingSchema.validate_or_error(data)
-if errors:
-    form = forms.Form(BookingSchema, values=data, errors=errors)
+form = forms.create_form(booking_schema, values=initial_values)
 ```
 
 ## Customizing field rendering

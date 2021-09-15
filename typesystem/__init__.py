@@ -21,12 +21,12 @@ from typesystem.fields import (
 )
 from typesystem.forms import Jinja2Forms
 from typesystem.json_schema import from_json_schema, to_json_schema
-from typesystem.schemas import Reference, Schema, SchemaDefinitions
+from typesystem.schemas import Definitions, Reference, Schema
 from typesystem.tokenize.positional_validation import validate_with_positions
 from typesystem.tokenize.tokenize_json import tokenize_json, validate_json
 from typesystem.tokenize.tokenize_yaml import tokenize_yaml, validate_yaml
 
-__version__ = "0.2.5"
+__version__ = "0.3.0"
 __all__ = [
     "Array",
     "Any",
@@ -50,7 +50,7 @@ __all__ = [
     "UUID",
     # Schemas
     "Schema",
-    "SchemaDefinitions",
+    "Definitions",
     # Exceptions
     "ParseError",
     "ValidationError",
