@@ -4,7 +4,6 @@ import pytest
 
 import typesystem
 
-
 contact = typesystem.Schema(
     fields={
         "a": typesystem.Boolean(),
