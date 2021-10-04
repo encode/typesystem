@@ -78,7 +78,7 @@ test_cases = load_test_cases()
 @pytest.mark.parametrize("schema,data,is_valid,description", test_cases)
 def test_json_schema(schema, data, is_valid, description):
     validator = from_json_schema(schema)
-    value, error = validator.validate_or_error(data, strict=True)
+    value, error = validator.validate_or_error(data)
     if is_valid:
         assert error is None, description
     else:
@@ -104,36 +104,37 @@ def test_to_from_json_schema(schema, data, is_valid, description):
     """
     validator = from_json_schema(schema)
 
-    value_before_convert, error_before_convert = validator.validate_or_error(
-        data, strict=True
-    )
+    value_before_convert, error_before_convert = validator.validate_or_error(data)
 
     schema_after = to_json_schema(validator)
     validator = from_json_schema(schema_after)
 
-    value_after_convert, error_after_convert = validator.validate_or_error(
-        data, strict=True
-    )
+    value_after_convert, error_after_convert = validator.validate_or_error(data)
 
     assert error_before_convert == error_after_convert
     assert value_before_convert == value_after_convert
 
 
 def test_schema_to_json_schema():
-    class BookingSchema(typesystem.Schema):
-        start_date = typesystem.Date(title="Start date")
-        end_date = typesystem.Date(title="End date")
-        room = typesystem.Choice(
-            title="Room type",
-            choices=[
-                ("double", "Double room"),
-                ("twin", "Twin room"),
-                ("single", "Single room"),
-            ],
-        )
-        include_breakfast = typesystem.Boolean(title="Include breakfast", default=False)
+    booking_schema = typesystem.Schema(
+        {
+            "start_date": typesystem.Date(title="Start date"),
+            "end_date": typesystem.Date(title="End date"),
+            "room": typesystem.Choice(
+                title="Room type",
+                choices=[
+                    ("double", "Double room"),
+                    ("twin", "Twin room"),
+                    ("single", "Single room"),
+                ],
+            ),
+            "include_breakfast": typesystem.Boolean(
+                title="Include breakfast", default=False
+            ),
+        }
+    )
 
-    schema = to_json_schema(BookingSchema)
+    schema = to_json_schema(booking_schema)
 
     assert schema == {
         "type": "object",

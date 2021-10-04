@@ -1,4 +1,4 @@
-TypeSystem can convert Schema classes or Field instances to/from JSON Schema.
+TypeSystem can convert Schema or Field instances to/from JSON Schema.
 
 !!! note
     TypeSystem only supports `$ref` pointers that use the standard "definitions"
@@ -15,20 +15,21 @@ Let's define a schema, and dump it out into a JSON schema document:
 import json
 import typesystem
 
-class BookingSchema(typesystem.Schema):
-    start_date = typesystem.Date(title="Start date")
-    end_date = typesystem.Date(title="End date")
-    room = typesystem.Choice(
-        title="Room type",
-        choices=[
-            ("double", "Double room"),
-            ("twin", "Twin room"),
-            ("single", "Single room"),
-        ],
-    )
-    include_breakfast = typesystem.Boolean(title="Include breakfast", default=False)
+booking_schema = typesystem.Schema(
+    fields={
+        "start_date": typesystem.Date(title="Start date"),
+        "end_date": typesystem.Date(title="End date"),
+        "room": typesystem.Choice(title="Room type", choices=[
+            ('double', 'Double room'),
+            ('twin', 'Twin room'),
+            ('single', 'Single room')
+        ]),
+        "include_breakfast": typesystem.Boolean(title="Include breakfast", default=False),
 
-schema = typesystem.to_json_schema(BookingSchema)
+    }
+)
+
+schema = typesystem.to_json_schema(booking_schema)
 print(json.dumps(schema, indent=4))
 ```
 

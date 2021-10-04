@@ -27,14 +27,17 @@ def test_validate_yaml():
         )
     ]
 
-    class Validator(Schema):
-        a = Integer()
-        b = Integer()
+    validator = Schema(
+        fields={
+            "a": Integer(),
+            "b": Integer(),
+        }
+    )
 
     text = "a: 123\nb: abc\n"
 
     with pytest.raises(ValidationError) as exc_info:
-        validate_yaml(text, validator=Validator)
+        validate_yaml(text, validator=validator)
 
     exc = exc_info.value
     assert exc.messages() == [
@@ -49,7 +52,7 @@ def test_validate_yaml():
 
     text = "a: 123"
     with pytest.raises(ValidationError) as exc_info:
-        validate_yaml(text, validator=Validator)
+        validate_yaml(text, validator=validator)
     exc = exc_info.value
     assert exc.messages() == [
         Message(

@@ -15,18 +15,21 @@ uvicorn
 **app.py**
 
 ```python
+import typesystem
+import uvicorn
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
 from starlette.routing import Route
-import typesystem
-import uvicorn
 
 users = []
 
 
-class User(typesystem.Schema):
-    username = typesystem.String(max_length=100)
-    is_admin = typesystem.Boolean(default=False)
+user_schema = typesystem.Schema(
+    fields={
+        "username": typesystem.String(max_length=100),
+        "is_admin": typesystem.Boolean(default=False),
+    }
+)
 
 
 async def list_users(request):
@@ -39,7 +42,7 @@ async def add_user(request):
     if errors:
         return JSONResponse(dict(errors), status_code=400)
     users.append(user)
-    return JSONResponse(dict(user))
+    return JSONResponse(user)
 
 
 app = Starlette(debug=True, routes=[
@@ -73,13 +76,13 @@ uvicorn
 **app.py**
 
 ```python
-from starlette.applications import Starlette
-from starlette.responses import RedirectResponse
-from starlette.routing import Route, Mount
-from starlette.staticfiles import StaticFiles
-from starlette.templating import Jinja2Templates
 import typesystem
 import uvicorn
+from starlette.applications import Starlette
+from starlette.responses import RedirectResponse
+from starlette.routing import Mount, Route
+from starlette.staticfiles import StaticFiles
+from starlette.templating import Jinja2Templates
 
 forms = typesystem.Jinja2Forms(package="bootstrap4")
 templates = Jinja2Templates(directory="templates")
@@ -87,42 +90,41 @@ statics = StaticFiles(directory="statics", packages=["bootstrap4"])
 bookings = []
 
 
-class BookingSchema(typesystem.Schema):
-    start_date = typesystem.Date(title="Start date")
-    end_date = typesystem.Date(title="End date")
-    room = typesystem.Choice(
-        title="Room type",
-        choices=[
-            ("double", "Double room"),
-            ("twin", "Twin room"),
-            ("single", "Single room"),
-        ],
-    )
-    include_breakfast = typesystem.Boolean(title="Include breakfast", default=False)
-
-    def __str__(self):
-        breakfast = (
-            "(with breakfast)" if self.include_breakfast else "(without breakfast)"
-        )
-        return f"Booking for {self.room} from {self.start_date} to {self.end_date}"
+booking_schema = typesystem.Schema(
+    fields={
+        "start_date": typesystem.Date(title="Start date"),
+        "end_date": typesystem.Date(title="End date"),
+        "room": typesystem.Choice(
+            title="Room type",
+            choices=[
+                ("double", "Double room"),
+                ("twin", "Twin room"),
+                ("single", "Single room"),
+            ],
+        ),
+        "include_breakfast": typesystem.Boolean(
+            title="Include breakfast", default=False
+        ),
+    }
+)
 
 
 async def homepage(request):
-    form = forms.Form(BookingSchema)
+    form = forms.create_form(booking_schema)
     context = {"request": request, "form": form, "bookings": bookings}
     return templates.TemplateResponse("index.html", context)
 
 
 async def make_booking(request):
     data = await request.form()
-    booking, errors = BookingSchema.validate_or_error(data)
+    booking, errors = booking_schema.validate_or_error(data)
     if errors:
-        form = forms.Form(BookingSchema, values=data, errors=errors)
+        form = forms.create_form(booking_schema)
         context = {"request": request, "form": form, "bookings": bookings}
         return templates.TemplateResponse("index.html", context)
 
     bookings.append(booking)
-    return RedirectResponse(request.url_for("homepage"))
+    return RedirectResponse(request.url_for("homepage"), status_code=303)
 
 
 app = Starlette(

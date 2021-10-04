@@ -16,7 +16,7 @@ class NeverMatch(Field):
         assert "allow_null" not in kwargs
         super().__init__(**kwargs)
 
-    def validate(self, value: typing.Any, strict: bool = False) -> typing.Any:
+    def validate(self, value: typing.Any) -> typing.Any:
         raise self.validation_error("never")
 
 
@@ -38,11 +38,11 @@ class OneOf(Field):
         super().__init__(**kwargs)
         self.one_of = one_of
 
-    def validate(self, value: typing.Any, strict: bool = False) -> typing.Any:
+    def validate(self, value: typing.Any) -> typing.Any:
         candidate = None
         match_count = 0
         for child in self.one_of:
-            validated, error = child.validate_or_error(value, strict=strict)
+            validated, error = child.validate_or_error(value)
             if error is None:
                 match_count += 1
                 candidate = validated
@@ -67,9 +67,9 @@ class AllOf(Field):
         super().__init__(**kwargs)
         self.all_of = all_of
 
-    def validate(self, value: typing.Any, strict: bool = False) -> typing.Any:
+    def validate(self, value: typing.Any) -> typing.Any:
         for child in self.all_of:
-            child.validate(value, strict=strict)
+            child.validate(value)
         return value
 
 
@@ -87,8 +87,8 @@ class Not(Field):
         super().__init__(**kwargs)
         self.negated = negated
 
-    def validate(self, value: typing.Any, strict: bool = False) -> typing.Any:
-        _, error = self.negated.validate_or_error(value, strict=strict)
+    def validate(self, value: typing.Any) -> typing.Any:
+        _, error = self.negated.validate_or_error(value)
         if error:
             return value
         raise self.validation_error("negated")
@@ -114,9 +114,9 @@ class IfThenElse(Field):
         self.then_clause = Any() if then_clause is None else then_clause
         self.else_clause = Any() if else_clause is None else else_clause
 
-    def validate(self, value: typing.Any, strict: bool = False) -> typing.Any:
-        _, error = self.if_clause.validate_or_error(value, strict=strict)
+    def validate(self, value: typing.Any) -> typing.Any:
+        _, error = self.if_clause.validate_or_error(value)
         if error is None:
-            return self.then_clause.validate(value, strict=strict)
+            return self.then_clause.validate(value)
         else:
-            return self.else_clause.validate(value, strict=strict)
+            return self.else_clause.validate(value)

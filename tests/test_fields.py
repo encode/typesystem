@@ -155,8 +155,8 @@ def test_integer():
     value, error = validator.validate_or_error(float("nan"))
     assert error == ValidationError(text="Must be an integer.", code="integer")
 
-    validator = Integer()
-    value, error = validator.validate_or_error("123", strict=True)
+    validator = Integer(coerce_types=False)
+    value, error = validator.validate_or_error("123")
     assert error == ValidationError(text="Must be a number.", code="type")
 
     validator = Integer(allow_null=True)
@@ -169,8 +169,8 @@ def test_integer():
     assert value is None
     assert error is None
 
-    validator = Integer(allow_null=True)
-    value, error = validator.validate_or_error("", strict=True)
+    validator = Integer(allow_null=True, coerce_types=False)
+    value, error = validator.validate_or_error("")
     assert error == ValidationError(text="Must be a number.", code="type")
 
     validator = Integer(maximum=10)
@@ -245,8 +245,8 @@ def test_float():
     value, error = validator.validate_or_error(float("nan"))
     assert error == ValidationError(text="Must be finite.", code="finite")
 
-    validator = Float()
-    value, error = validator.validate_or_error("123", strict=True)
+    validator = Float(coerce_types=False)
+    value, error = validator.validate_or_error("123")
     assert error == ValidationError(text="Must be a number.", code="type")
 
     validator = Float(allow_null=True)
@@ -364,8 +364,8 @@ def test_boolean():
     assert value is None
     assert error is None
 
-    validator = Boolean()
-    value, error = validator.validate_or_error("True", strict=True)
+    validator = Boolean(coerce_types=False)
+    value, error = validator.validate_or_error("True")
     assert error == ValidationError(text="Must be a boolean.", code="type")
 
 

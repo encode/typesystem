@@ -1,10 +1,20 @@
-Fields are usually declared as attributes on schema classes:
+Fields are passed as a dictionary to the Schema classes:
 
 ```python
-class Organisation(typesystem.Schema):
-    name = typesystem.String(title="Name", max_length=100)
-    date_created = typesystem.Date(title="Date created", default=datetime.date.today)
-    owner = typesystem.Reference(to=User, allow_null=True)
+import typesystem
+
+user_schema = typesystem.Schema(fields={"name": typesystem.String()})
+
+definitions = typesystem.Definitions()
+definitions["User"] = user_schema
+
+organization_schema = typesystem.Schema(
+    fields={
+        "name": typesystem.String(title="Name", max_length=100),
+        "date_created": typesystem.Date(title="Date created", default=datetime.date.today),
+        "owner": typesystem.Reference(to="User", allow_null=True, definitions=definitions),
+    }
+)
 ```
 
 Fields are always *required* in inputs, unless a *default* value is set.
@@ -20,6 +30,7 @@ All fields support the following arguments.
 * `description` - A string describing the input. **Default: `None`**
 * `default` - A value to be used if no input is provided for this field. May be a callable, such as `datetime.datetime.now`. **Default: `NO_DEFAULT`**
 * `allow_null` - A boolean determining if `None` values are valid. **Default: `False`**
+* `read_only` - A boolean determining if field should be considered as read-only, this is usually used in form rendering. **Default: `False`**
 
 ## Using fields directly
 
@@ -60,6 +71,7 @@ For example: `username = typesystem.String(max_length=100)`
 * `min_length` - A minimum number of characters that valid input stings may contain. **Default: `None`**
 * `pattern` - A regular expression that must match. This can be either a string or a compiled regular expression. E.g. `pattern="^[A-Za-z]+$"` **Default: `None`**
 * `format` - A string used to indicate a semantic type, such as `"email"`, `"url"`, or `"color"`. **Default: `None`**
+* `coerce_types` - A boolean determining if type casting should be done, E.g. changing `None` to `""` if `allow_blank`. **Default: `True`**
 
 ### Text
 
@@ -181,7 +193,7 @@ extra_metadata = typesystem.Object(properties=typesystem.String(max_length=100))
 Schema classes implement their validation behaviour by generating an `Object`
 field, and automatically determining the `properties` and `required` attributes.
 
-You'll typically want to use `typesystem.Reference(to=SomeSchema)` rather than
+You'll typically want to use `typesystem.Reference(to="SomeSchema")` rather than
 using the `Object` field directly, but it can be useful if you have a more
 complex data structure that you need to validate.
 
@@ -201,12 +213,13 @@ Used to reference a nested schema.
 For example:
 
 ```python
-owner = typesystem.Reference(to=User, allow_null=True)
+owner = typesystem.Reference(to="User", allow_null=True, definitions=definitions)
 ```
 
 **Arguments**:
 
-* `to` - A schema class or field instance. **Required**
+* `to` - Name of schema defined in definitions. **Required**
+* `definitions` - `Definitions` instance. **Required**
 
 ## Other data types
 

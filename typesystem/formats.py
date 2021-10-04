@@ -125,7 +125,7 @@ class DateTimeFormat(BaseFormat):
             raise self.validation_error("format")
 
         groups = match.groupdict()
-        if groups["microsecond"]:
+        if groups["microsecond"] is not None:
             groups["microsecond"] = groups["microsecond"].ljust(6, "0")
 
         tzinfo_str = groups.pop("tzinfo")

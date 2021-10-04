@@ -53,7 +53,7 @@ def tokenize_yaml(content: typing.Union[str, bytes]) -> Token:
     def construct_scalar(loader: "yaml.Loader", node: "yaml.Node") -> ScalarToken:
         start = node.start_mark.index
         end = node.end_mark.index
-        value = loader.construct_scalar(node)
+        value = loader.construct_scalar(node)  # type: ignore
         return ScalarToken(value, start, end - 1, content=str_content)
 
     def construct_int(loader: "yaml.Loader", node: "yaml.Node") -> ScalarToken:
@@ -104,6 +104,8 @@ def tokenize_yaml(content: typing.Union[str, bytes]) -> Token:
         return yaml.load(str_content, CustomSafeLoader)
     except (yaml.scanner.ScannerError, yaml.parser.ParserError) as exc:  # type: ignore
         # Handle cases that result in a YAML parse error.
+        assert exc.problem is not None
+        assert exc.problem_mark is not None
         text = exc.problem + "."
         position = _get_position(str_content, index=exc.problem_mark.index)
         raise ParseError(text=text, code="parse_error", position=position)
@@ -111,7 +113,7 @@ def tokenize_yaml(content: typing.Union[str, bytes]) -> Token:
 
 def validate_yaml(
     content: typing.Union[str, bytes],
-    validator: typing.Union[Field, typing.Type[Schema]],
+    validator: typing.Union[Field, Schema],
 ) -> typing.Any:
     """
     Parse and validate a YAML string, returning positionally marked error

@@ -1,23 +1,30 @@
 import jinja2
 import markupsafe
+import pytest
 
 import typesystem
 
 
-class Contact(typesystem.Schema):
-    a = typesystem.Boolean()
-    b = typesystem.String(max_length=10)
-    c = typesystem.Text()
-    d = typesystem.Choice(choices=[("abc", "Abc"), ("def", "Def"), ("ghi", "Ghi")])
-    email = typesystem.Email()
-    password = typesystem.Password()
+contact = typesystem.Schema(
+    fields={
+        "a": typesystem.Boolean(),
+        "b": typesystem.String(max_length=10),
+        "c": typesystem.Text(),
+        "d": typesystem.Choice(
+            choices=[("abc", "Abc"), ("def", "Def"), ("ghi", "Ghi")]
+        ),
+        "extra": typesystem.Boolean(default=True, read_only=True),
+        "email": typesystem.Email(),
+        "password": typesystem.Password(),
+    }
+)
 
 
 forms = typesystem.Jinja2Forms(package="typesystem")
 
 
 def test_form_rendering():
-    form = forms.Form(Contact)
+    form = forms.create_form(contact)
 
     html = str(form)
 
@@ -30,13 +37,29 @@ def test_form_rendering():
 
 
 def test_password_rendering():
-    form = forms.Form(Contact, values={"password": "secret"})
+    form = forms.create_form(contact, values={"password": "secret"})
     html = str(form)
     assert "secret" not in html
 
 
+def test_form_validation():
+    password_schema = typesystem.Schema(
+        {"password": typesystem.String(format="password")}
+    )
+
+    form = forms.create_form(password_schema)
+
+    with pytest.raises(AssertionError):
+        form.is_valid
+
+    form.validate(data={"password": "secret"})
+
+    assert form.is_valid is True
+    assert form.validated_data == {"password": "secret"}
+
+
 def test_form_html():
-    form = forms.Form(Contact)
+    form = forms.create_form(contact)
 
     markup = form.__html__()
 
