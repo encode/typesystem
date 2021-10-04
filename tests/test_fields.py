@@ -18,6 +18,7 @@ from typesystem.fields import (
     Integer,
     Number,
     Object,
+    Password,
     String,
     Time,
     Union,
@@ -843,3 +844,9 @@ def test_email():
     validator = Email()
     value, error = validator.validate_or_error("example.com")
     assert error == ValidationError(text="Must be a valid email format.", code="format")
+
+
+def test_password():
+    validator = Password()
+    value, _ = validator.validate_or_error("secret")
+    assert value == "secret"

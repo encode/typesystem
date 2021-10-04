@@ -1,8 +1,8 @@
 # TypeSystem
 
 <p>
-<a href="https://travis-ci.org/encode/typesystem">
-    <img src="https://travis-ci.org/encode/typesystem.svg?branch=master" alt="Build Status">
+<a href="https://github.com/encode/typesystem/actions">
+    <img src="https://github.com/encode/typesystem/workflows/Test%20Suite/badge.svg" alt="Build Status">
 </a>
 <a href="https://codecov.io/gh/encode/typesystem">
     <img src="https://codecov.io/gh/encode/typesystem/branch/master/graph/badge.svg" alt="Coverage">
@@ -33,10 +33,16 @@ Python 3.6+
 $ pip3 install typesystem
 ```
 
-If you'd like you use the form rendering you'll also want to install `jinja2`.
+If you'd like you use the form rendering using `jinja2`:
 
 ```shell
-$ pip3 install jinja2
+$ pip3 install typesystem[jinja2]
+```
+
+If you'd like you use the YAML tokenization using `pyyaml`:
+
+```shell
+$ pip3 install typesystem[pyyaml]
 ```
 
 ## Quickstart

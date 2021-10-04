@@ -10,6 +10,7 @@ class Contact(typesystem.Schema):
     c = typesystem.Text()
     d = typesystem.Choice(choices=[("abc", "Abc"), ("def", "Def"), ("ghi", "Ghi")])
     email = typesystem.Email()
+    password = typesystem.Password()
 
 
 forms = typesystem.Jinja2Forms(package="typesystem")
@@ -25,13 +26,11 @@ def test_form_rendering():
     assert html.count("<textarea ") == 1
     assert html.count("<select ") == 1
     assert html.count('<input type="email" ') == 1
+    assert html.count('<input type="password" ') == 1
 
 
 def test_password_rendering():
-    class PasswordForm(typesystem.Schema):
-        password = typesystem.String(format="password")
-
-    form = forms.Form(PasswordForm, values={"password": "secret"})
+    form = forms.Form(Contact, values={"password": "secret"})
     html = str(form)
     assert "secret" not in html
 

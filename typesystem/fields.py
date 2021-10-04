@@ -771,3 +771,8 @@ class UUID(String):
 class Email(String):
     def __init__(self, **kwargs: typing.Any) -> None:
         super().__init__(format="email", **kwargs)
+
+
+class Password(String):
+    def __init__(self, **kwargs: typing.Any) -> None:
+        super().__init__(format="password", **kwargs)

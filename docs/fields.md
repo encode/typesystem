@@ -66,6 +66,11 @@ For example: `username = typesystem.String(max_length=100)`
 Validates multi-line strings. Takes the same arguments as `String`.
 Represented in HTML forms as a `<textarea>`.
 
+### Password
+
+Similar to `String` and takes the same arguments.
+Represented in HTML forms as a `<input type="password">`.
+
 ## Boolean data types
 
 ### Boolean
@@ -202,3 +207,12 @@ owner = typesystem.Reference(to=User, allow_null=True)
 **Arguments**:
 
 * `to` - A schema class or field instance. **Required**
+
+## Other data types
+
+### UUID
+
+Validates UUID in the format of 32 hexadecimal characters, separated by hyphens.
+For example `"cd11b0d7-d8b3-4b5c-8159-70f5c9ea96ab"`.
+
+Returns `uuid.UUID` instances.
