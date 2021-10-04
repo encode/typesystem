@@ -23,6 +23,13 @@ UUID_REGEX = re.compile(
     r"[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}"
 )
 
+EMAIL_REGEX = re.compile(
+    r"(^[-!#$%&'*+/=?^_`{}|~0-9A-Z]+(\.[-!#$%&'*+/=?^_`{}|~0-9A-Z]+)*"
+    r'|^"([\001-\010\013\014\016-\037!#-\[\]-\177]|\\[\001-\011\013\014\016-\177])*'
+    r")@(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,63}(?<!-)\.?$",
+    re.IGNORECASE,
+)
+
 
 class BaseFormat:
     errors: typing.Dict[str, str] = {}
@@ -166,6 +173,23 @@ class UUIDFormat(BaseFormat):
             raise self.validation_error("format")
 
         return uuid.UUID(value)
+
+    def serialize(self, obj: typing.Any) -> str:
+        return str(obj)
+
+
+class EmailFormat(BaseFormat):
+    errors = {"format": "Must be a valid email format."}
+
+    def is_native_type(self, value: typing.Any) -> bool:
+        return False
+
+    def validate(self, value: typing.Any) -> uuid.UUID:
+        match = EMAIL_REGEX.match(value)
+        if not match:
+            raise self.validation_error("format")
+
+        return value
 
     def serialize(self, obj: typing.Any) -> str:
         return str(obj)

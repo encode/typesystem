@@ -13,6 +13,7 @@ contact = typesystem.Schema(
             choices=[("abc", "Abc"), ("def", "Def"), ("ghi", "Ghi")]
         ),
         "extra": typesystem.Boolean(default=True, read_only=True),
+        "email": typesystem.Email(),
         "password": typesystem.Password(),
     }
 )
@@ -30,6 +31,7 @@ def test_form_rendering():
     assert html.count('<input type="text" ') == 1
     assert html.count("<textarea ") == 1
     assert html.count("<select ") == 1
+    assert html.count('<input type="email" ') == 1
     assert html.count('<input type="password" ') == 1
 
 

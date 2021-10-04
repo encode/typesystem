@@ -500,3 +500,11 @@ def test_definitions_to_json_schema():
             },
         }
     }
+
+
+def test_schema_email_serialization():
+    user = typesystem.Schema(fields={"email": typesystem.Email()})
+
+    item = {"email": "team@encode.io"}
+    data = user.serialize(item)
+    assert data == {"email": "team@encode.io"}
