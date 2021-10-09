@@ -1,4 +1,5 @@
 import datetime
+import ipaddress
 import re
 import typing
 import uuid
@@ -30,6 +31,13 @@ EMAIL_REGEX = re.compile(
     re.IGNORECASE,
 )
 
+IPV4_REGEX = re.compile(
+    r"(?:0|25[0-5]|2[0-4]\d|1\d?\d?|[1-9]\d?)"
+    r"(?:\.(?:0|25[0-5]|2[0-4]\d|1\d?\d?|[1-9]\d?)){3}"
+)
+
+IPV6_REGEX = re.compile(r"(?:[a-f0-9]{1,4}:){7}[a-f0-9]{1,4}")
+
 
 class BaseFormat:
     errors: typing.Dict[str, str] = {}
@@ -44,7 +52,7 @@ class BaseFormat:
     def validate(self, value: typing.Any) -> typing.Union[typing.Any, ValidationError]:
         raise NotImplementedError()  # pragma: no cover
 
-    def serialize(self, obj: typing.Any) -> typing.Union[str, None]:
+    def serialize(self, obj: typing.Any) -> typing.Optional[str]:
         raise NotImplementedError()  # pragma: no cover
 
 
@@ -68,7 +76,7 @@ class DateFormat(BaseFormat):
         except ValueError:
             raise self.validation_error("invalid")
 
-    def serialize(self, obj: typing.Any) -> typing.Union[str, None]:
+    def serialize(self, obj: typing.Optional[datetime.date]) -> typing.Optional[str]:
         if obj is None:
             return None
 
@@ -101,7 +109,7 @@ class TimeFormat(BaseFormat):
         except ValueError:
             raise self.validation_error("invalid")
 
-    def serialize(self, obj: typing.Any) -> typing.Union[str, None]:
+    def serialize(self, obj: typing.Optional[datetime.time]) -> typing.Optional[str]:
         if obj is None:
             return None
 
@@ -147,7 +155,9 @@ class DateTimeFormat(BaseFormat):
         except ValueError:
             raise self.validation_error("invalid")
 
-    def serialize(self, obj: typing.Any) -> typing.Union[str, None]:
+    def serialize(
+        self, obj: typing.Optional[datetime.datetime]
+    ) -> typing.Optional[str]:
         if obj is None:
             return None
 
@@ -174,7 +184,12 @@ class UUIDFormat(BaseFormat):
 
         return uuid.UUID(value)
 
-    def serialize(self, obj: typing.Any) -> str:
+    def serialize(self, obj: typing.Optional[uuid.UUID]) -> typing.Optional[str]:
+        if obj is None:
+            return None
+
+        assert isinstance(obj, uuid.UUID)
+
         return str(obj)
 
 
@@ -184,12 +199,48 @@ class EmailFormat(BaseFormat):
     def is_native_type(self, value: typing.Any) -> bool:
         return False
 
-    def validate(self, value: typing.Any) -> uuid.UUID:
+    def validate(self, value: str) -> str:
         match = EMAIL_REGEX.match(value)
         if not match:
             raise self.validation_error("format")
 
         return value
 
-    def serialize(self, obj: typing.Any) -> str:
+    def serialize(self, obj: typing.Optional[str]) -> typing.Optional[str]:
+        if obj is None:
+            return None
+
+        return obj
+
+
+class IPAddressFormat(BaseFormat):
+    errors = {
+        "format": "Must be a valid IP format.",
+        "invalid": "Must be a real IP.",
+    }
+
+    def is_native_type(self, value: typing.Any) -> bool:
+        return isinstance(value, (ipaddress.IPv4Address, ipaddress.IPv6Address))
+
+    def validate(
+        self, value: typing.Any
+    ) -> typing.Union[ipaddress.IPv4Address, ipaddress.IPv6Address]:
+        match_ipv4 = IPV4_REGEX.match(value)
+        match_ipv6 = IPV6_REGEX.match(value)
+        if not match_ipv4 and not match_ipv6:
+            raise self.validation_error("format")
+
+        try:
+            return ipaddress.ip_address(value)
+        except ValueError:
+            raise self.validation_error("invalid")
+
+    def serialize(
+        self, obj: typing.Union[ipaddress.IPv4Address, ipaddress.IPv6Address, None]
+    ) -> typing.Optional[str]:
+        if obj is None:
+            return None
+
+        assert isinstance(obj, (ipaddress.IPv4Address, ipaddress.IPv6Address))
+
         return str(obj)

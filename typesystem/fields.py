@@ -15,6 +15,7 @@ FORMATS = {
     "datetime": formats.DateTimeFormat(),
     "uuid": formats.UUIDFormat(),
     "email": formats.EmailFormat(),
+    "ipaddress": formats.IPAddressFormat(),
 }
 
 
@@ -778,3 +779,8 @@ class Email(String):
 class Password(String):
     def __init__(self, **kwargs: typing.Any) -> None:
         super().__init__(format="password", **kwargs)
+
+
+class IPAddress(String):
+    def __init__(self, **kwargs: typing.Any) -> None:
+        super().__init__(format="ipaddress", **kwargs)
