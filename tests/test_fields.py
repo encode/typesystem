@@ -1,5 +1,6 @@
 import datetime
 import decimal
+import ipaddress
 import re
 import uuid
 
@@ -16,6 +17,7 @@ from typesystem.fields import (
     Email,
     Float,
     Integer,
+    IPAddress,
     Number,
     Object,
     Password,
@@ -850,3 +852,29 @@ def test_password():
     validator = Password()
     value, _ = validator.validate_or_error("secret")
     assert value == "secret"
+
+
+def test_ipaddress():
+    validator = IPAddress()
+    value, error = validator.validate_or_error("192.168.1.1")
+    assert value == ipaddress.ip_address("192.168.1.1")
+
+    validator = IPAddress()
+    value, error = validator.validate_or_error("192.168.1.af")
+    assert error == ValidationError(text="Must be a valid IP format.", code="format")
+
+    validator = IPAddress()
+    value, error = validator.validate_or_error("192.168.1.256")
+    assert error == ValidationError(text="Must be a real IP.", code="invalid")
+
+    validator = IPAddress()
+    value, error = validator.validate_or_error(
+        "2001:0db8:85a3:0000:0000:8a2e:0370:7334"
+    )
+    assert value == ipaddress.ip_address("2001:0db8:85a3:0000:0000:8a2e:0370:7334")
+
+    validator = IPAddress()
+    value, error = validator.validate_or_error(
+        "2001:0dz8:85a3:0000:0000:8a2e:0370:7334"
+    )
+    assert error == ValidationError(text="Must be a valid IP format.", code="format")

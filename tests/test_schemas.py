@@ -1,4 +1,6 @@
 import datetime
+import ipaddress
+import uuid
 
 import typesystem
 import typesystem.formats
@@ -265,16 +267,22 @@ def test_schema_decimal_serialization():
 def test_schema_uuid_serialization():
     user = typesystem.Schema(
         fields={
-            "id": typesystem.String(format="uuid"),
+            "id": typesystem.UUID(),
+            "parent_id": typesystem.UUID(),
             "username": typesystem.String(),
         }
     )
 
-    item = {"id": "b769df4a-18ec-480f-89ef-8ea961a82269", "username": "tom"}
+    item = {
+        "id": uuid.UUID("b769df4a-18ec-480f-89ef-8ea961a82269"),
+        "username": "tom",
+        "parent_id": None,
+    }
     data = user.serialize(item)
 
     assert data["id"] == "b769df4a-18ec-480f-89ef-8ea961a82269"
     assert data["username"] == "tom"
+    assert data["parent_id"] is None
 
 
 def test_schema_reference_serialization():
@@ -503,8 +511,22 @@ def test_definitions_to_json_schema():
 
 
 def test_schema_email_serialization():
-    user = typesystem.Schema(fields={"email": typesystem.Email()})
+    user = typesystem.Schema(
+        fields={"from": typesystem.Email(), "to": typesystem.Email()}
+    )
 
-    item = {"email": "team@encode.io"}
+    item = {"from": "team@encode.io", "to": None}
     data = user.serialize(item)
-    assert data == {"email": "team@encode.io"}
+    assert data["from"] == "team@encode.io"
+    assert data["to"] is None
+
+
+def test_schema_ipaddress_serialization():
+    schema = typesystem.Schema(
+        fields={"src": typesystem.IPAddress(), "dst": typesystem.IPAddress()}
+    )
+
+    item = {"src": ipaddress.ip_address("127.0.0.1"), "dst": None}
+    data = schema.serialize(item)
+    assert data["src"] == "127.0.0.1"
+    assert data["dst"] is None
