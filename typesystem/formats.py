@@ -3,6 +3,7 @@ import ipaddress
 import re
 import typing
 import uuid
+from urllib.parse import urlparse
 
 from typesystem.base import ValidationError
 
@@ -244,3 +245,23 @@ class IPAddressFormat(BaseFormat):
         assert isinstance(obj, (ipaddress.IPv4Address, ipaddress.IPv6Address))
 
         return str(obj)
+
+
+class URLFormat(BaseFormat):
+    errors = {"invalid": "Must be a real URL."}
+
+    def is_native_type(self, value: typing.Any) -> bool:
+        return False
+
+    def validate(self, value: typing.Any) -> str:
+        url = urlparse(value)
+        if not all([url.scheme, url.netloc]):
+            raise self.validation_error("invalid")
+
+        return str(value)
+
+    def serialize(self, obj: typing.Optional[str]) -> typing.Optional[str]:
+        if obj is None:
+            return None
+
+        return obj

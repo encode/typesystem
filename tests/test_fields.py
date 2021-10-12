@@ -6,6 +6,7 @@ import uuid
 
 from typesystem.base import Message, ValidationError
 from typesystem.fields import (
+    URL,
     UUID,
     Array,
     Boolean,
@@ -878,3 +879,13 @@ def test_ipaddress():
         "2001:0dz8:85a3:0000:0000:8a2e:0370:7334"
     )
     assert error == ValidationError(text="Must be a valid IP format.", code="format")
+
+
+def test_url():
+    validator = URL()
+    value, error = validator.validate_or_error("https://example.com")
+    assert value == "https://example.com"
+
+    validator = URL()
+    value, error = validator.validate_or_error("example")
+    assert error == ValidationError(text="Must be a real URL.", code="invalid")
