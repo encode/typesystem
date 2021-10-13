@@ -16,6 +16,7 @@ FORMATS = {
     "uuid": formats.UUIDFormat(),
     "email": formats.EmailFormat(),
     "ipaddress": formats.IPAddressFormat(),
+    "url": formats.URLFormat(),
 }
 
 
@@ -784,3 +785,8 @@ class Password(String):
 class IPAddress(String):
     def __init__(self, **kwargs: typing.Any) -> None:
         super().__init__(format="ipaddress", **kwargs)
+
+
+class URL(String):
+    def __init__(self, **kwargs: typing.Any) -> None:
+        super().__init__(format="url", **kwargs)

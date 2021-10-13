@@ -530,3 +530,14 @@ def test_schema_ipaddress_serialization():
     data = schema.serialize(item)
     assert data["src"] == "127.0.0.1"
     assert data["dst"] is None
+
+
+def test_schema_url_serialization():
+    schema = typesystem.Schema(
+        fields={"url": typesystem.URL(), "website": typesystem.URL()}
+    )
+
+    item = {"url": "https://google.com", "website": None}
+    data = schema.serialize(item)
+    assert data["url"] == "https://google.com"
+    assert data["website"] is None
