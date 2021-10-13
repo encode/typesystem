@@ -94,6 +94,11 @@ Validates IPv4 and IPv6 addresses.
 
 Returns `ipaddress.IPv4Address` or `ipaddress.IPv6Address` based on input.
 
+### URL
+
+Similar to `String` and takes the same arguments.
+Represented in HTML forms as a `<input type="url">`.
+
 ## Boolean data types
 
 ### Boolean
