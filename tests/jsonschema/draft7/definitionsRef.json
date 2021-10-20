@@ -4,10 +4,10 @@
         "schema": {
             "definitions": {
                 "a": {"type": "integer"},
-                "b": {"$ref": "#/definitions/a"},
-                "c": {"$ref": "#/definitions/b"}
+                "b": {"$ref": "#/components/schemas/a"},
+                "c": {"$ref": "#/components/schemas/b"}
             },
-            "$ref": "#/definitions/c"
+            "$ref": "#/components/schemas/c"
         },
         "tests": [
             {
@@ -32,7 +32,7 @@
             },
             "properties": {
                 "foo": {
-                    "$ref": "#/definitions/reffed",
+                    "$ref": "#/components/schemas/reffed",
                     "maxItems": 2
                 }
             }
@@ -58,7 +58,7 @@
     {
         "description": "$ref to boolean schema true",
         "schema": {
-            "$ref": "#/definitions/bool",
+            "$ref": "#/components/schemas/bool",
             "definitions": {
                 "bool": true
             }
@@ -74,7 +74,7 @@
     {
         "description": "$ref to boolean schema false",
         "schema": {
-            "$ref": "#/definitions/bool",
+            "$ref": "#/components/schemas/bool",
             "definitions": {
                 "bool": false
             }

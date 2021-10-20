@@ -116,7 +116,7 @@ def from_json_schema(
     if definitions is None:
         definitions = Definitions()
         for key, value in data.get("definitions", {}).items():
-            ref = f"#/definitions/{key}"
+            ref = f"#/components/schemas/{key}"
             definitions[ref] = from_json_schema(value, definitions=definitions)
 
     if "$ref" in data:
@@ -421,7 +421,7 @@ def to_json_schema(
             definitions[key] = to_json_schema(value, _definitions=definitions)
 
     if isinstance(field, Reference):
-        data["$ref"] = f"#/definitions/{field.to}"
+        data["$ref"] = f"#/components/schemas/{field.to}"
         definitions[field.to] = to_json_schema(field.target, _definitions=definitions)
 
     elif isinstance(field, String):
