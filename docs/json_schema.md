@@ -1,10 +1,10 @@
 TypeSystem can convert Schema or Field instances to/from JSON Schema.
 
 !!! note
-    TypeSystem only supports `$ref` pointers that use the standard "definitions"
+    TypeSystem only supports `$ref` pointers that use the standard "components/schemas"
     namespace to store referenced schemas.
 
-    All references should be of the style `{"$ref": "#/definitions/..."}`.
+    All references should be of the style `{"$ref": "#/components/schemas/..."}`.
 
     Using hyperlinked references, relative references, or references to parts
     of the document other than "definitions" is not supported.

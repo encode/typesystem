@@ -451,7 +451,7 @@ def test_nested_schema_to_json_schema():
         "properties": {
             "title": {"type": "string", "minLength": 1, "maxLength": 100},
             "release_date": {"type": "string", "minLength": 1, "format": "date"},
-            "artist": {"$ref": "#/definitions/Artist"},
+            "artist": {"$ref": "#/components/schemas/Artist"},
         },
         "required": ["title", "release_date", "artist"],
         "definitions": {
@@ -502,7 +502,7 @@ def test_definitions_to_json_schema():
                         "minLength": 1,
                         "format": "date",
                     },
-                    "artist": {"$ref": "#/definitions/Artist"},
+                    "artist": {"$ref": "#/components/schemas/Artist"},
                 },
                 "required": ["title", "release_date", "artist"],
             },
