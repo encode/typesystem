@@ -1,7 +1,9 @@
 [
     {
         "description": "remote ref",
-        "schema": {"$ref": "http://localhost:1234/integer.json"},
+        "schema": {
+            "$ref": "http://localhost:1234/integer.json"
+        },
         "tests": [
             {
                 "description": "remote ref valid",
@@ -17,7 +19,9 @@
     },
     {
         "description": "fragment within remote ref",
-        "schema": {"$ref": "http://localhost:1234/subSchemas.json#/integer"},
+        "schema": {
+            "$ref": "http://localhost:1234/subSchemas.json#/integer"
+        },
         "tests": [
             {
                 "description": "remote fragment valid",
@@ -55,18 +59,28 @@
             "$id": "http://localhost:1234/",
             "items": {
                 "$id": "folder/",
-                "items": {"$ref": "folderInteger.json"}
+                "items": {
+                    "$ref": "folderInteger.json"
+                }
             }
         },
         "tests": [
             {
                 "description": "base URI change ref valid",
-                "data": [[1]],
+                "data": [
+                    [
+                        1
+                    ]
+                ],
                 "valid": true
             },
             {
                 "description": "base URI change ref invalid",
-                "data": [["a"]],
+                "data": [
+                    [
+                        "a"
+                    ]
+                ],
                 "valid": false
             }
         ]
@@ -75,27 +89,39 @@
         "description": "base URI change - change folder",
         "schema": {
             "$id": "http://localhost:1234/scope_change_defs1.json",
-            "type" : "object",
+            "type": "object",
             "properties": {
-                "list": {"$ref": "#/definitions/baz"}
+                "list": {
+                    "$ref": "#/components/schemas/baz"
+                }
             },
-            "definitions": {
+            "components/schemas": {
                 "baz": {
                     "$id": "folder/",
                     "type": "array",
-                    "items": {"$ref": "folderInteger.json"}
+                    "items": {
+                        "$ref": "folderInteger.json"
+                    }
                 }
             }
         },
         "tests": [
             {
                 "description": "number is valid",
-                "data": {"list": [1]},
+                "data": {
+                    "list": [
+                        1
+                    ]
+                },
                 "valid": true
             },
             {
                 "description": "string is invalid",
-                "data": {"list": ["a"]},
+                "data": {
+                    "list": [
+                        "a"
+                    ]
+                },
                 "valid": false
             }
         ]
@@ -104,17 +130,21 @@
         "description": "base URI change - change folder in subschema",
         "schema": {
             "$id": "http://localhost:1234/scope_change_defs2.json",
-            "type" : "object",
+            "type": "object",
             "properties": {
-                "list": {"$ref": "#/definitions/baz/definitions/bar"}
+                "list": {
+                    "$ref": "#/components/schemas/baz/components/schemas/bar"
+                }
             },
-            "definitions": {
+            "components/schemas": {
                 "baz": {
                     "$id": "folder/",
-                    "definitions": {
+                    "components/schemas": {
                         "bar": {
                             "type": "array",
-                            "items": {"$ref": "folderInteger.json"}
+                            "items": {
+                                "$ref": "folderInteger.json"
+                            }
                         }
                     }
                 }
@@ -123,12 +153,20 @@
         "tests": [
             {
                 "description": "number is valid",
-                "data": {"list": [1]},
+                "data": {
+                    "list": [
+                        1
+                    ]
+                },
                 "valid": true
             },
             {
                 "description": "string is invalid",
-                "data": {"list": ["a"]},
+                "data": {
+                    "list": [
+                        "a"
+                    ]
+                },
                 "valid": false
             }
         ]
@@ -139,7 +177,9 @@
             "$id": "http://localhost:1234/object",
             "type": "object",
             "properties": {
-                "name": {"$ref": "name.json#/definitions/orNull"}
+                "name": {
+                    "$ref": "name.json#/components/schemas/orNull"
+                }
             }
         },
         "tests": [

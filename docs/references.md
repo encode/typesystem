@@ -53,42 +53,44 @@ definitions["Album"] = album_schema
 document = typesystem.to_json_schema(definitions)
 print(json.dumps(document, indent=4))
 # {
-#     "definitions": {
-#         "Artist": {
-#             "type": "object",
-#             "properties": {
-#                 "name": {
-#                     "type": "string",
-#                     "minLength": 1,
-#                     "maxLength": 100
-#                 }
-#             },
-#             "required": [
-#                 "name"
-#             ]
-#         },
-#         "Album": {
-#             "type": "object",
-#             "properties": {
-#                 "title": {
-#                     "type": "string",
-#                     "minLength": 1,
-#                     "maxLength": 100
+#     "components":{
+#         "schemas":{
+#             "Artist":{
+#                 "type":"object",
+#                 "properties":{
+#                     "name":{
+#                         "type":"string",
+#                         "minLength":1,
+#                         "maxLength":100
+#                     }
 #                 },
-#                 "release_date": {
-#                     "type": "string",
-#                     "minLength": 1,
-#                     "format": "date"
-#                 },
-#                 "artist": {
-#                     "$ref": "#/definitions/Artist"
-#                 }
+#                 "required":[
+#                     "name"
+#                 ]
 #             },
-#             "required": [
-#                 "title",
-#                 "release_date",
-#                 "artist"
-#             ]
+#             "Album":{
+#                 "type":"object",
+#                 "properties":{
+#                     "title":{
+#                         "type":"string",
+#                         "minLength":1,
+#                         "maxLength":100
+#                     },
+#                     "release_date":{
+#                         "type":"string",
+#                         "minLength":1,
+#                         "format":"date"
+#                     },
+#                     "artist":{
+#                         "$ref":"#/components/schemas/Artist"
+#                     }
+#                 },
+#                 "required":[
+#                     "title",
+#                     "release_date",
+#                     "artist"
+#                 ]
+#             }
 #         }
 #     }
 # }
