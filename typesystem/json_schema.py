@@ -115,7 +115,7 @@ def from_json_schema(
 
     if definitions is None:
         definitions = Definitions()
-        for key, value in data.get("definitions", {}).items():
+        for key, value in data.get("components", {}).get("schemas", {}).items():
             ref = f"#/components/schemas/{key}"
             definitions[ref] = from_json_schema(value, definitions=definitions)
 
@@ -571,7 +571,8 @@ def to_json_schema(
         raise ValueError(f"Cannot convert field type {name!r} to JSON Schema")
 
     if is_root and definitions:
-        data["definitions"] = definitions
+        data["components"] = {}
+        data["components"]["schemas"] = definitions
     return data
 
 

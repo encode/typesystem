@@ -3,29 +3,43 @@
         "description": "root pointer ref",
         "schema": {
             "properties": {
-                "foo": {"$ref": "#"}
+                "foo": {
+                    "$ref": "#"
+                }
             },
             "additionalProperties": false
         },
         "tests": [
             {
                 "description": "match",
-                "data": {"foo": false},
+                "data": {
+                    "foo": false
+                },
                 "valid": true
             },
             {
                 "description": "recursive match",
-                "data": {"foo": {"foo": false}},
+                "data": {
+                    "foo": {
+                        "foo": false
+                    }
+                },
                 "valid": true
             },
             {
                 "description": "mismatch",
-                "data": {"bar": false},
+                "data": {
+                    "bar": false
+                },
                 "valid": false
             },
             {
                 "description": "recursive mismatch",
-                "data": {"foo": {"bar": false}},
+                "data": {
+                    "foo": {
+                        "bar": false
+                    }
+                },
                 "valid": false
             }
         ]
@@ -34,19 +48,27 @@
         "description": "relative pointer ref to object",
         "schema": {
             "properties": {
-                "foo": {"type": "integer"},
-                "bar": {"$ref": "#/properties/foo"}
+                "foo": {
+                    "type": "integer"
+                },
+                "bar": {
+                    "$ref": "#/properties/foo"
+                }
             }
         },
         "tests": [
             {
                 "description": "match",
-                "data": {"bar": 3},
+                "data": {
+                    "bar": 3
+                },
                 "valid": true
             },
             {
                 "description": "mismatch",
-                "data": {"bar": true},
+                "data": {
+                    "bar": true
+                },
                 "valid": false
             }
         ]
@@ -55,19 +77,29 @@
         "description": "relative pointer ref to array",
         "schema": {
             "items": [
-                {"type": "integer"},
-                {"$ref": "#/items/0"}
+                {
+                    "type": "integer"
+                },
+                {
+                    "$ref": "#/items/0"
+                }
             ]
         },
         "tests": [
             {
                 "description": "match array",
-                "data": [1, 2],
+                "data": [
+                    1,
+                    2
+                ],
                 "valid": true
             },
             {
                 "description": "mismatch array",
-                "data": [1, "foo"],
+                "data": [
+                    1,
+                    "foo"
+                ],
                 "valid": false
             }
         ]
@@ -75,44 +107,68 @@
     {
         "description": "escaped pointer ref",
         "schema": {
-            "tilda~field": {"type": "integer"},
-            "slash/field": {"type": "integer"},
-            "percent%field": {"type": "integer"},
+            "tilda~field": {
+                "type": "integer"
+            },
+            "slash/field": {
+                "type": "integer"
+            },
+            "percent%field": {
+                "type": "integer"
+            },
             "properties": {
-                "tilda": {"$ref": "#/tilda~0field"},
-                "slash": {"$ref": "#/slash~1field"},
-                "percent": {"$ref": "#/percent%25field"}
+                "tilda": {
+                    "$ref": "#/tilda~0field"
+                },
+                "slash": {
+                    "$ref": "#/slash~1field"
+                },
+                "percent": {
+                    "$ref": "#/percent%25field"
+                }
             }
         },
         "tests": [
             {
                 "description": "slash invalid",
-                "data": {"slash": "aoeu"},
+                "data": {
+                    "slash": "aoeu"
+                },
                 "valid": false
             },
             {
                 "description": "tilda invalid",
-                "data": {"tilda": "aoeu"},
+                "data": {
+                    "tilda": "aoeu"
+                },
                 "valid": false
             },
             {
                 "description": "percent invalid",
-                "data": {"percent": "aoeu"},
+                "data": {
+                    "percent": "aoeu"
+                },
                 "valid": false
             },
             {
                 "description": "slash valid",
-                "data": {"slash": 123},
+                "data": {
+                    "slash": 123
+                },
                 "valid": true
             },
             {
                 "description": "tilda valid",
-                "data": {"tilda": 123},
+                "data": {
+                    "tilda": 123
+                },
                 "valid": true
             },
             {
                 "description": "percent valid",
-                "data": {"percent": 123},
+                "data": {
+                    "percent": 123
+                },
                 "valid": true
             }
         ]
@@ -120,12 +176,18 @@
     {
         "description": "nested refs",
         "schema": {
-            "definitions": {
-                "a": {"type": "integer"},
-                "b": {"$ref": "#/definitions/a"},
-                "c": {"$ref": "#/definitions/b"}
+            "components/schemas": {
+                "a": {
+                    "type": "integer"
+                },
+                "b": {
+                    "$ref": "#/components/schemas/a"
+                },
+                "c": {
+                    "$ref": "#/components/schemas/b"
+                }
             },
-            "$ref": "#/definitions/c"
+            "$ref": "#/components/schemas/c"
         },
         "tests": [
             {
@@ -143,14 +205,14 @@
     {
         "description": "ref overrides any sibling keywords",
         "schema": {
-            "definitions": {
+            "components/schemas": {
                 "reffed": {
                     "type": "array"
                 }
             },
             "properties": {
                 "foo": {
-                    "$ref": "#/definitions/reffed",
+                    "$ref": "#/components/schemas/reffed",
                     "maxItems": 2
                 }
             }
@@ -158,33 +220,49 @@
         "tests": [
             {
                 "description": "ref valid",
-                "data": { "foo": [] },
+                "data": {
+                    "foo": []
+                },
                 "valid": true
             },
             {
                 "description": "ref valid, maxItems ignored",
-                "data": { "foo": [ 1, 2, 3] },
+                "data": {
+                    "foo": [
+                        1,
+                        2,
+                        3
+                    ]
+                },
                 "valid": true
             },
             {
                 "description": "ref invalid",
-                "data": { "foo": "string" },
+                "data": {
+                    "foo": "string"
+                },
                 "valid": false
             }
         ]
     },
     {
         "description": "remote ref, containing refs itself",
-        "schema": {"$ref": "http://json-schema.org/draft-07/schema#"},
+        "schema": {
+            "$ref": "http://json-schema.org/draft-07/schema#"
+        },
         "tests": [
             {
                 "description": "remote ref valid",
-                "data": {"minLength": 1},
+                "data": {
+                    "minLength": 1
+                },
                 "valid": true
             },
             {
                 "description": "remote ref invalid",
-                "data": {"minLength": -1},
+                "data": {
+                    "minLength": -1
+                },
                 "valid": false
             }
         ]
@@ -193,18 +271,24 @@
         "description": "property named $ref that is not a reference",
         "schema": {
             "properties": {
-                "$ref": {"type": "string"}
+                "$ref": {
+                    "type": "string"
+                }
             }
         },
         "tests": [
             {
                 "description": "property named $ref valid",
-                "data": {"$ref": "a"},
+                "data": {
+                    "$ref": "a"
+                },
                 "valid": true
             },
             {
                 "description": "property named $ref invalid",
-                "data": {"$ref": 2},
+                "data": {
+                    "$ref": 2
+                },
                 "valid": false
             }
         ]
@@ -212,8 +296,8 @@
     {
         "description": "$ref to boolean schema true",
         "schema": {
-            "$ref": "#/definitions/bool",
-            "definitions": {
+            "$ref": "#/components/schemas/bool",
+            "components/schemas": {
                 "bool": true
             }
         },
@@ -228,8 +312,8 @@
     {
         "description": "$ref to boolean schema false",
         "schema": {
-            "$ref": "#/definitions/bool",
-            "definitions": {
+            "$ref": "#/components/schemas/bool",
+            "components/schemas": {
                 "bool": false
             }
         },
@@ -248,30 +332,43 @@
             "description": "tree of nodes",
             "type": "object",
             "properties": {
-                "meta": {"type": "string"},
+                "meta": {
+                    "type": "string"
+                },
                 "nodes": {
                     "type": "array",
-                    "items": {"$ref": "node"}
+                    "items": {
+                        "$ref": "node"
+                    }
                 }
             },
-            "required": ["meta", "nodes"],
-            "definitions": {
+            "required": [
+                "meta",
+                "nodes"
+            ],
+            "components/schemas": {
                 "node": {
                     "$id": "http://localhost:1234/node",
                     "description": "node",
                     "type": "object",
                     "properties": {
-                        "value": {"type": "number"},
-                        "subtree": {"$ref": "tree"}
+                        "value": {
+                            "type": "number"
+                        },
+                        "subtree": {
+                            "$ref": "tree"
+                        }
                     },
-                    "required": ["value"]
+                    "required": [
+                        "value"
+                    ]
                 }
             }
         },
         "tests": [
             {
                 "description": "valid tree",
-                "data": { 
+                "data": {
                     "meta": "root",
                     "nodes": [
                         {
@@ -279,8 +376,12 @@
                             "subtree": {
                                 "meta": "child",
                                 "nodes": [
-                                    {"value": 1.1},
-                                    {"value": 1.2}
+                                    {
+                                        "value": 1.1
+                                    },
+                                    {
+                                        "value": 1.2
+                                    }
                                 ]
                             }
                         },
@@ -289,8 +390,12 @@
                             "subtree": {
                                 "meta": "child",
                                 "nodes": [
-                                    {"value": 2.1},
-                                    {"value": 2.2}
+                                    {
+                                        "value": 2.1
+                                    },
+                                    {
+                                        "value": 2.2
+                                    }
                                 ]
                             }
                         }
@@ -300,7 +405,7 @@
             },
             {
                 "description": "invalid tree",
-                "data": { 
+                "data": {
                     "meta": "root",
                     "nodes": [
                         {
@@ -308,8 +413,12 @@
                             "subtree": {
                                 "meta": "child",
                                 "nodes": [
-                                    {"value": "string is invalid"},
-                                    {"value": 1.2}
+                                    {
+                                        "value": "string is invalid"
+                                    },
+                                    {
+                                        "value": 1.2
+                                    }
                                 ]
                             }
                         },
@@ -318,8 +427,12 @@
                             "subtree": {
                                 "meta": "child",
                                 "nodes": [
-                                    {"value": 2.1},
-                                    {"value": 2.2}
+                                    {
+                                        "value": 2.1
+                                    },
+                                    {
+                                        "value": 2.2
+                                    }
                                 ]
                             }
                         }

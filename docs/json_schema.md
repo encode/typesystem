@@ -7,7 +7,7 @@ TypeSystem can convert Schema or Field instances to/from JSON Schema.
     All references should be of the style `{"$ref": "#/components/schemas/..."}`.
 
     Using hyperlinked references, relative references, or references to parts
-    of the document other than "definitions" is not supported.
+    of the document other than "components/schemas" is not supported.
 
 Let's define a schema, and dump it out into a JSON schema document:
 

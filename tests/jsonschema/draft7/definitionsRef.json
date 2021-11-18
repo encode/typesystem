@@ -2,10 +2,18 @@
     {
         "description": "nested refs",
         "schema": {
-            "definitions": {
-                "a": {"type": "integer"},
-                "b": {"$ref": "#/components/schemas/a"},
-                "c": {"$ref": "#/components/schemas/b"}
+            "components": {
+                "schemas": {
+                    "a": {
+                        "type": "integer"
+                    },
+                    "b": {
+                        "$ref": "#/components/schemas/a"
+                    },
+                    "c": {
+                        "$ref": "#/components/schemas/b"
+                    }
+                }
             },
             "$ref": "#/components/schemas/c"
         },
@@ -25,9 +33,11 @@
     {
         "description": "ref overrides any sibling keywords",
         "schema": {
-            "definitions": {
-                "reffed": {
-                    "type": "array"
+            "components": {
+                "schemas": {
+                    "reffed": {
+                        "type": "array"
+                    }
                 }
             },
             "properties": {
@@ -40,17 +50,27 @@
         "tests": [
             {
                 "description": "ref valid",
-                "data": { "foo": [] },
+                "data": {
+                    "foo": []
+                },
                 "valid": true
             },
             {
                 "description": "ref valid, maxItems ignored",
-                "data": { "foo": [ 1, 2, 3] },
+                "data": {
+                    "foo": [
+                        1,
+                        2,
+                        3
+                    ]
+                },
                 "valid": true
             },
             {
                 "description": "ref invalid",
-                "data": { "foo": "string" },
+                "data": {
+                    "foo": "string"
+                },
                 "valid": false
             }
         ]
@@ -59,8 +79,10 @@
         "description": "$ref to boolean schema true",
         "schema": {
             "$ref": "#/components/schemas/bool",
-            "definitions": {
-                "bool": true
+            "components": {
+                "schemas": {
+                    "bool": true
+                }
             }
         },
         "tests": [
@@ -75,8 +97,10 @@
         "description": "$ref to boolean schema false",
         "schema": {
             "$ref": "#/components/schemas/bool",
-            "definitions": {
-                "bool": false
+            "components": {
+                "schemas": {
+                    "bool": false
+                }
             }
         },
         "tests": [

@@ -454,13 +454,15 @@ def test_nested_schema_to_json_schema():
             "artist": {"$ref": "#/components/schemas/Artist"},
         },
         "required": ["title", "release_date", "artist"],
-        "definitions": {
-            "Artist": {
-                "type": "object",
-                "properties": {
-                    "name": {"type": "string", "minLength": 1, "maxLength": 100}
-                },
-                "required": ["name"],
+        "components": {
+            "schemas": {
+                "Artist": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string", "minLength": 1, "maxLength": 100}
+                    },
+                    "required": ["name"],
+                }
             }
         },
     }
@@ -485,27 +487,29 @@ def test_definitions_to_json_schema():
     schema = typesystem.to_json_schema(definitions)
 
     assert schema == {
-        "definitions": {
-            "Artist": {
-                "type": "object",
-                "properties": {
-                    "name": {"type": "string", "minLength": 1, "maxLength": 100}
-                },
-                "required": ["name"],
-            },
-            "Album": {
-                "type": "object",
-                "properties": {
-                    "title": {"type": "string", "minLength": 1, "maxLength": 100},
-                    "release_date": {
-                        "type": "string",
-                        "minLength": 1,
-                        "format": "date",
+        "components": {
+            "schemas": {
+                "Artist": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string", "minLength": 1, "maxLength": 100}
                     },
-                    "artist": {"$ref": "#/components/schemas/Artist"},
+                    "required": ["name"],
                 },
-                "required": ["title", "release_date", "artist"],
-            },
+                "Album": {
+                    "type": "object",
+                    "properties": {
+                        "title": {"type": "string", "minLength": 1, "maxLength": 100},
+                        "release_date": {
+                            "type": "string",
+                            "minLength": 1,
+                            "format": "date",
+                        },
+                        "artist": {"$ref": "#/components/schemas/Artist"},
+                    },
+                    "required": ["title", "release_date", "artist"],
+                },
+            }
         }
     }
 
