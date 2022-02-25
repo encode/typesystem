@@ -54,33 +54,36 @@ $ pip3 install typesystem[pyyaml]
 ## Quickstart
 
 ```python
+
 import typesystem
 
-class Artist(typesystem.Schema):
-    name = typesystem.String(max_length=100)
+artist_schema = typesystem.Schema(
+    fields={
+        "name": typesystem.String(max_length=100)
+    }
+)
 
-class Album(typesystem.Schema):
-    title = typesystem.String(max_length=100)
-    release_date = typesystem.Date()
-    artist = typesystem.Reference(Artist)
+definitions = typesystem.Definitions()
+definitions["Artist"] = artist_schema
 
-album = Album.validate({
+album_schema = typesystem.Schema(
+    fields={
+        "title": typesystem.String(max_length=100),
+        "release_date": typesystem.Date(),
+        "artist": typesystem.Reference("Artist", definitions=definitions)
+    }
+)
+
+album = album_schema.validate({
     "title": "Double Negative",
     "release_date": "2018-09-14",
     "artist": {"name": "Low"}
 })
 
 print(album)
-# Album(title='Double Negative', release_date=datetime.date(2018, 9, 14), artist=Artist(name='Low'))
-
-print(album.release_date)
-# datetime.date(2018, 9, 14)
-
-print(album['release_date'])
-# '2018-09-14'
-
-print(dict(album))
 # {'title': 'Double Negative', 'release_date': '2018-09-14', 'artist': {'name': 'Low'}}
+# {'title': 'Double Negative', 'release_date': '2018-09-14', 'artist': {'name': 'Low'}}
+
 ```
 
 ## Alternatives
