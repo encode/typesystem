@@ -54,7 +54,6 @@ $ pip3 install typesystem[pyyaml]
 ## Quickstart
 
 ```python
-
 import typesystem
 
 artist_schema = typesystem.Schema(
@@ -82,7 +81,6 @@ album = album_schema.validate({
 
 print(album)
 # {'title': 'Double Negative', 'release_date': '2018-09-14', 'artist': {'name': 'Low'}}
-
 ```
 
 ## Alternatives
