@@ -818,6 +818,7 @@ class File(Field):
 
 class Image(File):
     errors = {
+        "type": "Must be a file descriptor.",
         "image_types": "Did not match the image_types",
         "file_type": "Must be a image type.",
     }
