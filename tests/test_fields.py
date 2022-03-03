@@ -909,14 +909,14 @@ def test_file():
 def test_image():
     validator = Image(image_types=["png"])
     with open("test.png", "wb") as f:
-        f.write(b"\211PNG\r\n\032\n")
+        f.write(b"\211PNG\r\n\032\nxxxxxxxxxxxxxxxxxxxxxxxy")
 
     value, error = validator.validate_or_error(f)
     assert value == f
 
     validator = Image(image_types=["png"])
-    with open("test.png") as f:
-        f.write("123")
+    with open("test.png", "wb") as f:
+        f.write(b"123")
 
     value, error = validator.validate_or_error(None)
     assert error == ValidationError(text="Must be a file descriptor.", code="type")
