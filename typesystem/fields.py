@@ -819,7 +819,7 @@ class File(Field):
 class Image(File):
     errors = {
         "image_types": "Did not match the image_types",
-        "file_type": "Must be a image type."
+        "file_type": "Must be a image type.",
     }
 
     def __init__(
