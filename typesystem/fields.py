@@ -1,4 +1,6 @@
 import decimal
+import imghdr
+import io
 import re
 import typing
 from math import isfinite
@@ -385,7 +387,7 @@ class Choice(Field):
             return None
         elif value is None:
             raise self.validation_error("null")
-        elif value not in Uniqueness([key for key, value in self.choices]):
+        elif value not in Uniqueness([key for key, val in self.choices]):
             if value == "":
                 if self.allow_null and self.coerce_types:
                     return None
@@ -749,7 +751,7 @@ class Any(Field):
 
 class Const(Field):
     """
-    Only ever matches the given given value.
+    Only ever matches the given value.
     """
 
     errors = {"only_null": "Must be null.", "const": "Must be the value '{const}'."}
@@ -790,3 +792,53 @@ class IPAddress(String):
 class URL(String):
     def __init__(self, **kwargs: typing.Any) -> None:
         super().__init__(format="url", **kwargs)
+
+
+class File(Field):
+    errors = {
+        "type": "Must be a file descriptor.",
+    }
+
+    def __init__(
+        self,
+        *,
+        serialize_func: typing.Callable = None,
+        **kwargs: typing.Any
+    ) -> None:
+        super().__init__(**kwargs)
+        self.serialize_func = serialize_func
+
+    def validate(self, value: typing.Any) -> typing.Any:
+        if not isinstance(value, io.BufferedReader):
+            raise self.validation_error("type")
+        return value
+
+    def serialize(self, obj: typing.Any) -> typing.Any:
+        if self.serialize_func is not None and callable(self.serialize_func):
+            return self.serialize_func(obj)
+        return obj
+
+
+class Image(File):
+    errors = {
+        "image_types": "Did not match the image_types",
+        "file_type": "Must be a image type."
+    }
+
+    def __init__(
+        self,
+        image_types: typing.List[str] = None,
+        **kwargs: typing.Any
+    ) -> None:
+
+        super().__init__(**kwargs)
+        self.image_types = image_types
+
+    def validate(self, value: typing.Any) -> typing.Any:
+        value = super().validate(value)
+        image_type: typing.Optional[str] = imghdr.what(value)
+        if image_type is None:
+            raise self.validation_error("file_type")
+        if self.image_types is not None and image_type in self.image_types:
+            return value
+        raise self.validation_error("image_types")
