@@ -805,21 +805,13 @@ class File(Field):
         io.BufferedWriter,
     )
 
-    def __init__(
-        self, *, serialize_func: typing.Callable = None, **kwargs: typing.Any
-    ) -> None:
+    def __init__(self, **kwargs: typing.Any) -> None:
         super().__init__(**kwargs)
-        self.serialize_func = serialize_func
 
     def validate(self, value: typing.Any) -> typing.Any:
         if not isinstance(value, self.value_types):
             raise self.validation_error("type")
         return value
-
-    def serialize(self, obj: typing.Any) -> typing.Any:
-        if self.serialize_func is not None and callable(self.serialize_func):
-            return self.serialize_func(obj)
-        return obj
 
 
 class Image(File):
