@@ -798,6 +798,12 @@ class File(Field):
     errors = {
         "type": "Must be a file descriptor.",
     }
+    value_types = (
+        io.BufferedReader,
+        io.TextIOWrapper,
+        io.BufferedRandom,
+        io.BufferedWriter,
+    )
 
     def __init__(
         self, *, serialize_func: typing.Callable = None, **kwargs: typing.Any
@@ -806,7 +812,7 @@ class File(Field):
         self.serialize_func = serialize_func
 
     def validate(self, value: typing.Any) -> typing.Any:
-        if not isinstance(value, io.BufferedReader):
+        if not isinstance(value, self.value_types):
             raise self.validation_error("type")
         return value
 
@@ -819,7 +825,7 @@ class File(Field):
 class Image(File):
     errors = {
         "type": "Must be a file descriptor.",
-        "image_types": "Did not match the image_types",
+        "image_types": "Did not match the image_types.",
         "file_type": "Must be a image type.",
     }
 

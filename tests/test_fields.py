@@ -897,7 +897,7 @@ def test_file():
     validator = File()
     with open("test.txt", "w") as f:
         f.write("123")
-    with open("test.txt", "r") as f:
+    with open("test.txt") as f:
         value, error = validator.validate_or_error(f)
         assert value == f
 
@@ -911,9 +911,9 @@ def test_image():
     with open("test.png", "wb") as f:
         f.write(b"\211PNG\r\n\032\nxxxxxxxxxxxxxxxxxxxxxxxy")
 
-    f = open("test.png", "rb")
-    value, error = validator.validate_or_error(f)
-    assert value == f
+    with open("test.png", "rb") as f:
+        value, error = validator.validate_or_error(f)
+        assert value == f
 
     validator = Image(image_types=["png"])
     value, error = validator.validate_or_error(None)
@@ -921,6 +921,14 @@ def test_image():
 
     with open("test.png", "wb") as f:
         f.write(b"123")
+
+    with open("test.png", "rb") as f:
+        value, error = validator.validate_or_error(f)
+        assert error == ValidationError(text="Must be a image type.", code="file_type")
+
+    validator = Image(image_types=["jpg"])
+    with open("test.png", "wb") as f:
+        f.write(b"\211PNG\r\n\032\nxxxxxxxxxxxxxxxxxxxxxxxy")
 
     with open("test.png", "rb") as f:
         value, error = validator.validate_or_error(f)
