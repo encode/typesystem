@@ -800,10 +800,7 @@ class File(Field):
     }
 
     def __init__(
-        self,
-        *,
-        serialize_func: typing.Callable = None,
-        **kwargs: typing.Any
+        self, *, serialize_func: typing.Callable = None, **kwargs: typing.Any
     ) -> None:
         super().__init__(**kwargs)
         self.serialize_func = serialize_func
@@ -826,9 +823,7 @@ class Image(File):
     }
 
     def __init__(
-        self,
-        image_types: typing.List[str] = None,
-        **kwargs: typing.Any
+        self, image_types: typing.List[str] = None, **kwargs: typing.Any
     ) -> None:
 
         super().__init__(**kwargs)

@@ -924,4 +924,5 @@ def test_image():
     with open("test.png") as f:
         value, error = validator.validate_or_error(f)
         assert error == ValidationError(
-            text="Did not match the image_types.", code="image_types")
+            text="Did not match the image_types.", code="image_types"
+        )
