@@ -409,7 +409,7 @@ class Object(Field):
     def __init__(
         self,
         *,
-        properties: typing.Dict[str, Field] = None,
+        properties: typing.Union[Field, typing.Dict[str, Field]] = None,
         pattern_properties: typing.Dict[str, Field] = None,
         additional_properties: typing.Union[bool, None, Field] = True,
         property_names: Field = None,
