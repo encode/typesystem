@@ -408,7 +408,7 @@ def to_json_schema(
     elif isinstance(arg, NeverMatch):
         return False
 
-    field: typing.Optional[Field]
+    field: typing.Optional[Field] = None
     data: dict = {}
     is_root = _definitions is None
     definitions = {} if _definitions is None else _definitions
@@ -416,7 +416,6 @@ def to_json_schema(
     if isinstance(arg, Field):
         field = arg
     elif isinstance(arg, Definitions):
-        field = None
         for key, value in arg.items():
             definitions[key] = to_json_schema(value, _definitions=definitions)
 
