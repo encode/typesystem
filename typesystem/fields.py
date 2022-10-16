@@ -823,8 +823,7 @@ class File(Field):
 class Image(File):
     errors = {
         "type": "Must be a file descriptor.",
-        "image_types": "Did not match the image_types.",
-        "file_type": "Must be a image type.",
+        "image_types": "Do not support this image type.",
     }
 
     def __init__(
@@ -836,11 +835,16 @@ class Image(File):
 
     def validate(self, value: typing.Any) -> typing.Any:
         value = super().validate(value)
-        if puremagic is None:
+        if self.image_types is None:
             return value
-        image_type: typing.Optional[str] = puremagic.from_stream(value)
-        if image_type is None:
-            raise self.validation_error("file_type")
-        if self.image_types is not None and image_type in self.image_types:
-            return value
-        raise self.validation_error("image_types")
+
+        assert puremagic is not None, "'puremagic' must be installed."
+        try:
+            image_type: typing.Optional[str] = puremagic.from_stream(value)
+        except Exception:
+            image_type = None
+
+        image_type = (image_type or "").strip(".")
+        if not image_type or image_type not in self.image_types:
+            raise self.validation_error("image_types")
+        return value

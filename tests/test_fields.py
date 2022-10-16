@@ -908,30 +908,23 @@ def test_file():
 
 def test_image():
     validator = Image(image_types=["png"])
-    with open("test.png", "wb") as f:
-        f.write(b"\211PNG\r\n\032\nxxxxxxxxxxxxxxxxxxxxxxxy")
-
-    with open("test.png", "rb") as f:
-        value, error = validator.validate_or_error(f)
-        assert value == f
-
-    validator = Image(image_types=["png"])
     value, error = validator.validate_or_error(None)
     assert error == ValidationError(text="Must be a file descriptor.", code="type")
 
     with open("test.png", "wb") as f:
-        f.write(b"123")
-
-    with open("test.png", "rb") as f:
-        value, error = validator.validate_or_error(f)
-        assert error == ValidationError(text="Must be a image type.", code="file_type")
-
-    validator = Image(image_types=["jpg"])
-    with open("test.png", "wb") as f:
         f.write(b"\211PNG\r\n\032\nxxxxxxxxxxxxxxxxxxxxxxxy")
 
     with open("test.png", "rb") as f:
+        validator = Image(image_types=["png"])
         value, error = validator.validate_or_error(f)
         assert error == ValidationError(
-            text="Did not match the image_types.", code="image_types"
+            text="Do not support this image type.", code="image_types"
         )
+        validator = Image()
+        value, error = validator.validate_or_error(f)
+        assert value is f
+
+    with open("./tests/image/head.jpeg", "rb") as f:
+        validator = Image(image_types=["jfif"])
+        value, error = validator.validate_or_error(f)
+        assert value == f

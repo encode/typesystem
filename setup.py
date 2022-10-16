@@ -44,6 +44,7 @@ setup(
     extras_require={
         "jinja2": ["jinja2"],
         "pyyaml": ["pyyaml"],
+        "puremagic": ["puremagic"],
     },
     python_requires='>=3.6',
     classifiers=[
