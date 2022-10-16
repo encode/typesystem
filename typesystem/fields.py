@@ -1,5 +1,4 @@
 import decimal
-import imghdr
 import io
 import re
 import typing
@@ -8,6 +7,13 @@ from math import isfinite
 from typesystem import formats
 from typesystem.base import Message, ValidationError, ValidationResult
 from typesystem.unique import Uniqueness
+
+try:
+    # check the image type.
+    import puremagic
+except ImportError:
+    puremagic = None
+
 
 NO_DEFAULT = object()
 
@@ -830,7 +836,9 @@ class Image(File):
 
     def validate(self, value: typing.Any) -> typing.Any:
         value = super().validate(value)
-        image_type: typing.Optional[str] = imghdr.what(value)
+        if puremagic is None:
+            return value
+        image_type: typing.Optional[str] = puremagic.from_stream(value)
         if image_type is None:
             raise self.validation_error("file_type")
         if self.image_types is not None and image_type in self.image_types:
