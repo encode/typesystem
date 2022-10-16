@@ -1,6 +1,7 @@
 # Optionals
 jinja2
 pyyaml
+puremagic
 
 # Packaging
 twine

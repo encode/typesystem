@@ -1,4 +1,5 @@
 import decimal
+import io
 import re
 import typing
 from math import isfinite
@@ -6,6 +7,13 @@ from math import isfinite
 from typesystem import formats
 from typesystem.base import Message, ValidationError, ValidationResult
 from typesystem.unique import Uniqueness
+
+try:
+    # check the image type.
+    import puremagic
+except ImportError:
+    puremagic = None
+
 
 NO_DEFAULT = object()
 
@@ -385,7 +393,7 @@ class Choice(Field):
             return None
         elif value is None:
             raise self.validation_error("null")
-        elif value not in Uniqueness([key for key, value in self.choices]):
+        elif value not in Uniqueness([key for key, val in self.choices]):
             if value == "":
                 if self.allow_null and self.coerce_types:
                     return None
@@ -749,7 +757,7 @@ class Any(Field):
 
 class Const(Field):
     """
-    Only ever matches the given given value.
+    Only ever matches the given value.
     """
 
     errors = {"only_null": "Must be null.", "const": "Must be the value '{const}'."}
@@ -790,3 +798,53 @@ class IPAddress(String):
 class URL(String):
     def __init__(self, **kwargs: typing.Any) -> None:
         super().__init__(format="url", **kwargs)
+
+
+class File(Field):
+    errors = {
+        "type": "Must be a file descriptor.",
+    }
+    value_types = (
+        io.BufferedReader,
+        io.TextIOWrapper,
+        io.BufferedRandom,
+        io.BufferedWriter,
+    )
+
+    def __init__(self, **kwargs: typing.Any) -> None:
+        super().__init__(**kwargs)
+
+    def validate(self, value: typing.Any) -> typing.Any:
+        if not isinstance(value, self.value_types):
+            raise self.validation_error("type")
+        return value
+
+
+class Image(File):
+    errors = {
+        "type": "Must be a file descriptor.",
+        "image_types": "Do not support this image type.",
+    }
+
+    def __init__(
+        self, image_types: typing.List[str] = None, **kwargs: typing.Any
+    ) -> None:
+
+        super().__init__(**kwargs)
+        self.image_types = image_types
+
+    def validate(self, value: typing.Any) -> typing.Any:
+        value = super().validate(value)
+        if self.image_types is None:
+            return value
+
+        assert puremagic is not None, "'puremagic' must be installed."
+        try:
+            image_type: typing.Optional[str] = puremagic.from_stream(value)
+        except Exception:
+            image_type = None
+
+        image_type = (image_type or "").strip(".")
+        if not image_type or image_type not in self.image_types:
+            raise self.validation_error("image_types")
+        return value

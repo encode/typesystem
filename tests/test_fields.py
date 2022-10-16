@@ -16,7 +16,9 @@ from typesystem.fields import (
     DateTime,
     Decimal,
     Email,
+    File,
     Float,
+    Image,
     Integer,
     IPAddress,
     Number,
@@ -889,3 +891,40 @@ def test_url():
     validator = URL()
     value, error = validator.validate_or_error("example")
     assert error == ValidationError(text="Must be a real URL.", code="invalid")
+
+
+def test_file():
+    validator = File()
+    with open("test.txt", "w") as f:
+        f.write("123")
+    with open("test.txt") as f:
+        value, error = validator.validate_or_error(f)
+        assert value == f
+
+    validator = File()
+    value, error = validator.validate_or_error(None)
+    assert error == ValidationError(text="Must be a file descriptor.", code="type")
+
+
+def test_image():
+    validator = Image(image_types=["png"])
+    value, error = validator.validate_or_error(None)
+    assert error == ValidationError(text="Must be a file descriptor.", code="type")
+
+    with open("test.png", "wb") as f:
+        f.write(b"\211PNG\r\n\032\nxxxxxxxxxxxxxxxxxxxxxxxy")
+
+    with open("test.png", "rb") as f:
+        validator = Image(image_types=["png"])
+        value, error = validator.validate_or_error(f)
+        assert error == ValidationError(
+            text="Do not support this image type.", code="image_types"
+        )
+        validator = Image()
+        value, error = validator.validate_or_error(f)
+        assert value is f
+
+    with open("./tests/image/head.jpeg", "rb") as f:
+        validator = Image(image_types=["jfif"])
+        value, error = validator.validate_or_error(f)
+        assert value == f
